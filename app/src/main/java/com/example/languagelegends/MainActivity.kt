@@ -3,19 +3,18 @@ package com.example.languagelegends
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -33,13 +32,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.res.painterResource
-
-
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.languagelegends.screens.ExercisesScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -50,6 +49,9 @@ class MainActivity : ComponentActivity() {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
                 Scaffold(
+                    topBar = {
+                        TopBar()
+                    },
                     bottomBar = {
                         if (buttonsTrue) {
                             BottomBar(
@@ -71,27 +73,59 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+@Composable
+fun TopBar() {
+    Surface(
+        color = Color.White,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.flag),
+                    contentDescription = "Flags",
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(36.dp) // Adjust the size as needed
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = "Add",
+                    modifier = Modifier.size(36.dp) // Adjust the size as needed
+
+                )
+            }
+        }
+    }
+}
 
     sealed class Screen(
         val route: String,
         val title: String? = null,
-        val icon: ImageVector,
+        val icon: @Composable () -> Painter,
 
     ) {
         object Profile : Screen(
             "profile",
             title = "Profile",
-            Icons.Filled.Person)
+            { painterResource(id = R.drawable.person) }
+        )
         object Chat : Screen(
             "chat",
             title = "Chat",
-            Icons.Filled.Face
+            { painterResource(id = R.drawable.smart_toy) }
         )
         object Path : Screen("path",
             title = "Path",
-            Icons.Filled.Home
+            { painterResource(id = R.drawable.map) }
         )
-    }
+}
 
 
         @Composable
@@ -118,7 +152,8 @@ class MainActivity : ComponentActivity() {
                             Text(text = screen.title!!)
                         },
                         icon = {
-                            Icon(imageVector = screen.icon!!, contentDescription = "")
+                            val iconPainter = screen.icon()
+                            Icon(painter = iconPainter, contentDescription = null)
                         },
                         selected = currentRoute == screen.route,
                         onClick = {
@@ -153,9 +188,18 @@ fun NavHost(navController: NavHostController, onBottomBarVisibilityChanged: (Boo
             onBottomBarVisibilityChanged(true)
             ChatScreen()
         }
+        // Add composable for ExercisesScreen
+        composable(
+            route = "exercises/{exerciseNumber}",
+            arguments = listOf(navArgument("exerciseNumber") { type = NavType.IntType })
+        ) { navBackStackEntry ->
+            val exerciseNumber = navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
+            onBottomBarVisibilityChanged(false)
+            ExercisesScreen(selectedExercise = exerciseNumber, navController)
+        }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen()
+            PathScreen(navController = navController)
         }
     }
 }

@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 
 @Composable
-fun PathScreen() {
+fun PathScreen(navController : NavController) {
     var completedExercises by remember { mutableStateOf(0) }
 
     // Load the background image
@@ -58,7 +58,10 @@ fun PathScreen() {
                     LanguageExercise(
                         number = i,
                         completedExercises = completedExercises
-                    )
+                    ) {
+                        // Navigate to the ExercisesScreen when exercise is clicked
+                        navController.navigate("exercises/${it}")
+                    }
                     // Add spacers on the sides
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -72,7 +75,9 @@ fun PathScreen() {
 @Composable
 fun LanguageExercise(
     number: Int,
-    completedExercises: Int
+    completedExercises: Int,
+    onClick: (Int) -> Unit
+
 ) {
     // Determine if the exercise is unlocked
     val isUnlocked = number <= completedExercises + 1
@@ -84,7 +89,9 @@ fun LanguageExercise(
     Surface(
         modifier = Modifier.size(40.dp),
         shape = CircleShape,
-        color = circleColor
+        color = circleColor,
+        onClick = { onClick(number) } // Call the lambda onClick with the exercise number
+
     ) {
         Box(
             contentAlignment = Alignment.Center,
