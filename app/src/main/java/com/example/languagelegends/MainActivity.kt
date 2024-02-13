@@ -8,41 +8,47 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import com.example.languagelegends.database.AppDatabase
+import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.res.painterResource
-
-
-
 
 class MainActivity : ComponentActivity() {
+
+    private val appDatabase: AppDatabase by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "language_legends_database"
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    private val userProfileDao: UserProfileDao by lazy {
+        appDatabase.userProfileDao()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -61,10 +67,14 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(paddingValues)
                     ) {
-                        NavHost(navController = navController) {
-                                isVisible ->
-                            buttonsTrue = isVisible
-                        }
+                        NavHost(
+                            navController = navController,
+                            userProfileDao = userProfileDao,
+                            onBottomBarVisibilityChanged = { isVisible ->
+                                buttonsTrue = isVisible
+                            },
+                            startDestination = Screen.Profile.route
+                        )
                     }
                 }
             }
@@ -77,17 +87,17 @@ class MainActivity : ComponentActivity() {
         val title: String? = null,
         val icon: ImageVector,
 
-    ) {
-        object Profile : Screen(
+        ) {
+        data object Profile : Screen(
             "profile",
             title = "Profile",
             Icons.Filled.Person)
-        object Chat : Screen(
+        data object Chat : Screen(
             "chat",
             title = "Chat",
             Icons.Filled.Face
         )
-        object Path : Screen("path",
+        data object Path : Screen("path",
             title = "Path",
             Icons.Filled.Home
         )
@@ -118,7 +128,7 @@ class MainActivity : ComponentActivity() {
                             Text(text = screen.title!!)
                         },
                         icon = {
-                            Icon(imageVector = screen.icon!!, contentDescription = "")
+                            Icon(imageVector = screen.icon, contentDescription = "")
                         },
                         selected = currentRoute == screen.route,
                         onClick = {
@@ -143,11 +153,19 @@ class MainActivity : ComponentActivity() {
         }
 
 @Composable
-fun NavHost(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
-    NavHost(navController, startDestination = Screen.Profile.route) {
+fun NavHost(
+    navController: NavHostController,
+    userProfileDao: UserProfileDao,
+    onBottomBarVisibilityChanged: (Boolean) -> Unit,
+    startDestination: String
+) {
+    androidx.navigation.compose.NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
-            ProfileScreen()
+            ProfileScreen(userProfileDao)
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
