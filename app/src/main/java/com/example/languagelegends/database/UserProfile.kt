@@ -1,5 +1,6 @@
 package com.example.languagelegends.database
 
+import android.graphics.Bitmap
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.languagelegends.screens.Language
@@ -13,5 +14,6 @@ data class UserProfile(
     var languages: List<Language> = emptyList(),
     var currentLanguage: Language,
     var languagePoints: Int = 0,
-    var exercisesDone: Int? = 0
+    var exercisesDone: Int? = 0,
+    var image: ByteArray? = null,
 )
