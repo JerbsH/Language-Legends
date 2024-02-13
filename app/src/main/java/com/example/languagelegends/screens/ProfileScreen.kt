@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class Language(val name: String, val exercisesDone: Int)
+data class Language(val name: String, val exercisesDone: Int, val pointsEarned: Int)
 
 @Composable
 fun ProfileScreen(userProfileDao: UserProfileDao) {
@@ -39,7 +39,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
     var isDialogOpen by remember { mutableStateOf(false) }
 
     // Fixed value for weeklyPoints
-    val weeklyPoints = 1500
+    var weeklyPoints = 1500
+
+    if(selectedUserProfile == null){
+        weeklyPoints = 0
+    }
 
     Column(
         modifier = Modifier
@@ -97,6 +101,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             color = Color.Black,
         )
         Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Total Points: ${selectedUserProfile?.languagePoints}",
+            color = Color.Black,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Display the list of learned languages
         Text(
@@ -129,7 +138,12 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                         selectedUserProfile = firstUser
                     } else {
                         // If the database is empty or has more than one user, create a new user profile
-                        val newUserProfile = UserProfile(username = username, weeklyPoints = 1500)
+                        val newUserProfile = UserProfile(
+                            username = username,
+                            weeklyPoints = 1500,
+                            currentLanguage = Language ("English",0,0),
+                            languagePoints = 0
+                        )
                         updateUserLanguages(newUserProfile)
                         userProfileDao.insertUserProfile(newUserProfile)
                         Log.d(
@@ -171,6 +185,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                         Text("Exercises for ${language.name}", color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
+                        Text("Points earned: ${language.pointsEarned}", color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { isDialogOpen = false }) {
                             Text("Close")
@@ -184,10 +199,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
 
 fun updateUserLanguages(userProfile: UserProfile) {
     val updatedLanguages = listOf(
-        Language("English", 50), Language("Spanish", 50), Language("French", 70)
+        Language("English", 50, 3000),
+        Language("Spanish", 50, 500),
+        Language("French", 70, 12000)
     )
     userProfile.languages = updatedLanguages
     userProfile.exercisesDone = updatedLanguages.sumOf { it.exercisesDone }
+    userProfile.languagePoints = updatedLanguages.sumOf { it.pointsEarned }
 }
 
 @Composable
@@ -198,4 +216,5 @@ fun LanguageItem(language: Language, onClick: () -> Unit) {
         Text(text = language.name)
     }
 }
+
 

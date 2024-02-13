@@ -11,5 +11,7 @@ data class UserProfile(
     var username: String,
     var weeklyPoints: Int,
     var languages: List<Language> = emptyList(),
+    var currentLanguage: Language,
+    var languagePoints: Int = 0,
     var exercisesDone: Int? = 0
 )
