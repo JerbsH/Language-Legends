@@ -23,27 +23,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 
 
-
-
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var aiChatViewModel = ViewModelProvider(this)[AiChatViewModel::class.java]
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
@@ -60,8 +54,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(paddingValues)
                     ) {
-                        NavHost(aiChatViewModel, navController = navController) {
-                                isVisible ->
+                        NavHost(navController = navController) { isVisible ->
                             buttonsTrue = isVisible
                         }
                     }
@@ -71,78 +64,82 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-    sealed class Screen(
-        val route: String,
-        val title: String? = null,
-        val icon: ImageVector,
+sealed class Screen(
+    val route: String,
+    val title: String? = null,
+    val icon: ImageVector,
 
     ) {
-        object Profile : Screen(
-            "profile",
-            title = "Profile",
-            Icons.Filled.Person)
-        object Chat : Screen(
-            "chat",
-            title = "Chat",
-            Icons.Filled.Face
-        )
-        object Path : Screen("path",
-            title = "Path",
-            Icons.Filled.Home
-        )
-    }
+    object Profile : Screen(
+        "profile",
+        title = "Profile",
+        Icons.Filled.Person
+    )
 
+    object Chat : Screen(
+        "chat",
+        title = "Chat",
+        Icons.Filled.Face
+    )
 
-        @Composable
-        fun BottomBar(
-            navController: NavHostController,
-            modifier: Modifier = Modifier
-        ) {
-            val screens = listOf(
-                Screen.Path,
-                Screen.Chat,
-                Screen.Profile,
-                )
+    object Path : Screen(
+        "path",
+        title = "Path",
+        Icons.Filled.Home
+    )
+}
 
-            NavigationBar(
-                modifier = modifier,
-                containerColor = Color.White,
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                screens.forEach { screen ->
-                    NavigationBarItem(
-                        label = {
-                            Text(text = screen.title!!)
-                        },
-                        icon = {
-                            Icon(imageVector = screen.icon, contentDescription = "")
-                        },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            unselectedTextColor = Color.Gray,
-                            selectedTextColor = Color.Black,
-                            selectedIconColor = Color.Black,
-                            unselectedIconColor = Color.Black,
-                            indicatorColor = Color.LightGray
-                        ),
-                    )
-                }
-            }
-        }
 
 @Composable
-fun NavHost(aiChatViewModel: AiChatViewModel, navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
+fun BottomBar(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
+    val screens = listOf(
+        Screen.Path,
+        Screen.Chat,
+        Screen.Profile,
+    )
+
+    NavigationBar(
+        modifier = modifier,
+        containerColor = Color.White,
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        screens.forEach { screen ->
+            NavigationBarItem(
+                label = {
+                    Text(text = screen.title!!)
+                },
+                icon = {
+                    Icon(imageVector = screen.icon, contentDescription = "")
+                },
+                selected = currentRoute == screen.route,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    unselectedTextColor = Color.Gray,
+                    selectedTextColor = Color.Black,
+                    selectedIconColor = Color.Black,
+                    unselectedIconColor = Color.Black,
+                    indicatorColor = Color.LightGray
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+fun NavHost(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
     NavHost(navController, startDestination = Screen.Profile.route) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
@@ -150,7 +147,7 @@ fun NavHost(aiChatViewModel: AiChatViewModel, navController: NavHostController, 
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen(aiChatViewModel)
+            ChatScreen().Chats()
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)

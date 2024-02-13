@@ -77,9 +77,4 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    //AI chat wizard
-    implementation("com.hexascribe:vertexai-kt:1.1.0")
-    implementation("com.google.cloud:google-cloud-aiplatform:3.35.0")
-    implementation("com.google.cloud:google-cloud-core:2.1.0")
-    implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
 }
