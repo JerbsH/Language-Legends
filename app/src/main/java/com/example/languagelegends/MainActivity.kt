@@ -8,6 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -20,6 +28,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -32,6 +45,7 @@ import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
+
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Surface
@@ -44,7 +58,6 @@ import com.example.languagelegends.screens.ExercisesScreen
 
 
 class MainActivity : ComponentActivity() {
-
     private val appDatabase: AppDatabase by lazy {
         Room.databaseBuilder(
             applicationContext,
@@ -123,6 +136,7 @@ fun TopBar() {
     }
 }
 
+
     sealed class Screen(
         val route: String,
         val title: String? = null,
@@ -145,25 +159,38 @@ fun TopBar() {
         )
 }
 
+    object Chat : Screen(
+        "chat",
+        title = "Chat",
+        Icons.Filled.Face
+    )
 
-        @Composable
-        fun BottomBar(
-            navController: NavHostController,
-            modifier: Modifier = Modifier
-        ) {
-            val screens = listOf(
-                Screen.Path,
-                Screen.Chat,
-                Screen.Profile,
-                )
+    object Path : Screen(
+        "path",
+        title = "Path",
+        Icons.Filled.Home
+    )
+}
 
-            NavigationBar(
-                modifier = modifier,
-                containerColor = Color.White,
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
 
+
+@Composable
+fun BottomBar(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
+    val screens = listOf(
+        Screen.Path,
+        Screen.Chat,
+        Screen.Profile,
+    )
+
+    NavigationBar(
+        modifier = modifier,
+        containerColor = Color.White,
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
                 screens.forEach { screen ->
                     NavigationBarItem(
                         label = {
@@ -194,6 +221,8 @@ fun TopBar() {
                 }
             }
         }
+    }
+}
 
 @Composable
 fun NavHost(
@@ -212,7 +241,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen()
+            ChatScreen().Chats()
         }
         // Add composable for ExercisesScreen
         composable(

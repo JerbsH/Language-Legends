@@ -6,12 +6,13 @@ plugins {
 }
 
 android {
+
     namespace = "com.example.languagelegends"
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.languagelegends"
-        minSdk = 24
+        minSdk = 30
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -46,13 +47,13 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES,INDEX.LIST}"
+
         }
     }
 }
 
 dependencies {
-
     implementation ("com.google.code.gson:gson:2.10.1")
     implementation("androidx.room:room-ktx:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
@@ -76,9 +77,10 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation ("androidx.compose.material3:material3:1.2.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation ("org.mockito:mockito-core:3.12.4")
     testImplementation ("org.mockito:mockito-inline:3.12.4")
-
 }
