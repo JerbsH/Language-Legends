@@ -8,36 +8,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.res.painterResource
+
 
 
 
@@ -45,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var aiChatViewModel = ViewModelProvider(this)[AiChatViewModel::class.java]
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
@@ -61,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier.padding(paddingValues)
                     ) {
-                        NavHost(navController = navController) {
+                        NavHost(aiChatViewModel, navController = navController) {
                                 isVisible ->
                             buttonsTrue = isVisible
                         }
@@ -118,7 +117,7 @@ class MainActivity : ComponentActivity() {
                             Text(text = screen.title!!)
                         },
                         icon = {
-                            Icon(imageVector = screen.icon!!, contentDescription = "")
+                            Icon(imageVector = screen.icon, contentDescription = "")
                         },
                         selected = currentRoute == screen.route,
                         onClick = {
@@ -143,7 +142,7 @@ class MainActivity : ComponentActivity() {
         }
 
 @Composable
-fun NavHost(navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
+fun NavHost(aiChatViewModel: AiChatViewModel, navController: NavHostController, onBottomBarVisibilityChanged: (Boolean) -> Unit) {
     NavHost(navController, startDestination = Screen.Profile.route) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
@@ -151,7 +150,7 @@ fun NavHost(navController: NavHostController, onBottomBarVisibilityChanged: (Boo
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen()
+            ChatScreen(aiChatViewModel)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)

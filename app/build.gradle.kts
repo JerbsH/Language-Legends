@@ -4,12 +4,13 @@ plugins {
 }
 
 android {
+
     namespace = "com.example.languagelegends"
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.languagelegends"
-        minSdk = 24
+        minSdk = 30
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -44,7 +45,8 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES,INDEX.LIST}"
+
         }
     }
 }
@@ -72,5 +74,12 @@ dependencies {
     implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation ("androidx.compose.material3:material3:1.2.0")
 
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    //AI chat wizard
+    implementation("com.hexascribe:vertexai-kt:1.1.0")
+    implementation("com.google.cloud:google-cloud-aiplatform:3.35.0")
+    implementation("com.google.cloud:google-cloud-core:2.1.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
 }
