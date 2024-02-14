@@ -89,4 +89,5 @@ dependencies {
 
     //AI Implementation
     implementation("com.hexascribe:vertexai-kt:1.1.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
 }
