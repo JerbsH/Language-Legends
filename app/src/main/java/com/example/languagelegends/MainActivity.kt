@@ -218,7 +218,7 @@ fun NavHost(
             route = "exercises/{exerciseNumber}",
             arguments = listOf(navArgument("exerciseNumber") { type = NavType.IntType })
         ) { navBackStackEntry ->
-            val exerciseNumber = navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
+            navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
             ExercisesScreen(navController)
         }
