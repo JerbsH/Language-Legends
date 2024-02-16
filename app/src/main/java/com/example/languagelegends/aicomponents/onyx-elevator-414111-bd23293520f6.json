@@ -1,0 +1,13 @@
+{
+	"type": "service_account",
+	"project_id": "onyx-elevator-414111",
+	"private_key_id": "bd23293520f65db2fe1a6a84a7108f4bbba11ee7",
+	"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDBP6mf39vis/PE\nM6ZbaPv/FQnfAOh6umRGmzMXNDu4Wwcm8q0YH0XRH+kjrvSlL5yzZNmrtCw6OKNN\nWP1mR53GpPNKipKmlNuBr8f1IB6eHPHjWrwnScNZaiKtJT4bY1vFmM+pNNSkzl/z\nnGolyq8y/1JsVbpciqqfRCfJDfkbTjuYWCjuJcFfONdxkPdwsX8eb2DkWJQWT+CO\nk2E0AHheA/lH0ElBemfV0Ll9rWdCIKyuAXetUodWAzW5jHHnVRZdafOQAO93jGUN\nwRd4Zg1Mz9A+L95rpnCRgBEXxBMJV6z/kpyauNDGslbovvi1cLUzvONVAQ79U2af\nVmK1Dz0dAgMBAAECggEAVH0t/y0TaMl+gUCHsh1zV3HuT+aIveeyIcCHFNUMayy5\nMskU7p/1mVnXR3edlH79ht1H4a8zSv0qQI3wtAAJtii2CdgOB/C7C7c7uCsj18MV\n6m3oJ1EzrGsf4A2RWs4U+I439GWZtrhX8R1otz8nXCeO9LiCcyVZNarJrjiCufG1\ne86seUXfbMncQx/rFmSMruEecLAbDx99Tfw9u9X1qDWfoiTjjBAv+TCsUB3DHw/L\n/JgQN9w2d3MXfLnbRA18MR+wdY+46Ka6SpS2ck1s9QfH2wwOKDBMYPHSCXDj/WXx\nRzen0CI0pLkBYu3ZBxxKHgyHtIpXdfBK4BTsVgd8DQKBgQD6MtjujLf1n/pzce0A\niHITruqVVgGaWWpt5LC4T4xKe+VAXO8cHEnI/cijVerX6LWFgutKsu1TIAH9/MMm\n4FdWzyyMIMROfHMuuZIwn4kB2c+2Y5I44io9B+AgWA5sxCz5dZw5lvotCva6wGku\nBuEDjHKavlKPhd+WeIhV9vP13wKBgQDFusQw3aamFQ6U6kI11si3H/MtjR6p5/k3\nU04nMtkJS4bRyw8n79gteIHVFliTryC8uCKPgiRj5bkt8mYshE8BWku4h9mIPOd+\nBn9tlos6sNRU+ZxAQyzygpwCaPcZiA9Yx+ow4EreUUN+Y29IP2L3QlMapZV9gehv\nyiyCq10UgwKBgQDl0OreQ7d+ENKWVCEkijBu0A592aBjTJqsEpIY2ki86gzsD/E6\nWumTizlOfs7WP9TsrBLAbJX98rqhuBjxjsPq4yXCGR74EOwkESStMP1CC/X1TIS1\nZ1jw8lj2nKuzUIcXJOa5J2rpENcNN0vlkUACaHGknglr98YmitSAUfRI9QKBgHTv\nfTOBAhtafKMo3ztD6LQUGxanTKki3UoQ5DleYuiSWAseUbpGp8xMZkwEySGeAnhZ\nVWcVijviEd/QaQiOvsKIChv5i3Z8vlLTuOywiWqORSRz8io3EA/jmiv6s5fP1XOl\n1yRMoTpVSNsoJxnNEtQzzz4FCyGMgFAMesJUYdnNAoGBANAeQ4sxzR0yLPdwgD5C\nzHbS/1mnNYHivWbX79Wlybl0ki48BFrvzm8vu5rXJyFKl6zl1yR1ByXbu/jRGsEf\nHHDwBuyg5BCj3acrdSN1mt9f4znQCCIgoDf0rCkqTVwjzl61x3hYRsmqgzOd8oPt\nbfLhu8Zn7wzDbphJIcR7xwBU\n-----END PRIVATE KEY-----\n",
+	"client_email": "langlegends@onyx-elevator-414111.iam.gserviceaccount.com",
+	"client_id": "118431390273952598085",
+	"auth_uri": "https://accounts.google.com/o/oauth2/auth",
+	"token_uri": "https://oauth2.googleapis.com/token",
+	"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+	"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/langlegends%40onyx-elevator-414111.iam.gserviceaccount.com",
+	"universe_domain": "googleapis.com"
+}

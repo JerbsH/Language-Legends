@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +44,6 @@ import com.example.languagelegends.screens.ExercisesScreen
 
 
 class MainActivity : ComponentActivity() {
-
     private val appDatabase: AppDatabase by lazy {
         Room.databaseBuilder(
             applicationContext,
@@ -91,6 +90,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 fun TopBar() {
     Surface(
@@ -123,78 +123,77 @@ fun TopBar() {
     }
 }
 
-    sealed class Screen(
-        val route: String,
-        val title: String? = null,
-        val icon: @Composable () -> Painter,
 
-        ) {
-        data object Profile : Screen(
-            "profile",
-            title = "Profile",
-            { painterResource(id = R.drawable.person) }
-      )
-        data object Chat : Screen(
-            "chat",
-            title = "Chat",
-            { painterResource(id = R.drawable.smart_toy) }
-        )
-        data object Path : Screen("path",
-            title = "Path",
-            { painterResource(id = R.drawable.map) }
-        )
+sealed class Screen(
+    val route: String,
+    val title: String? = null,
+    val icon: @Composable () -> Painter,
+
+    ) {
+    data object Profile : Screen(
+        "profile",
+        title = "Profile",
+        { painterResource(id = R.drawable.person) }
+    )
+
+    data object Chat : Screen(
+        "chat",
+        title = "Chat",
+        { painterResource(id = R.drawable.smart_toy) }
+    )
+
+    data object Path : Screen("path",
+        title = "Path",
+        { painterResource(id = R.drawable.map) }
+    )
 }
+@Composable
+fun BottomBar(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
+    val screens = listOf(
+        Screen.Path,
+        Screen.Chat,
+        Screen.Profile,
+    )
 
-
-        @Composable
-        fun BottomBar(
-            navController: NavHostController,
-            modifier: Modifier = Modifier
-        ) {
-            val screens = listOf(
-                Screen.Path,
-                Screen.Chat,
-                Screen.Profile,
-                )
-
-            NavigationBar(
-                modifier = modifier,
-                containerColor = Color.White,
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                screens.forEach { screen ->
-                    NavigationBarItem(
-                        label = {
-                            Text(text = screen.title!!)
-                        },
-                        icon = {
-                            val iconPainter = screen.icon()
-                            Icon(painter = iconPainter, contentDescription = null)
-                            //Icon(imageVector = screen.icon, contentDescription = "")
-                        },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            unselectedTextColor = Color.Gray,
-                            selectedTextColor = Color.Black,
-                            selectedIconColor = Color.Black,
-                            unselectedIconColor = Color.Black,
-                            indicatorColor = Color.LightGray
-                        ),
-                    )
-                }
-            }
+    NavigationBar(
+        modifier = modifier,
+        containerColor = Color.White,
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        screens.forEach { screen ->
+            NavigationBarItem(
+                label = {
+                    Text(text = screen.title!!)
+                },
+                icon = {
+                    val iconPainter = screen.icon()
+                    Icon(painter = iconPainter, contentDescription = null)
+                },
+                selected = currentRoute == screen.route,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    unselectedTextColor = Color.Gray,
+                    selectedTextColor = Color.Black,
+                    selectedIconColor = Color.Black,
+                    unselectedIconColor = Color.Black,
+                    indicatorColor = Color.LightGray
+                ),
+            )
         }
+    }
+}
 
 @Composable
 fun NavHost(
@@ -213,7 +212,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen()
+            ChatScreen().Chats()
         }
         composable(
             route = "exercises/{exerciseNumber}",
