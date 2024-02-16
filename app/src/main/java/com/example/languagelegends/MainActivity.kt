@@ -214,14 +214,13 @@ fun NavHost(
             onBottomBarVisibilityChanged(true)
             ChatScreen().Chats()
         }
-        // Add composable for ExercisesScreen
         composable(
             route = "exercises/{exerciseNumber}",
             arguments = listOf(navArgument("exerciseNumber") { type = NavType.IntType })
         ) { navBackStackEntry ->
-            val exerciseNumber = navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
+            navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(selectedExercise = exerciseNumber, navController)
+            ExercisesScreen(navController)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)

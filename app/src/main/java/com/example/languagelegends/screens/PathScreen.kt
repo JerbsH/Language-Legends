@@ -85,23 +85,43 @@ fun LanguageExercise(
     // Determine the circle color based on the unlocked status
     val circleColor = if (isUnlocked) Color.Cyan else Color.Gray
 
-    // Render the circle as a non-clickable surface
-    Surface(
-        modifier = Modifier.size(40.dp),
-        shape = CircleShape,
-        color = circleColor,
-        onClick = { onClick(number) } // Call the lambda onClick with the exercise number
-
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(40.dp)
+    // Render the circle as a clickable surface if the exercise is unlocked
+    if (isUnlocked) {
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = circleColor,
+            onClick = { onClick(number) } // Call the lambda onClick with the exercise number
         ) {
-            Text(
-                text = number.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Text(
+                    text = number.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White
+                )
+            }
+        }
+    } else {
+        // Render the circle as a non-clickable surface if the exercise is locked
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = circleColor,
+            onClick = {}
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Text(
+                    text = number.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White
+                )
+            }
         }
     }
 }
