@@ -1,5 +1,6 @@
 package com.example.languagelegends.screens
 
+import android.util.Log
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,12 +18,12 @@ class ChatScreen {
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
 
-
         Surface {
             if (menuVisibility) {
                 viewModel.CardView()
             } else {
                 viewModel.AiChat(topic, viewModel)
+                Log.d("DBG", "Chatscreen response: $response")
             }
 
         }

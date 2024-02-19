@@ -34,7 +34,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.hexascribe.vertexai.VertexAI
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 class AiChatViewModel : ViewModel() {
     var menuVisibility = MutableLiveData<Boolean>()
@@ -56,13 +60,30 @@ class AiChatViewModel : ViewModel() {
             .setTopP(0.8)
     }
 
-    fun executeRequest(text: String): String {
-        var result = ""
+    @OptIn(ExperimentalCoroutinesApi::class)
+    suspend fun executeRequest(text: String): String {
+        val resultFlow = MutableStateFlow<String?>(null)
+
         viewModelScope.launch {
-            result = textRequest.execute(text).getOrThrow()
+            val result = textRequest.execute(text).getOrThrow()
+            resultFlow.value = result
             Log.d("DBG", "Result: $result")
         }
-        return result
+
+        return suspendCancellableCoroutine { continuation ->
+            val collector = viewModelScope.launch {
+                resultFlow.collect { result ->
+                    if (result != null) {
+                        continuation.resume(result)
+                    }
+                }
+            }
+
+            continuation.invokeOnCancellation {
+                // Cancel the collector if coroutine is cancelled
+                collector.cancel()
+            }
+        }
     }
 
     @Composable
@@ -302,14 +323,16 @@ class AiChatViewModel : ViewModel() {
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(onClick = {
-                    response.value = executeRequest(message)
-                    message = ""
+                    viewModelScope.launch {
+                        response.value = executeRequest(message)
+                        message = ""
+                    }
                 }) {
                     Text("Send")
                 }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
-                Log.d("DBG", "Response: $response")
+                Log.d("DBG", "Response: ${response.value}")
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = response.value.toString(),
