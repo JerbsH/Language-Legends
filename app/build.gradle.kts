@@ -88,4 +88,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation ("org.mockito:mockito-core:3.12.4")
     testImplementation ("org.mockito:mockito-inline:3.12.4")
+
+    //AI Implementation
+    implementation("com.hexascribe:vertexai-kt:1.1.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.1")
 }
