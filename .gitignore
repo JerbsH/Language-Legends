@@ -1,6 +1,6 @@
 *.iml
 .gradle
-/app/src/main/java/com/example/languagelegends/aicomponents/onyx-elevator-414111-bd23293520f6.json
+/app/src/main/assets/keyfile.json
 /local.properties
 /.idea/caches
 /.idea/libraries
