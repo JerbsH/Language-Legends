@@ -1,2 +1,2 @@
 /build
-./app/src/main/assets/*
+/src/main/assets/keyfile.json

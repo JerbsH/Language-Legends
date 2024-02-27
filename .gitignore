@@ -1,6 +1,6 @@
 *.iml
 .gradle
-./app/src/main/assets/*
+/app/src/main/assets/keyfile.json
 /local.properties
 /.idea/caches
 /.idea/libraries
