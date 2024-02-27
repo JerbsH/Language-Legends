@@ -26,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 class ChatScreen {
@@ -103,194 +102,70 @@ fun CardView(viewModel: AiChatViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "Cafe"
-                        viewModel.menuVisibility.value = false
-                    }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_coffee_24),
-                            contentDescription = "coffee"
-                        )
-                        Text(
-                            text = "Cafe",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                }
+                MakeCard(viewModel = viewModel, topic = "Coffee")
                 Spacer(modifier = Modifier.width(10.dp))
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "Transport"
-                        viewModel.menuVisibility.value = false
-                    }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_directions_bus_24),
-                            contentDescription = "bus"
-                        )
-                        Text(
-                            text = "Transport",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                    }
-                }
+                MakeCard(viewModel = viewModel, topic = "Transport")
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "Shopping"
-                        viewModel.menuVisibility.value = false
-                    }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_shopping_cart_24),
-                            contentDescription = "shopping cart"
-                        )
-                        Text(
-                            text = "Shopping",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                }
+                MakeCard(viewModel = viewModel, topic = "Shopping")
                 Spacer(modifier = Modifier.width(10.dp))
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "Weather"
-                        viewModel.menuVisibility.value = false
-                    }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_thermostat_24),
-                            contentDescription = "thermostat"
-                        )
-                        Text(
-                            text = "Weather",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                    }
-                }
+                MakeCard(viewModel = viewModel, topic = "Temperature")
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "School"
-                        viewModel.menuVisibility.value = false
-                    }
-
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_school_24),
-                            contentDescription = "school"
-                        )
-                        Text(
-                            text = "School",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                }
+                MakeCard(viewModel = viewModel, topic = "School")
                 Spacer(modifier = Modifier.width(10.dp))
-                Card(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(2.dp),
-                    onClick = {
-                        viewModel.topic.value = "Health"
-                        viewModel.menuVisibility.value = false
-                    }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_health_and_safety_24),
-                            contentDescription = "Health and safety"
-                        )
-                        Text(
-                            text = "Health",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                    }
-                }
+                MakeCard(viewModel = viewModel, topic = "Health")
             }
         }
+    }
+}
+
+@Composable
+fun MakeCard(viewModel: AiChatViewModel, topic: String){
+    val iconId = when (topic) {
+        "Coffee" -> com.example.languagelegends.R.drawable.coffee
+        "Transport" -> com.example.languagelegends.R.drawable.transport
+        "Shopping" -> com.example.languagelegends.R.drawable.shopping
+        "Temperature" -> com.example.languagelegends.R.drawable.temperature
+        "School" -> com.example.languagelegends.R.drawable.school
+        "Health" -> com.example.languagelegends.R.drawable.health
+        else -> com.example.languagelegends.R.drawable.coffee
+    }
+    Card(
+        modifier = Modifier
+            .size(150.dp)
+            .padding(2.dp),
+        onClick = {
+            viewModel.topic.value =  topic
+            viewModel.menuVisibility.value = false
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+
+            Icon(
+                painter = painterResource(id = iconId),
+                contentDescription = topic
+            )
+            Text(
+                text = topic,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+
     }
 }
