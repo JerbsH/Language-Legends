@@ -218,8 +218,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
 
         // Username
         Text(
-            text = "Username:",
-            color = Color.Black,
+            text = "Username:"
         )
 
         // TextField for username and button to edit it
@@ -251,20 +250,16 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         // Display the fixed value for weeklyPoints
         Text(
             text = "Weekly Points: $weeklyPoints",
-            color = Color.Black,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Total Points: ${selectedUserProfile?.languagePoints}",
-            color = Color.Black,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         // Display the list of learned languages
         Text(
             text = "Languages Learned:",
-            color = Color.Black,
-            fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             modifier = Modifier.padding(vertical = 8.dp)
         )
@@ -345,7 +340,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Text("Exercises for ${language.name}", color = Color.Black)
+                        Text("Exercises for ${language.name}", color = Color.Black,)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
                         Text("Points earned: ${language.pointsEarned}", color = Color.Black)
