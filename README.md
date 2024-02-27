@@ -18,3 +18,7 @@ TODO: write about feature
 TODO: write about feature
 ### Feature 5: 
 TODO: write about feature
+
+## Getting Setup:
+Add "assets" folder to the same level as res in project files and add your service account keyfile.json in there. 
+ProjectID and other required IDs for AI functionality will be picked from there automatically. 
