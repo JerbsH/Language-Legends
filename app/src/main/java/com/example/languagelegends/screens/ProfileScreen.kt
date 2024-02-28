@@ -9,12 +9,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -25,10 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
@@ -159,7 +163,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
@@ -173,20 +178,26 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 ImageBitmap(1, 1)
             }
         }
-
-        if (imageBitmap.value != null) {
-            Image(
-                bitmap = imageBitmap.value!!,
-                contentDescription = null,
-                modifier = Modifier.size(
-                    LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
-                    LocalConfiguration.current.screenHeightDp.dp * 1 / 4
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 5),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (imageBitmap.value != null) {
+                Image(
+                    bitmap = imageBitmap.value!!,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(
+                            LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
+                            LocalConfiguration.current.screenHeightDp.dp * 1 / 5
+                        )
+                        .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp)),
+                    alignment = Alignment.Center,
                 )
-            )
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         val cameraPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
@@ -199,64 +210,94 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 Log.d("DBG", "Camera permission is denied.")
             }
         }
-
-        Button(onClick = {
-            Log.d("DBG", "Take Photo button clicked")
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }) {
-            Text("Take Photo")
-        }
-
-        Button(onClick = {
-            Log.d("DBG", "From Gallery button clicked")
-            val pickImageIntent = Intent(context, ImagePickerActivity::class.java)
-            pickImageIntent.putExtra("requestType", "gallery")
-            pickImageLauncher.launch(pickImageIntent)
-        }) {
-            Text("From Gallery")
-        }
-
-        // Username
         Text(
-            text = "Username:"
+            text = "Select a profile picture",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
-        // TextField for username and button to edit it
-        Box(modifier = Modifier.fillMaxWidth()) {
-            TextField(
-                value = username,
-                onValueChange = {
-                    if (isEditingUsername) {
-                        username = it
-                    }
-                },
-                label = { Text("Enter your username") },
-                enabled = isEditingUsername,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = {
-                    Log.d("DBG", "Edit Username button clicked")
-                    // Update UI
-                    isEditingUsername = !isEditingUsername
-                },
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Text(if (isEditingUsername) "Select Username" else "Edit Username")
+            Button(onClick = {
+                Log.d("DBG", "Take Photo button clicked")
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }) {
+                Text("Take Photo")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = {
+                Log.d("DBG", "From Gallery button clicked")
+                val pickImageIntent = Intent(context, ImagePickerActivity::class.java)
+                pickImageIntent.putExtra("requestType", "gallery")
+                pickImageLauncher.launch(pickImageIntent)
+            }) {
+                Text("From Gallery")
             }
         }
+        Spacer(modifier = Modifier.height(2.dp))
+        HorizontalDivider(thickness = 2.dp)
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Display the fixed value for weeklyPoints
-        Text(
-            text = "Weekly Points: $weeklyPoints",
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Total Points: ${selectedUserProfile?.languagePoints}",
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Welcome $username!",
+                    textAlign = TextAlign.Center,
+                )
+                var editVisible by remember { mutableStateOf(false) }
+                Button(onClick = {
+                    editVisible = !editVisible
+                }) {
+                    Text(text = "Edit Username")
+                }
+                if (editVisible) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TextField(
+                            value = username,
+                            onValueChange = {
+                                if (isEditingUsername) {
+                                    username = it
+                                }
+                            },
+                            label = { Text("Enter your username") },
+                            enabled = isEditingUsername,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
+                        Button(
+                            onClick = {
+                                Log.d("DBG", "Edit Username button clicked")
+                                // Update UI
+                                isEditingUsername = !isEditingUsername
+                            },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Text(if (isEditingUsername) "Select Username" else "Edit Username")
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Card(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            onClick = {}
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, top = 4.dp)
+                    .fillMaxWidth(),
+                text = "Weekly Points: $weeklyPoints",
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                    .fillMaxWidth(),
+                text = "Total Points: ${selectedUserProfile?.languagePoints}",
+                textAlign = TextAlign.Center
+            )
+        }
         // Display the list of learned languages
         Text(
             text = "Languages Learned:",
@@ -319,7 +360,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         }
 
 // Display the list of languages from the user profile
-        LazyColumn {
+        LazyColumn() {
             selectedUserProfile?.languages?.let { languages ->
                 items(languages) { language ->
                     LanguageItem(language = language) {
@@ -340,7 +381,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Text("Exercises for ${language.name}", color = Color.Black,)
+                        Text("Exercises for ${language.name}", color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
                         Text("Points earned: ${language.pointsEarned}", color = Color.Black)
@@ -379,7 +420,8 @@ fun updateUserLanguages(userProfile: UserProfile) {
 fun LanguageItem(language: Language, onClick: () -> Unit) {
     Row(modifier = Modifier
         .fillMaxWidth()
-        .clickable { onClick() }) {
+        .clickable { onClick() },
+        horizontalArrangement = Arrangement.Center) {
         Text(text = language.name)
     }
 }
