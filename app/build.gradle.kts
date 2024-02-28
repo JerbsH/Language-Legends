@@ -92,6 +92,6 @@ dependencies {
     //AI Implementation
     implementation("com.hexascribe:vertexai-kt:1.1.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.2")
-    implementation("com.google.auth:google-auth-library-oauth2-http:1.3.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
 
 }
