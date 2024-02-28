@@ -102,10 +102,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             if (result.resultCode == Activity.RESULT_OK) {
                 Log.d("DBG", "Image selected")
                 val newImage = result.data?.getByteArrayExtra("image")
-
+                
                 // Check if selectedUserProfile is null
                 if (selectedUserProfile == null) {
-                    // If it's null, create a new UserProfile with the current username
+                    //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
                         currentLanguage = Language("English", 0, 0),
