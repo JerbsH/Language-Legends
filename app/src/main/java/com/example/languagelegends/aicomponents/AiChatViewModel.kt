@@ -39,11 +39,12 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
 
     init {
         viewModelScope.launch {
+          /*
             val currentAccessToken = sharedPreferences.getString("accessToken", null)
             val currentProjectId = sharedPreferences.getString("projectId", null)
             val tokenExpirationTime = sharedPreferences.getLong("tokenExpirationTime", 0)
             Log.d("DBG", "MyPrefs: $currentProjectId")
-
+            */
             var currentTime = System.currentTimeMillis()
             /*
             if (currentAccessToken != null && currentProjectId != null && currentTime < tokenExpirationTime) {
@@ -69,7 +70,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
             }
                 vertexAI = VertexAI.Builder()
                     .setAccessToken("") //replace with newAccessToken when working
-                    .setProjectId("") //replace with newProjectId when working
+                    .setProjectId("onyx-elevator-414111") //replace with newProjectId when working
                     .build()
 
 
