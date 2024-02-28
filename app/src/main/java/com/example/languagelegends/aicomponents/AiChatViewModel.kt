@@ -58,11 +58,11 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                 accessToken = newAccessToken
                 projectId = newProjectId
                 currentTime = System.currentTimeMillis() // update currentTime
-                //this@AiChatViewModel.tokenExpirationTime = currentTime + 30 * 1000
+                this@AiChatViewModel.tokenExpirationTime = currentTime + 60 * 60 * 1000
                 sharedPreferences.edit().apply {
                     putString("accessToken", newAccessToken)
                     putString("projectId", newProjectId)
-                    putLong("tokenExpirationTime", currentTime)
+                    putLong("tokenExpirationTime", this@AiChatViewModel.tokenExpirationTime)
                     apply()
                 }
                 vertexAI = VertexAI.Builder()
@@ -70,6 +70,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                     .setProjectId(newProjectId)
                     .build()
             }
+
 
             // Calculate the remaining time for the token to expire
             currentTime = System.currentTimeMillis()
