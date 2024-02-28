@@ -1,3 +1,53 @@
 <resources>
-    <string name="app_name">Language Legends</string>
+
+    <!-- nav -->
+    <string name="app_name" translatable="false">Language Legends</string>
+    <string name="profile">Profile</string>
+    <string name="chat">Chat</string>
+    <string name="path">Path</string>
+
+    <!-- profile -->
+    <string name="take_photo">Take Photo</string>
+    <string name="from_gallery">From Gallery</string>
+    <string name="select_username">Select Username</string>
+    <string name="weekly_points">Weekly Points: %1$d</string>
+    <string name="total_points">Total Points: %1$d</string>
+    <string name="lang_learned">Languages Learned</string>
+    <string name="enter_name">Enter your username</string>
+    <string name="edit_username">Edit Username</string>
+    <string name="exercises_done">Exercises done: %1$d</string>
+    <string name="points_earned">Points earned: %1$d</string>
+    <string name="for_language">Exercises for %1$s</string>
+    <string name="select_picture">Select a profile picture</string>
+    <string name="close">Close</string>
+    <string name="english">English</string>
+    <string name="french">French</string>
+    <string name="spanish">Spanish</string>
+
+
+    <!-- chat -->
+    <string name="ai_wizard">AI chat Wizard</string>
+    <string name="cafe">Cafe</string>
+    <string name="transport">Transport</string>
+    <string name="shopping">Shopping</string>
+    <string name="school">School</string>
+    <string name="health">Health</string>
+    <string name="choose_topic">Choose a topic</string>
+    <string name="ask_question">Ask Me a Question</string>
+    <string name="ai_choice">You chose %1$s, the Wizard will now test your knowledge.</string>
+    <string name="weather">Weather</string>
+
+    <!-- path -->
+    <string name="exercise_1">Word Scramble Exercise</string>
+    <string name="unscramble_word">Unscramble the word</string>
+    <string name="your_answer">Your answer</string>
+    <string name="ready">Continue</string>
+    <string name="correct">Correct!</string>
+    <string name="keep_trying">Keep trying! Almost there</string>
+    <string name="exercise_2">Language and Country Matching Exercise</string>
+    <string name="match_country">Match each language with it\'s corresponding country</string>
+    <string name="country_name">Country name</string>
+    <string name="all_exercises">All exercises completed!</string>
+
+
 </resources>

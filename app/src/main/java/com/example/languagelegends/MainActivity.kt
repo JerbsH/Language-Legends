@@ -37,9 +37,11 @@ import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.languagelegends.Screen.Chat.title
 import com.example.languagelegends.screens.ExercisesScreen
 
 
@@ -126,24 +128,24 @@ fun TopBar() {
 
 sealed class Screen(
     val route: String,
-    val title: String? = null,
+    val title: Int? = null,
     val icon: @Composable () -> Painter,
 
     ) {
     data object Profile : Screen(
         "profile",
-        title = "Profile",
+        R.string.profile, // Resource ID for the title string
         { painterResource(id = R.drawable.person) }
     )
 
     data object Chat : Screen(
         "chat",
-        title = "Chat",
+        R.string.chat, // Resource ID for the title string
         { painterResource(id = R.drawable.smart_toy) }
     )
 
     data object Path : Screen("path",
-        title = "Path",
+        R.string.path, // Resource ID for the title string
         { painterResource(id = R.drawable.map) }
     )
 }
@@ -167,7 +169,9 @@ fun BottomBar(
         screens.forEach { screen ->
             NavigationBarItem(
                 label = {
-                    Text(text = screen.title!!)
+                    screen.title?.let { title ->
+                        Text(text = stringResource(id = title))
+                    }
                 },
                 icon = {
                     val iconPainter = screen.icon()

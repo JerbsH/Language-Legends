@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- nav -->
+    <string name="profile">Profil</string>
+    <string name="chat">Chat</string>
+    <string name="path">Väg</string>
+
+    <!-- profile -->
+    <string name="take_photo">Ta bild</string>
+    <string name="from_gallery">Från galleriet</string>
+    <string name="select_username">Välj användarnamn</string>
+    <string name="total_points">Total poäng: %1$d</string>
+    <string name="weekly_points">Väckans poäng: %1$d</string>
+    <string name="lang_learned">Inlärda språk</string>
+    <string name="enter_name">Ge användarnamn</string>
+    <string name="edit_username">Ändra användarnamn</string>
+    <string name="exercises_done">Gjorda övningar: %1$d</string>
+    <string name="points_earned">Poäng: %1$d</string>
+    <string name="select_picture">Välj en profilbild</string>
+    <string name="for_language">Övningar för %1$s</string>
+    <string name="close">Stäng</string>
+    <string name="english">Engelska</string>
+    <string name="french">Franska</string>
+    <string name="spanish">Spanska</string>
+
+    <!-- chat -->
+    <string name="ai_wizard">AI trollkarl</string>
+    <string name="cafe">Café</string>
+    <string name="transport">Transport</string>
+    <string name="shopping">Butik</string>
+    <string name="school">Skola</string>
+    <string name="health">Hälsa</string>
+    <string name="choose_topic">Välj ett ämne</string>
+    <string name="ask_question">Ställ en fråg</string>
+    <string name="weather">Väder</string>
+    <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
+
+    <!-- path -->
+    <string name="exercise_1">Ordblandningsövning</string>
+    <string name="unscramble_word">"Ångra blandning "</string>
+    <string name="your_answer">Ditt svar</string>
+    <string name="ready">Fortsätt</string>
+    <string name="correct">Rätt!</string>
+    <string name="keep_trying">Fortsätt försöka! Nästan där</string>
+    <string name="exercise_2">Passa ihop språk och land -övning</string>
+    <string name="match_country">Passa ihop varje land med motsvarande land</string>
+    <string name="country_name">Landets namn</string>
+    <string name="all_exercises">Alla övningar färdiga!</string>
+</resources>

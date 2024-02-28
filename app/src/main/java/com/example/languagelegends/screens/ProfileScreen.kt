@@ -25,10 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
@@ -204,7 +206,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             Log.d("DBG", "Take Photo button clicked")
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }) {
-            Text("Take Photo")
+            Text(stringResource(id = R.string.take_photo))
         }
 
         Button(onClick = {
@@ -213,7 +215,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             pickImageIntent.putExtra("requestType", "gallery")
             pickImageLauncher.launch(pickImageIntent)
         }) {
-            Text("From Gallery")
+            Text(stringResource(id = R.string.from_gallery))
         }
 
         // Username
@@ -231,7 +233,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                         username = it
                     }
                 },
-                label = { Text("Enter your username") },
+                label = { Text(stringResource(id = R.string.enter_name)) },
                 enabled = isEditingUsername,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -244,25 +246,25 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 },
                 modifier = Modifier.align(Alignment.CenterEnd)
             ) {
-                Text(if (isEditingUsername) "Select Username" else "Edit Username")
+                Text(if (isEditingUsername) stringResource(id = R.string.select_username) else stringResource(id = R.string.edit_username))
             }
         }
 
         // Display the fixed value for weeklyPoints
         Text(
-            text = "Weekly Points: $weeklyPoints",
+            text = stringResource(id = R.string.weekly_points, weeklyPoints),
             color = Color.Black,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Total Points: ${selectedUserProfile?.languagePoints}",
+            text = stringResource(id = R.string.total_points, selectedUserProfile?.languagePoints ?: 0),
             color = Color.Black,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         // Display the list of learned languages
         Text(
-            text = "Languages Learned:",
+            text = stringResource(id = R.string.lang_learned),
             color = Color.Black,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
@@ -345,13 +347,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Text("Exercises for ${language.name}", color = Color.Black)
+                        Text(stringResource(id = R.string.for_language, language.name), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
-                        Text("Points earned: ${language.pointsEarned}", color = Color.Black)
+                        Text(stringResource(id = R.string.exercises_done, language.exercisesDone), color = Color.Black)
+                        Text(stringResource(id = R.string.points_earned, language.pointsEarned), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { isDialogOpen = false }) {
-                            Text("Close")
+                            Text(stringResource(id = R.string.close))
                         }
                     }
                 })

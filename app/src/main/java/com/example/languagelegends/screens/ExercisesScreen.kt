@@ -6,9 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.R
@@ -34,12 +34,12 @@ import com.example.languagelegends.R
 fun ExercisesScreen(navController: NavController) {
     var currentExercise by remember { mutableStateOf(1) }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
     ) {
         when (currentExercise) {
             1 -> {
@@ -50,6 +50,7 @@ fun ExercisesScreen(navController: NavController) {
                     onGoBack = { navController.navigate("path") }
                 )
             }
+
             2 -> {
                 SecondExercise(
                     onNextExercise = {
@@ -60,7 +61,14 @@ fun ExercisesScreen(navController: NavController) {
             }
             // Add more exercises as needed
             else -> {
-                Text("All exercises completed")
+                Text(
+                    text = stringResource(id = R.string.all_exercises),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
@@ -104,10 +112,9 @@ fun WordScrambleExercise(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
     ) {
         TopAppBar(
-            title = { Text(text = "Word Scramble Exercise") },
+            title = { Text(text = stringResource(id = R.string.exercise_1)) },
             navigationIcon = {
                 IconButton(onClick = { onGoBack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
@@ -133,7 +140,7 @@ fun WordScrambleExercise(
                     .padding(bottom = 16.dp)
             )
             Text(
-                text = "Unscramble the word:",
+                text = stringResource(id = R.string.unscramble_word),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -149,7 +156,7 @@ fun WordScrambleExercise(
             OutlinedTextField(
                 value = userInput,
                 onValueChange = { userInput = it },
-                label = { Text(text = "Your answer") },
+                label = { Text(text = stringResource(id = R.string.your_answer)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -161,8 +168,10 @@ fun WordScrambleExercise(
             // Display feedback based on user input
             if (userInput.isNotEmpty()) {
                 Text(
-                    text = if (isCorrect) "Correct!" else "Keep trying!",
-                    color = if (isCorrect) Color.Green else Color.Red,
+                    text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
+                        id = R.string.keep_trying
+                    ),
+                    color = if (isCorrect) Color.Black else Color.Red,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -178,7 +187,7 @@ fun WordScrambleExercise(
                 modifier = Modifier.padding(bottom = 16.dp)
 
             ) {
-                Text(text = "Continue")
+                Text(text = stringResource(id = R.string.ready))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -196,7 +205,7 @@ fun SecondExercise(
     // List of languages and corresponding countries
     val languageCountryPairs = remember {
         listOf(
-            "English" to "United Kingdom",
+            "Finnish" to "Finland",
             "Spanish" to "Spain",
             "French" to "France",
             "German" to "Germany",
@@ -211,10 +220,9 @@ fun SecondExercise(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
     ) {
         TopAppBar(
-            title = { Text(text = "Language-Country Matching Exercise") },
+            title = { Text(text = stringResource(id = R.string.exercise_2)) },
             navigationIcon = {
                 IconButton(onClick = { onGoBack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
@@ -230,7 +238,7 @@ fun SecondExercise(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Match each language with its corresponding country:",
+                text = stringResource(id = R.string.match_country),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -256,7 +264,7 @@ fun SecondExercise(
                                 newList[index] = newValue
                                 userTranslations.value = newList
                             },
-                            label = { Text(text = "Country name") },
+                            label = { Text(text = stringResource(id = R.string.country_name)) },
                             singleLine = true,
                             modifier = Modifier.padding(start = 8.dp)
                         )
@@ -269,13 +277,16 @@ fun SecondExercise(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Check if user input matches the correct translations, ignoring case sensitivity
-            val isCorrect = userTranslations.value.map { it.lowercase() } == languageCountryPairs.map { it.second.lowercase() }
+            val isCorrect =
+                userTranslations.value.map { it.lowercase() } == languageCountryPairs.map { it.second.lowercase() }
 
             // Display feedback based on user input
             if (userTranslations.value.any { it.isNotEmpty() }) {
                 Text(
-                    text = if (isCorrect) "Correct!" else "Keep trying!",
-                    color = if (isCorrect) Color.Green else Color.Red,
+                    text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
+                        id = R.string.keep_trying
+                    ),
+                    color = if (isCorrect) Color.Black else Color.Red,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -292,7 +303,7 @@ fun SecondExercise(
                 enabled = isCorrect,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                Text(text = "Continue")
+                Text(text = stringResource(id = R.string.ready))
             }
 
             Spacer(modifier = Modifier.height(16.dp))

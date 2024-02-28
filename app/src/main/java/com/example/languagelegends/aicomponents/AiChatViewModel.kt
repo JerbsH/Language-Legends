@@ -1,5 +1,6 @@
 package com.example.languagelegends.aicomponents
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,7 +12,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 // Here are all the functionalities needed for Hexascibe VertexAI-KT to work (https://github.com/hexascribe/vertexai-kt)
-class AiChatViewModel : ViewModel() {
+class AiChatViewModel(private val application: Application) : ViewModel() {
     var menuVisibility = MutableLiveData<Boolean>()
     var topic = MutableLiveData<String>()
     var response = MutableLiveData<String>()
