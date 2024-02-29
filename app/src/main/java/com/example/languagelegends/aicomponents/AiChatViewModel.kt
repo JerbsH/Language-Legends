@@ -102,6 +102,12 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
 
         Log.d("DBG", "Generated access token: $tokenValue")
 
+        // Update the VertexAI instance with the new access token
+        vertexAI = VertexAI.Builder()
+            .setAccessToken(tokenValue)
+            .setProjectId(projectId)
+            .build()
+
         return@withContext Pair(tokenValue, projectId)
     }
 
