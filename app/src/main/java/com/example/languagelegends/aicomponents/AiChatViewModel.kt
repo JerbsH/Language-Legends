@@ -39,14 +39,12 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
 
     init {
         viewModelScope.launch {
-          /*
             val currentAccessToken = sharedPreferences.getString("accessToken", null)
             val currentProjectId = sharedPreferences.getString("projectId", null)
             val tokenExpirationTime = sharedPreferences.getLong("tokenExpirationTime", 0)
             Log.d("DBG", "MyPrefs: $currentProjectId")
-            */
+
             var currentTime = System.currentTimeMillis()
-            /*
             if (currentAccessToken != null && currentProjectId != null && currentTime < tokenExpirationTime) {
                 accessToken = currentAccessToken
                 projectId = currentProjectId
@@ -60,32 +58,28 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                 accessToken = newAccessToken
                 projectId = newProjectId
                 currentTime = System.currentTimeMillis() // update currentTime
-                this@AiChatViewModel.tokenExpirationTime = currentTime + 60 * 60 * 1000
+                this@AiChatViewModel.tokenExpirationTime =
+                    currentTime + 60 * 60 * 1000 // +1 hour to the current time
                 sharedPreferences.edit().apply {
                     putString("accessToken", newAccessToken)
                     putString("projectId", newProjectId)
                     putLong("tokenExpirationTime", this@AiChatViewModel.tokenExpirationTime)
                     apply()
-                }*/
-            }
+                }
                 vertexAI = VertexAI.Builder()
-                    .setAccessToken("") //replace with newAccessToken when working
-                    .setProjectId("onyx-elevator-414111") //replace with newProjectId when working
+                    .setAccessToken(newAccessToken)
+                    .setProjectId(newProjectId)
                     .build()
-
-
+            }
 
             // Calculate the remaining time for the token to expire
-           /*
             currentTime = System.currentTimeMillis()
             val remainingTimeMillis = tokenExpirationTime - currentTime
             val remainingTimeSeconds = remainingTimeMillis / 1000
             Log.d("DBG", "Remaining time for token to expire: $remainingTimeSeconds seconds")
-            */
-
+        }
     }
 
-    /*
     private suspend fun generateAccessToken(): Pair<String, String> = withContext(Dispatchers.IO) {
         val serviceAccountKeyPath = "keyfile.json"
         val targetScopes = listOf("https://www.googleapis.com/auth/cloud-platform")
@@ -108,7 +102,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
         Log.d("DBG", "Generated access token: $tokenValue")
 
         return@withContext Pair(tokenValue, projectId)
-    }*/
+    }
 
     //Initialize the textRequest for VertexAI
     //TODO: May need to change model for chatting
