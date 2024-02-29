@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- nav -->
+    <string name="profile">Profiili</string>
+    <string name="chat">Keskustelu</string>
+    <string name="path">Polku</string>
+
+    <!-- profile -->
+    <string name="take_photo">Ota kuva</string>
+    <string name="from_gallery">Kuvagalleriasta</string>
+    <string name="select_username">Valitse käyttäjänimi</string>
+    <string name="total_points">Kokonaispisteet: %1$d</string>
+    <string name="weekly_points">Viikko pisteet: %1$d</string>
+    <string name="lang_learned">Kielet opittu</string>
+    <string name="enter_name">Syötä käyttäjänimesi</string>
+    <string name="edit_username">Muokkaa käyttäjätunnusta</string>
+    <string name="exercises_done">Harjoituksia tehty: %1$d</string>
+    <string name="points_earned">Ansaitut pisteet: %1$d</string>
+    <string name="select_picture">Valitse profiilikuva</string>
+    <string name="for_language">Harjoitukset  %1$s</string>
+    <string name="close">Sulje</string>
+    <string name="english">Englanti</string>
+    <string name="french">Ranska</string>
+    <string name="spanish">Espanja</string>
+
+
+    <!-- chat -->
+    <string name="ai_wizard">AI Velho</string>
+    <string name="cafe">Kahvila</string>
+    <string name="transport">Matkustus</string>
+    <string name="shopping">Kauppa</string>
+    <string name="school">Koulu</string>
+    <string name="health">Terveys</string>
+    <string name="choose_topic">Valitse aihe</string>
+    <string name="ask_question">Kysy minulta kysymys</string>
+    <string name="weather">Sää</string>
+    <string name="ai_choice">Valitsit %1$s, AI velho testaa nyt tietosi.</string>
+
+    <!-- path -->
+    <string name="exercise_1">Sanat sekaisin peli</string>
+    <string name="unscramble_word">Selvitä sana</string>
+    <string name="your_answer">Vastauksesi</string>
+    <string name="ready">Jatka</string>
+    <string name="correct">Oikein!</string>
+    <string name="keep_trying">Jatka yrittämistä! Melkein valmista!</string>
+    <string name="exercise_2">Kielen ja maan yhdistämisharjoitus</string>
+    <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
+    <string name="country_name">Maan nimi</string>
+    <string name="all_exercises">Kaikki tehtävät on tehty!</string>
+
+
+</resources>

@@ -43,10 +43,16 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
@@ -196,27 +202,30 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 Log.d("DBG", "Camera permission is denied.")
             }
         }
+
         Text(
             text = "Select a profile picture",
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-
-            Button(onClick = {
-                Log.d("DBG", "Take Photo button clicked")
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)            }) {
-                Text("Take Photo")
-            }
+          
+        Button(onClick = {
+            Log.d("DBG", "Take Photo button clicked")
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }) {
+            Text(stringResource(id = R.string.take_photo))
+        }
             Spacer(modifier = Modifier.width(16.dp))
-            Button(onClick = {
-                Log.d("DBG", "From Gallery button clicked")
-                val pickImageIntent = Intent(context, ImagePickerActivity::class.java)
-                pickImageIntent.putExtra("requestType", "gallery")
-                pickImageIntent.putExtra("username", username)
-                pickImageLauncher.launch(pickImageIntent)
-            }) {
-                Text("From Gallery")
+
+        Button(onClick = {
+            Log.d("DBG", "From Gallery button clicked")
+            val pickImageIntent = Intent(context, ImagePickerActivity::class.java)
+            pickImageIntent.putExtra("requestType", "gallery")
+            pickImageLauncher.launch(pickImageIntent)
+        }) {
+            Text(stringResource(id = R.string.from_gallery))
+        }
             }
         }
         Spacer(modifier = Modifier.height(2.dp))
@@ -236,61 +245,67 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     Text(text = "Edit Username")
                 }
                 if (editVisible) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        TextField(
-                            value = username,
-                            onValueChange = {
-                                if (isEditingUsername) {
-                                    username = it
-                                }
-                            },
-                            label = { Text("Enter your username") },
-                            enabled = isEditingUsername,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                  
+        // TextField for username and button to edit it
+        Box(modifier = Modifier.fillMaxWidth()) {
+            TextField(
+                value = username,
+                onValueChange = {
+                    if (isEditingUsername) {
+                        username = it
+                    }
+                },
+                label = { Text(stringResource(id = R.string.enter_name)) },
+                enabled = isEditingUsername,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                        Button(
-                            onClick = {
-                                Log.d("DBG", "Edit Username button clicked")
-                                // Update UI
-                                isEditingUsername = !isEditingUsername
-                            },
-                            modifier = Modifier.align(Alignment.CenterEnd)
-                        ) {
-                            Text(if (isEditingUsername) "Select Username" else "Edit Username")
+            Button(
+                onClick = {
+                    Log.d("DBG", "Edit Username button clicked")
+                    // Update UI
+                    isEditingUsername = !isEditingUsername
+                },
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Text(if (isEditingUsername) stringResource(id = R.string.select_username) else stringResource(id = R.string.edit_username))
+
                         }
                     }
                 }
             }
         }
+        
         Spacer(modifier = Modifier.height(12.dp))
         Card(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = {}
         ) {
-            Text(
-                modifier = Modifier
+                    // Display the fixed value for weeklyPoints
+        Text(
+                     modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, top = 4.dp)
                     .fillMaxWidth(),
-                text = "Weekly Points: $weeklyPoints",
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                modifier = Modifier
+            text = stringResource(id = R.string.weekly_points, weeklyPoints),
+                          textAlign = TextAlign.Center
+
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+                     modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
                     .fillMaxWidth(),
-                text = "Total Points: ${selectedUserProfile?.languagePoints}",
-                textAlign = TextAlign.Center
-            )
-        }
-        // Display the list of learned languages
-        Text(
-            text = "Languages Learned:",
-            fontSize = 18.sp,
-            modifier = Modifier.padding(vertical = 8.dp)
+            text = stringResource(id = R.string.total_points, selectedUserProfile?.languagePoints ?: 0),
+                          textAlign = TextAlign.Center
+
         )
 
+        // Display the list of learned languages
+        Text(
+            text = stringResource(id = R.string.lang_learned),
+            fontSize = 18.sp,
+            modifier = Modifier.padding(vertical = 8.dp)
+        }
 
 // Fetch user profile from the database using a coroutine
         LaunchedEffect(isEditingUsername, username) {
@@ -370,13 +385,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Text("Exercises for ${language.name}", color = Color.Black)
+                        Text(stringResource(id = R.string.for_language, language.name), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
-                        Text("Points earned: ${language.pointsEarned}", color = Color.Black)
+                        Text(stringResource(id = R.string.exercises_done, language.exercisesDone), color = Color.Black)
+                        Text(stringResource(id = R.string.points_earned, language.pointsEarned), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { isDialogOpen = false }) {
-                            Text("Close")
+                            Text(stringResource(id = R.string.close))
                         }
                     }
                 })
