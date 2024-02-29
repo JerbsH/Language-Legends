@@ -3,35 +3,58 @@ package com.example.languagelegends.screens
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.asImageBitmap
-import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+
+import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
+import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
@@ -49,11 +72,15 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
     var selectedLanguage by remember { mutableStateOf<Language?>(null) }
     var isDialogOpen by remember { mutableStateOf(false) }
+    Log.d("DBG", "Initial username: $username") // Log the initial username
+
 
     val context = LocalContext.current
+    DatabaseProvider.getDatabase(context).userProfileDao()
+
 
     var image by remember { mutableStateOf<ByteArray?>(null) }
-    var imageUri by remember { mutableStateOf<String?>(null) }
+    val imageUri by remember { mutableStateOf<String?>(null) }
 
     // Fixed value for weeklyPoints
     var weeklyPoints = 1500
@@ -81,10 +108,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             if (result.resultCode == Activity.RESULT_OK) {
                 Log.d("DBG", "Image selected")
                 val newImage = result.data?.getByteArrayExtra("image")
-
+                
                 // Check if selectedUserProfile is null
                 if (selectedUserProfile == null) {
-                    // If it's null, create a new UserProfile with the current username
+                    //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
                         currentLanguage = Language("English", 0, 0),
@@ -104,64 +131,28 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             }
         }
 
-    // Update the user profile in the database when image or imageUri changes
-    LaunchedEffect(image, imageUri) {
+    // Update the user profile in the database when values change
+    LaunchedEffect(
+        image, imageUri,
+        selectedUserProfile?.weeklyPoints,
+        selectedUserProfile?.languages,
+        selectedUserProfile?.currentLanguage,
+        selectedUserProfile?.languagePoints,
+        selectedUserProfile?.exercisesDone
+    ) {
         selectedUserProfile?.let { userProfile ->
             coroutineScope.launch {
                 userProfileDao.updateUserProfile(userProfile)
             }
-        }
-    }
-
-// Update the user profile in the database when weeklyPoints changes
-    LaunchedEffect(selectedUserProfile?.weeklyPoints) {
-        selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
-            }
-        }
-    }
-
-// Update the user profile in the database when languages changes
-    LaunchedEffect(selectedUserProfile?.languages) {
-        selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
-            }
-        }
-    }
-
-// Update the user profile in the database when currentLanguage changes
-    LaunchedEffect(selectedUserProfile?.currentLanguage) {
-        selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
-            }
-        }
-    }
-
-// Update the user profile in the database when languagePoints changes
-    LaunchedEffect(selectedUserProfile?.languagePoints) {
-        selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
-            }
-        }
-    }
-
-// Update the user profile in the database when exercisesDone changes
-    LaunchedEffect(selectedUserProfile?.exercisesDone) {
-        selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
-            }
+            Log.d("DBG", "User profile updated in the database.")
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
@@ -175,39 +166,57 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 ImageBitmap(1, 1)
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 5),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (imageBitmap.value != null) {
+                Image(
+                    bitmap = imageBitmap.value!!,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(
+                            LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
+                            LocalConfiguration.current.screenHeightDp.dp * 1 / 5
+                        )
+                        .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp)),
+                    alignment = Alignment.Center,
 
-        if (imageBitmap.value != null) {
-            Image(
-                bitmap = imageBitmap.value!!,
-                contentDescription = null,
-                modifier = Modifier.size(
-                    LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
-                    LocalConfiguration.current.screenHeightDp.dp * 1 / 4
-                )
-            )
+                    )
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        val takePictureIntent = Intent(context, ImagePickerActivity::class.java).apply {
+            putExtra("requestType", "camera")
+            putExtra("username", username)
+        }
 
         val cameraPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
                 // Permission is granted. Continue with your action
-                val takePictureIntent = Intent(context, ImagePickerActivity::class.java)
-                takePictureIntent.putExtra("requestType", "camera")
                 pickImageLauncher.launch(takePictureIntent)
             } else {
                 Log.d("DBG", "Camera permission is denied.")
             }
         }
 
+        Text(
+            text = "Select a profile picture",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+          
         Button(onClick = {
             Log.d("DBG", "Take Photo button clicked")
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }) {
             Text(stringResource(id = R.string.take_photo))
         }
+            Spacer(modifier = Modifier.width(16.dp))
 
         Button(onClick = {
             Log.d("DBG", "From Gallery button clicked")
@@ -217,13 +226,26 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         }) {
             Text(stringResource(id = R.string.from_gallery))
         }
+            }
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        HorizontalDivider(thickness = 2.dp)
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Username
-        Text(
-            text = "Username:",
-            color = Color.Black,
-        )
-
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Welcome $username!",
+                    textAlign = TextAlign.Center,
+                )
+                var editVisible by remember { mutableStateOf(false) }
+                Button(onClick = {
+                    editVisible = !editVisible
+                }) {
+                    Text(text = "Edit Username")
+                }
+                if (editVisible) {
+                  
         // TextField for username and button to edit it
         Box(modifier = Modifier.fillMaxWidth()) {
             TextField(
@@ -247,30 +269,43 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 modifier = Modifier.align(Alignment.CenterEnd)
             ) {
                 Text(if (isEditingUsername) stringResource(id = R.string.select_username) else stringResource(id = R.string.edit_username))
+
+                        }
+                    }
+                }
             }
         }
-
-        // Display the fixed value for weeklyPoints
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        Card(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            onClick = {}
+        ) {
+                    // Display the fixed value for weeklyPoints
         Text(
+                     modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, top = 4.dp)
+                    .fillMaxWidth(),
             text = stringResource(id = R.string.weekly_points, weeklyPoints),
-            color = Color.Black,
+                          textAlign = TextAlign.Center
+
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
+                     modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                    .fillMaxWidth(),
             text = stringResource(id = R.string.total_points, selectedUserProfile?.languagePoints ?: 0),
-            color = Color.Black,
+                          textAlign = TextAlign.Center
+
         )
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Display the list of learned languages
         Text(
             text = stringResource(id = R.string.lang_learned),
-            color = Color.Black,
-            fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             modifier = Modifier.padding(vertical = 8.dp)
-        )
-
+        }
 
 // Fetch user profile from the database using a coroutine
         LaunchedEffect(isEditingUsername, username) {
@@ -280,6 +315,9 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     val allUsers = withContext(Dispatchers.IO) {
                         userProfileDao.getAllUserProfiles()
                     }
+
+                    Log.d("ProfileScreen", "All users: $allUsers") // Log all users
+
 
                     if (allUsers.size == 1) {
                         // If there is exactly one user, update its username
@@ -384,9 +422,12 @@ fun updateUserLanguages(userProfile: UserProfile) {
 
 @Composable
 fun LanguageItem(language: Language, onClick: () -> Unit) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onClick() }) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.Center
+    ) {
         Text(text = language.name)
     }
 }

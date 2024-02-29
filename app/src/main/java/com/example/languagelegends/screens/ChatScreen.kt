@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 class ChatScreen {
@@ -42,7 +41,6 @@ class ChatScreen {
         val application = context.applicationContext as Application
         val viewModel = AiChatViewModel(application)
 
-        // Observe the topic, menu visibility, and response states
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
@@ -138,30 +136,37 @@ fun CardView(viewModel: AiChatViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+
                 MakeCard(viewModel = viewModel, topic = shoppingTopic, iconId = R.drawable.baseline_shopping_cart_24)
                 Spacer(modifier = Modifier.width(10.dp))
                 MakeCard(viewModel = viewModel, topic = temperatureTopic, iconId = R.drawable.baseline_thermostat_24)
+                
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+
                 MakeCard(viewModel = viewModel, topic = schoolTopic, iconId = R.drawable.baseline_school_24)
                 Spacer(modifier = Modifier.width(10.dp))
                 MakeCard(viewModel = viewModel, topic = healthTopic, iconId = R.drawable.baseline_health_and_safety_24)
+
             }
         }
     }
 }
 
 @Composable
+
 fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
+
     Card(
         modifier = Modifier
             .size(150.dp)
             .padding(2.dp),
         onClick = {
+
             viewModel.topic.value = topic
             viewModel.menuVisibility.value = false
         }
@@ -173,12 +178,12 @@ fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Display icon for the card
+
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = topic
             )
-            // Display text for the card
+
             Text(
                 text = topic,
                 modifier = Modifier.fillMaxWidth(),
@@ -187,3 +192,4 @@ fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
         }
     }
 }
+
