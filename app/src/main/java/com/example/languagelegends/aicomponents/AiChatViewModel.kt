@@ -3,7 +3,6 @@ package com.example.languagelegends.aicomponents
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -101,6 +100,12 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
         val projectId = json.get("project_id").asString
 
         Log.d("DBG", "Generated access token: $tokenValue")
+
+        // Update the VertexAI instance with the new access token
+        vertexAI = VertexAI.Builder()
+            .setAccessToken(tokenValue)
+            .setProjectId(projectId)
+            .build()
 
         return@withContext Pair(tokenValue, projectId)
     }
