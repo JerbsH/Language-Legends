@@ -12,7 +12,7 @@
     <string name="select_username">Valitse käyttäjänimi</string>
     <string name="total_points">Kokonaispisteet: %1$d</string>
     <string name="weekly_points">Viikko pisteet: %1$d</string>
-    <string name="lang_learned">Kielet opittu</string>
+    <string name="lang_learned">Opitut kielet</string>
     <string name="enter_name">Syötä käyttäjänimesi</string>
     <string name="edit_username">Muokkaa käyttäjätunnusta</string>
     <string name="exercises_done">Harjoituksia tehty: %1$d</string>
@@ -23,6 +23,7 @@
     <string name="english">Englanti</string>
     <string name="french">Ranska</string>
     <string name="spanish">Espanja</string>
+    <string name="welcome">Tervetuloa %1$s</string>
 
 
     <!-- chat -->

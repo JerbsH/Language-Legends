@@ -23,6 +23,7 @@
     <string name="english">Engelska</string>
     <string name="french">Franska</string>
     <string name="spanish">Spanska</string>
+    <string name="welcome">Välkommen %1$s</string>
 
     <!-- chat -->
     <string name="ai_wizard">AI trollkarl</string>

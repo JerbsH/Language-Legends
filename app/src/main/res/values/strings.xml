@@ -23,6 +23,7 @@
     <string name="english">English</string>
     <string name="french">French</string>
     <string name="spanish">Spanish</string>
+    <string name="welcome">Welcome %1$s</string>
 
 
     <!-- chat -->

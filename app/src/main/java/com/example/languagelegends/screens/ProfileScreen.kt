@@ -43,10 +43,12 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
@@ -96,7 +98,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             weeklyPoints = userProfile?.weeklyPoints ?: 0
         }
     }
-
+    // Function to handle image selection
     val pickImageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -148,7 +150,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        // Display user image
         val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
         val converters = Converters()
 
@@ -181,6 +183,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     )
             }
         }
+        // Buttons for selecting picture
         val takePictureIntent = Intent(context, ImagePickerActivity::class.java).apply {
             putExtra("requestType", "camera")
             putExtra("username", username)
@@ -197,7 +200,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             }
         }
         Text(
-            text = "Select a profile picture",
+            text = stringResource(id = R.string.select_picture),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -207,7 +210,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 Log.d("DBG", "Take Photo button clicked")
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }) {
-                Text("Take Photo")
+                Text(stringResource(id = R.string.take_photo))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(onClick = {
@@ -217,7 +220,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 pickImageIntent.putExtra("username", username)
                 pickImageLauncher.launch(pickImageIntent)
             }) {
-                Text("From Gallery")
+                Text(stringResource(id = R.string.from_gallery))
             }
         }
         Spacer(modifier = Modifier.height(2.dp))
@@ -227,15 +230,16 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Welcome $username!",
+                    text = stringResource(R.string.welcome, username),
                     textAlign = TextAlign.Center,
                 )
                 var editVisible by remember { mutableStateOf(false) }
                 Button(onClick = {
                     editVisible = !editVisible
                 }) {
-                    Text(text = "Edit Username")
-                }
+                    Text(
+                        text = if (editVisible) stringResource(id = R.string.close) else stringResource(id = R.string.edit_username)
+                    )                }
                 if (editVisible) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         TextField(
@@ -245,7 +249,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                                     username = it
                                 }
                             },
-                            label = { Text("Enter your username") },
+                            label = { Text(stringResource(id = R.string.enter_name)) },
                             enabled = isEditingUsername,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -255,10 +259,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                                 Log.d("DBG", "Edit Username button clicked")
                                 // Update UI
                                 isEditingUsername = !isEditingUsername
+
                             },
                             modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
-                            Text(if (isEditingUsername) "Select Username" else "Edit Username")
+                            Text(if (isEditingUsername) stringResource(id = R.string.select_username) else stringResource(id = R.string.edit_username))
                         }
                     }
                 }
@@ -273,7 +278,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, top = 4.dp)
                     .fillMaxWidth(),
-                text = "Weekly Points: $weeklyPoints",
+                text = stringResource(id = R.string.weekly_points, weeklyPoints),
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -281,13 +286,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
                     .fillMaxWidth(),
-                text = "Total Points: ${selectedUserProfile?.languagePoints}",
+                text = stringResource(id = R.string.total_points, selectedUserProfile?.languagePoints ?: 0),
                 textAlign = TextAlign.Center
             )
         }
         // Display the list of learned languages
         Text(
-            text = "Languages Learned:",
+            text = stringResource(id = R.string.lang_learned),
             fontSize = 18.sp,
             modifier = Modifier.padding(vertical = 8.dp)
         )
@@ -371,13 +376,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Text("Exercises for ${language.name}", color = Color.Black)
+                        Text(stringResource(id = R.string.for_language, language.name), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Exercises done: ${language.exercisesDone}", color = Color.Black)
-                        Text("Points earned: ${language.pointsEarned}", color = Color.Black)
+                        Text(stringResource(id = R.string.exercises_done, language.exercisesDone), color = Color.Black)
+                        Text(stringResource(id = R.string.points_earned, language.pointsEarned), color = Color.Black)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { isDialogOpen = false }) {
-                            Text("Close")
+                            Text(stringResource(id = R.string.close))
                         }
                     }
                 })
