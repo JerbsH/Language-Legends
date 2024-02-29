@@ -41,16 +41,7 @@ import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
-import com.example.languagelegends.Screen.Chat.title
-import com.example.languagelegends.screens.ExercisesScreen
-
 
 
 class MainActivity : ComponentActivity() {
@@ -150,6 +141,7 @@ sealed class Screen(
         { painterResource(id = R.drawable.map) }
     )
 }
+
 @Composable
 fun BottomBar(
     navController: NavHostController,

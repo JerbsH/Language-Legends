@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 class ChatScreen {
@@ -127,9 +128,13 @@ fun CardView(viewModel: AiChatViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                MakeCard(viewModel = viewModel, topic = coffeeTopic, iconId = R.drawable.baseline_coffee_24)
+                MakeCard(viewModel = viewModel, topic = coffeeTopic, iconId = R.drawable.coffee)
                 Spacer(modifier = Modifier.width(10.dp))
-                MakeCard(viewModel = viewModel, topic = transportTopic, iconId = R.drawable.baseline_directions_bus_24)
+                MakeCard(
+                    viewModel = viewModel,
+                    topic = transportTopic,
+                    iconId = R.drawable.transport
+                )
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
@@ -137,10 +142,14 @@ fun CardView(viewModel: AiChatViewModel) {
                 horizontalArrangement = Arrangement.Center
             ) {
 
-                MakeCard(viewModel = viewModel, topic = shoppingTopic, iconId = R.drawable.baseline_shopping_cart_24)
+                MakeCard(viewModel = viewModel, topic = shoppingTopic, iconId = R.drawable.shopping)
                 Spacer(modifier = Modifier.width(10.dp))
-                MakeCard(viewModel = viewModel, topic = temperatureTopic, iconId = R.drawable.baseline_thermostat_24)
-                
+                MakeCard(
+                    viewModel = viewModel,
+                    topic = temperatureTopic,
+                    iconId = R.drawable.temperature
+                )
+
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
@@ -148,9 +157,9 @@ fun CardView(viewModel: AiChatViewModel) {
                 horizontalArrangement = Arrangement.Center
             ) {
 
-                MakeCard(viewModel = viewModel, topic = schoolTopic, iconId = R.drawable.baseline_school_24)
+                MakeCard(viewModel = viewModel, topic = schoolTopic, iconId = R.drawable.school)
                 Spacer(modifier = Modifier.width(10.dp))
-                MakeCard(viewModel = viewModel, topic = healthTopic, iconId = R.drawable.baseline_health_and_safety_24)
+                MakeCard(viewModel = viewModel, topic = healthTopic, iconId = R.drawable.health)
 
             }
         }
