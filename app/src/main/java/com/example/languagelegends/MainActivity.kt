@@ -1,5 +1,6 @@
 package com.example.languagelegends
 
+import LanguageSelection
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,6 +38,8 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.TranslateAPI
+import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
@@ -56,9 +59,28 @@ class MainActivity : ComponentActivity() {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
+                var translatedText by remember { mutableStateOf("") }
+
                 Scaffold(
                     topBar = {
-                        TopBar()
+                        TopBar(onLanguageSelected = { selectedLanguage ->
+                            // Example text to translate, replace it with your actual text
+                            val textToTranslate = "Hello, World!"
+
+                            // Translate the text here
+                            val translateAPI = TranslateAPI(context = this)
+                            translateAPI.translate(textToTranslate, selectedLanguage, object :
+                                TranslationCallback {
+                                override fun onTranslationResult(result: String) {
+                                    translatedText = result
+                                }
+
+                                override fun onTranslationError(error: String) {
+                                    // Handle translation error
+                                    println("Translation error: $error")
+                                }
+                            })
+                        })
                     },
                     bottomBar = {
                         if (buttonsTrue) {
@@ -87,7 +109,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(onLanguageSelected: (String) -> Unit) {
     Surface(
         color = Color.White,
     ) {
@@ -100,13 +122,8 @@ fun TopBar() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.flag),
-                    contentDescription = "Flags",
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .size(36.dp) // Adjust the size as needed
-                )
+                LanguageSelection(onLanguageSelected = onLanguageSelected)
+
                 Icon(
                     painter = painterResource(id = R.drawable.add),
                     contentDescription = "Add",
