@@ -36,6 +36,8 @@
     <string name="ask_question">Ställ en fråg</string>
     <string name="weather">Väder</string>
     <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
+    <string name="check_answer">Se svarr</string>
+
 
     <!-- path -->
     <string name="exercise_1">Ordblandningsövning</string>

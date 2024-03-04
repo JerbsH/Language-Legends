@@ -37,6 +37,8 @@
     <string name="ask_question">Kysy minulta kysymys</string>
     <string name="weather">Sää</string>
     <string name="ai_choice">Valitsit %1$s, AI velho testaa nyt tietosi.</string>
+    <string name="check_answer">Katso vastaus</string>
+
 
     <!-- path -->
     <string name="exercise_1">Sanat sekaisin peli</string>

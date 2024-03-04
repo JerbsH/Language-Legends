@@ -18,9 +18,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
-class ChatScreen {
+class ChatScreen(apiSelectedLanguage: String) {
     //private val viewModel: AiChatViewModel = AiChatViewModel()
 
     @Composable
@@ -46,21 +49,29 @@ class ChatScreen {
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
 
+
         // Display the chat screen
         Surface {
             if (menuVisibility) {
                 CardView(viewModel)
             } else {
-                AiChat(topic, response) {
-                    viewModel.onAskMeAQuestion()
-                }
+                AiChat(viewModel, topic, response, viewModel::onAskMeAQuestion, viewModel::checkAnswer)
             }
         }
     }
 }
 
+
 @Composable
-fun AiChat(topic: String, response: String?, onAskMeAQuestion: () -> Unit) {
+fun AiChat(
+    viewModel: AiChatViewModel,
+    topic: String,
+    response: String?,
+    onAskMeAQuestion: () -> Unit,
+    onCheckAnswer: () -> Unit
+) {
+    val userAnswer = remember { mutableStateOf("") }
+
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
             // Display AI choice based on topic
@@ -83,12 +94,33 @@ fun AiChat(topic: String, response: String?, onAskMeAQuestion: () -> Unit) {
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             // Display AI response
-            Log.d("DBG", "Response: $response")
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = response.toString(),
                 textAlign = TextAlign.Center
             )
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            // Text field for user's answer
+            TextField(
+                value = userAnswer.value,
+                onValueChange = { newValue ->
+                    userAnswer.value = newValue
+                    viewModel.userAnswer.postValue(newValue)
+                    Log.d("DBG", "User answer: ${userAnswer.value}")
+                },
+                label = { Text("Your answer") }
+            )
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            // Button to check the answer
+            Button(onClick = {
+                onCheckAnswer()
+            }) {
+                Text(text = stringResource(id = R.string.check_answer))
+            }
         }
     }
 }

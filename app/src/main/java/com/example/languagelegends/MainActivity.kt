@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -38,8 +38,6 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
-import com.example.languagelegends.features.TranslateAPI
-import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
@@ -59,27 +57,12 @@ class MainActivity : ComponentActivity() {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
-                var translatedText by remember { mutableStateOf("") }
+                var apiSelectedLanguage by remember { mutableStateOf("English") }
 
                 Scaffold(
                     topBar = {
-                        TopBar(onLanguageSelected = { selectedLanguage ->
-                            // Example text to translate, replace it with your actual text
-                            val textToTranslate = "Hello, World!"
-
-                            // Translate the text here
-                            val translateAPI = TranslateAPI(context = this)
-                            translateAPI.translate(textToTranslate, selectedLanguage, object :
-                                TranslationCallback {
-                                override fun onTranslationResult(result: String) {
-                                    translatedText = result
-                                }
-
-                                override fun onTranslationError(error: String) {
-                                    // Handle translation error
-                                    println("Translation error: $error")
-                                }
-                            })
+                        TopBar(onLanguageSelected = { language ->
+                            apiSelectedLanguage = language
                         })
                     },
                     bottomBar = {
@@ -99,7 +82,9 @@ class MainActivity : ComponentActivity() {
                             onBottomBarVisibilityChanged = { isVisible ->
                                 buttonsTrue = isVisible
                             },
-                            startDestination = Screen.Profile.route
+                            startDestination = Screen.Profile.route,
+                            selectedLanguage = apiSelectedLanguage
+
                         )
                     }
                 }
@@ -110,6 +95,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TopBar(onLanguageSelected: (String) -> Unit) {
+    var showLanguageSelection by remember { mutableStateOf(false) }
+
     Surface(
         color = Color.White,
     ) {
@@ -122,14 +109,19 @@ fun TopBar(onLanguageSelected: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                LanguageSelection(onLanguageSelected = onLanguageSelected)
+                IconButton(onClick = { showLanguageSelection = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.flag),
+                        contentDescription = "Language Selection"
+                    )
+                }
 
-                Icon(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = "Add",
-                    modifier = Modifier.size(36.dp) // Adjust the size as needed
-
-                )
+                if (showLanguageSelection) {
+                    LanguageSelection(onLanguageSelected = { apiSelectedLanguage ->
+                        showLanguageSelection = false
+                        onLanguageSelected(apiSelectedLanguage)
+                    })
+                }
             }
         }
     }
@@ -215,7 +207,8 @@ fun NavHost(
     navController: NavHostController,
     userProfileDao: UserProfileDao,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
-    startDestination: String
+    startDestination: String,
+    selectedLanguage: String
 ) {
     androidx.navigation.compose.NavHost(
         navController = navController,
@@ -223,11 +216,11 @@ fun NavHost(
     ) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
-            ProfileScreen(userProfileDao)
+            ProfileScreen(userProfileDao, selectedLanguage)
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats()
+            ChatScreen(selectedLanguage).Chats()
         }
         composable(
             route = "exercises/{exerciseNumber}",
@@ -235,11 +228,11 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController)
+            ExercisesScreen(navController, selectedLanguage)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController)
+            PathScreen(navController = navController, selectedLanguage)
         }
     }
 }

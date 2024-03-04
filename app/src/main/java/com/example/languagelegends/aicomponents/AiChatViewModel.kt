@@ -7,15 +7,16 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.features.TranslateAPI
+import com.example.languagelegends.features.TranslationCallback
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hexascribe.vertexai.VertexAI
+import com.hexascribe.vertexai.domain.VertexResult
 import com.hexascribe.vertexai.features.TextRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,7 +40,13 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
     // LiveData objects to hold the state of the UI
     var menuVisibility = MutableLiveData<Boolean>()
     var topic = MutableLiveData<String>()
-    var response = MutableLiveData<String>()
+    var response = MutableLiveData<String?>()
+
+    private val translateAPI = TranslateAPI(application)
+
+    var userAnswer = MutableLiveData<String>()
+    private var correctAnswer = MutableLiveData<String?>()
+
 
     // SharedPreferences to store the access token and project ID
     private val sharedPreferences: SharedPreferences =
@@ -90,6 +97,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
             apply()
         }
     }
+
     // This function builds the VertexAI instance with the access token and project ID.
     private fun buildVertexAIInstance() {
         val vertexAI = VertexAI.Builder()
@@ -186,22 +194,60 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                 return@launch
             }
 
-            val resultFlow = MutableStateFlow<String?>(null)
+            var aiResponse: VertexResult<String>? = null
 
             withContext(Dispatchers.IO) {
                 try {
-                    val result =
-                        textRequest?.execute("Ask me to translate phrase with the theme of ${topic.value}")
-                            ?.getOrThrow()
-                    resultFlow.value = result
-                    Log.d("DBG", "Result: $result")
+                    // Send the API call to the AI
+                    aiResponse = textRequest?.execute("Ask me a question with the theme of ${topic.value}")
+
+                    Log.d("DBG", "AI response: $aiResponse")
+
+                    // Extract the question from the VertexResult string
+                    val regex = Regex("data=(.*?), exception=null")
+                    val matchResult = regex.find(aiResponse.toString())
+                    val question = matchResult?.groups?.get(1)?.value
+
+                    // Store the question as the correct answer
+                    correctAnswer.postValue(question)
+                    Log.d("DBG", "Set correctAnswer value: $question")
+
+                    // Translate the 'data' value using the TranslateAPI
+                    translateAPI.translate(aiResponse, "EN", object : TranslationCallback {
+                        override fun onTranslationResult(result: String) {
+                            // Set the translated 'data' value as the result
+                            response.postValue(result)
+                            Log.d("DBG", "Posted translated data to response: $result")
+                        }
+
+                        override fun onTranslationError(error: String) {
+                            Log.e("DBG", "Translation error: $error")
+                        }
+                    })
+
                 } catch (e: Exception) {
                     Log.e("DBG", "Error executing request: ${e.message}")
                     throw e
                 }
             }
+        }
+    }
 
-            response.value = resultFlow.first { it != null } ?: ""
+    fun checkAnswer() {
+        viewModelScope.launch {
+            val correctAnswer = correctAnswer.value
+            val userAnswer = userAnswer.value
+            Log.d("DBG", "Correct answer: $correctAnswer")
+            Log.d("DBG", "User answer: $userAnswer")
+
+            if (correctAnswer?.equals(userAnswer, ignoreCase = true) == true) {
+                response.value = "Correct answer!"
+                Log.d("DBG", "Correct answer!")
+                onAskMeAQuestion()
+            } else {
+                response.value = "Incorrect answer. Try again!"
+                Log.d("DBG", "Incorrect answer. Try again!")
+            }
         }
     }
 }
