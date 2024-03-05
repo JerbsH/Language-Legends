@@ -37,6 +37,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,13 +75,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
     var selectedLanguage by remember { mutableStateOf<Language?>(null) }
     var isDialogOpen by remember { mutableStateOf(false) }
+    var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
 
     // check if user is being created
-    val application = LocalContext.current.applicationContext as Application
-    val sharedPreferences: SharedPreferences =
-        application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-
 
     val context = LocalContext.current
     DatabaseProvider.getDatabase(context).userProfileDao()
@@ -108,6 +106,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             image = userProfile?.image
             username = userProfile?.username ?: ""
             weeklyPoints = userProfile?.weeklyPoints ?: 0
+            created = userProfile?.created ?: 0
         }
     }
 
@@ -124,7 +123,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     selectedUserProfile = UserProfile(
                         username = username,
                         currentLanguage = Language("English", 0, 0),
-                        weeklyPoints = 1500
+                        weeklyPoints = 1500,
+                        created = 1
                     )
                 }
                 // Update the image of selectedUserProfile
@@ -147,7 +147,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         selectedUserProfile?.languages,
         selectedUserProfile?.currentLanguage,
         selectedUserProfile?.languagePoints,
-        selectedUserProfile?.exercisesDone
+        selectedUserProfile?.exercisesDone,
+        selectedUserProfile?.created
     ) {
         selectedUserProfile?.let { userProfile ->
             coroutineScope.launch {
@@ -356,7 +357,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                                 username = username,
                                 weeklyPoints = 1500,
                                 currentLanguage = Language("English", 0, 0),
-                                languagePoints = 0
+                                languagePoints = 0,
+                                created = 1
                             )
                             updateUserLanguages(newUserProfile)
                             userProfileDao.insertUserProfile(newUserProfile)
@@ -524,6 +526,15 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                         ).show()
                     } else {
                         isEditingUsername = !isEditingUsername
+                        created = 1
+
+                        coroutineScope.launch {
+                            selectedUserProfile?.let { userProfile ->
+                                userProfile.created = created
+                                userProfileDao.updateUserProfile(userProfile)
+                            }
+                        }
+
                     }
                 },
                 modifier = Modifier.size(120.dp)
@@ -536,11 +547,12 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
         }
     }
 
-    if (username.isEmpty() || isEditingUsername) {
-        showNameScreen()
-    } else {
+    if (created == 1) {
         showProfile()
+    } else if (username.isEmpty() || isEditingUsername) {
+        showNameScreen()
     }
+
 }
 
 
