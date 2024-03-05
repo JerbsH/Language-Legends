@@ -3,6 +3,7 @@ package com.example.languagelegends
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -41,6 +44,7 @@ import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
+import com.example.languagelegends.screens.ViewState
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 
 
@@ -48,6 +52,7 @@ class MainActivity : ComponentActivity() {
     private val appDatabase: AppDatabase by lazy {
         DatabaseProvider.getDatabase(applicationContext)
     }
+    private val viewState: ViewState by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +82,8 @@ class MainActivity : ComponentActivity() {
                             onBottomBarVisibilityChanged = { isVisible ->
                                 buttonsTrue = isVisible
                             },
-                            startDestination = Screen.Profile.route
+                            startDestination = Screen.Profile.route,
+                            viewState = viewState
                         )
                     }
                 }
@@ -198,8 +204,12 @@ fun NavHost(
     navController: NavHostController,
     userProfileDao: UserProfileDao,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
-    startDestination: String
+    startDestination: String,
+    viewState: ViewState
 ) {
+    var completedExercises by remember { mutableIntStateOf(0) }
+    completedExercises = viewState.completedExercises
+
     androidx.navigation.compose.NavHost(
         navController = navController,
         startDestination = startDestination
@@ -218,11 +228,15 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController)
+            ExercisesScreen(navController = navController, topCompletedExercises = completedExercises, onCompleteExercise = {
+                viewState.completeExercise()
+            })
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController)
+            PathScreen(navController = navController, topCompletedExercises = completedExercises, onCompleteExercise = {
+                viewState.completeExercise()
+            })
         }
     }
 }

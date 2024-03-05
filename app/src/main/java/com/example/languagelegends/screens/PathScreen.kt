@@ -20,10 +20,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 
+typealias OnCompleteExercise = () -> Unit
 
 @Composable
-fun PathScreen(navController: NavController) {
-    val completedExercises by remember { mutableStateOf(0) }
+fun PathScreen(navController: NavController, topCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
+    val completedExercises = topCompletedExercises
     val scrollState = rememberScrollState()
 
     // Load the background image
@@ -48,7 +49,8 @@ fun PathScreen(navController: NavController) {
                 completedExercises = completedExercises,
             ) {
                 // Navigate to the ExercisesScreen when exercise is clicked
-                navController.navigate("exercises/${it}")
+                navController.navigate("exercises/${it}") //mikä tämä on? kysy Ellalta miten tuo it saadaan johonkin näkymään
+                //onCompleteExercise()
             }
         }
     }

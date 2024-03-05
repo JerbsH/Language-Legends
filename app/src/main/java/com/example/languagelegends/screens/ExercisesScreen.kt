@@ -31,7 +31,7 @@ import com.example.languagelegends.R
 
 
 @Composable
-fun ExercisesScreen(navController: NavController) {
+fun ExercisesScreen(navController: NavController, topCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
     var currentExercise by remember { mutableStateOf(1) }
 
 
@@ -55,6 +55,7 @@ fun ExercisesScreen(navController: NavController) {
                 SecondExercise(
                     onNextExercise = {
                         currentExercise++
+                        onCompleteExercise()
                     },
                     onGoBack = { navController.navigate("path") }
                 )
