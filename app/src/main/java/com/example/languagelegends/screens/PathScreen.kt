@@ -94,16 +94,16 @@ fun PathScreen(navController: NavController) {
 }
 
 val exercisePositions = listOf(
-    Pair(100.dp, 100.dp), // 1
-    Pair(150.dp, 100.dp),
-    Pair(250.dp, 150.dp),
-    Pair(350.dp, 200.dp),
-    Pair(450.dp, 250.dp),
-    Pair(50.dp, 250.dp),
-    Pair(150.dp, 200.dp),
-    Pair(250.dp, 150.dp),
-    Pair(350.dp, 100.dp),
-    Pair(100.dp, 1000.dp) // 10
+    Pair(80.dp, 1165.dp), //done 1
+    Pair(285.dp, 1048.dp), //done 2
+    Pair(117.dp, 936.dp), //done 3
+    Pair(263.dp, 850.dp), // done 4
+    Pair(173.dp, 748.dp), // done 5
+    Pair(70.dp, 570.dp), // done 6
+    Pair(293.dp, 437.dp), // done 7
+    Pair(130.dp, 320.dp), //
+    Pair(250.dp, 180.dp),
+    Pair(186.dp, 65.dp) // 10
 )
 
 @Composable
