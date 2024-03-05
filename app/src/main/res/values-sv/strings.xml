@@ -24,6 +24,15 @@
     <string name="french">Franska</string>
     <string name="spanish">Spanska</string>
     <string name="welcome">Välkommen %1$s</string>
+    <string name="welcome_to_language_legends">Välkommen till Language Legends!</string>
+    <string name="enter_name_to_start">Ange ditt namn för att komma igång med ditt äventyr.</string>
+    <string name="select_language_to_learn">Välj ett språk för att börja lära dig!</string>
+    <string name="please_choose_username">Välj ett användarnamn</string>
+    <string name="username_min_length_error">Användarnamnet ska bestå av minst 2 tecken</string>
+    <string name="username_max_length_error">" Användarnamn bör vara högst 20 tecken"</string>
+    <string name="please_choose_language">Välj ett språk</string>
+    <string name="start_adventure">Börja ditt äventyr!</string>
+
 
     <!-- chat -->
     <string name="ai_wizard">AI trollkarl</string>
@@ -57,6 +66,5 @@
     <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
     <string name="language_selection">Språkval</string>
     <string name="AIanswer">svara…</string>
-
 
 </resources>
