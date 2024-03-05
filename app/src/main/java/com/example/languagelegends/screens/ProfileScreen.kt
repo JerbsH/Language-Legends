@@ -446,12 +446,12 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Welcome to Language Legends!",
+                    text = stringResource(R.string.welcome_to_language_legends),
                     textAlign = TextAlign.Center,
                     fontSize = 22.sp
                 )
                 Text(
-                    text = "Please enter your name to get started on your adventure.",
+                    text = stringResource(R.string.enter_name_to_start),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -475,7 +475,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Select a language to start learning!",
+                    text = stringResource(R.string.select_language_to_learn),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -521,22 +521,23 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                 Button(
                     onClick = {
                         if (username.isEmpty()) {
-                            Toast.makeText(context, "Please choose username", Toast.LENGTH_SHORT)
+                            Toast.makeText(context, context.getString(R.string.please_choose_username), Toast.LENGTH_SHORT)
                                 .show()
                         } else if (username.length < 2) {
                             Toast.makeText(
                                 context,
-                                "Username should be at least 2 characters",
+                                context.getString(R.string.username_min_length_error),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else if (username.length > 20) {
                             Toast.makeText(
                                 context,
-                                "Username should be at most 20 characters",
+                                context.getString(R.string.username_max_length_error),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else if (selectedLanguage == null) {
-                            Toast.makeText(context, "Please choose a language", Toast.LENGTH_SHORT)
+                            Toast.makeText(context, context.getString(R.string.please_choose_language)
+                                , Toast.LENGTH_SHORT)
                                 .show()
                         }else {
                             isEditingUsername = !isEditingUsername
@@ -555,7 +556,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     modifier = Modifier.size(120.dp)
                 ) {
                     Text(
-                        "Start your adventure!",
+                        text = stringResource(R.string.start_adventure),
                         textAlign = TextAlign.Center,
                     )
                 }
