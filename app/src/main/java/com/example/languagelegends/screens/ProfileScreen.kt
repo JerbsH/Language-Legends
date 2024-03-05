@@ -12,7 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,9 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -61,15 +58,17 @@ import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
+import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.languagelegends.features.icon
 
 data class Language(val name: String, val exercisesDone: Int, val pointsEarned: Int)
 
 @Composable
-fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String ) {
+fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
     var username by remember { mutableStateOf("") }
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -354,7 +353,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String ) 
                             val newUserProfile = UserProfile(
                                 username = username,
                                 weeklyPoints = 1500,
-                                currentLanguage = selectedLanguage ?: Language("No selection", 0, 0),
+                                currentLanguage = selectedLanguage ?: Language(
+                                    "No selection",
+                                    0,
+                                    0
+                                ),
                                 languagePoints = 0,
                                 created = 1
                             )
@@ -440,127 +443,135 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String ) 
 
     @Composable
     fun showNameScreen() {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.welcome_to_language_legends),
+                textAlign = TextAlign.Center,
+                fontSize = 22.sp
+            )
+            Text(
+                text = stringResource(R.string.enter_name_to_start),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.welcome_to_language_legends),
-                    textAlign = TextAlign.Center,
-                    fontSize = 22.sp
+                TextField(
+                    value = username,
+                    onValueChange = {
+                        if (isEditingUsername) {
+                            username = it
+                        }
+                    },
+                    label = { Text(stringResource(id = R.string.enter_name)) },
+                    enabled = isEditingUsername,
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
-                Text(
-                    text = stringResource(R.string.enter_name_to_start),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    TextField(
-                        value = username,
-                        onValueChange = {
-                            if (isEditingUsername) {
-                                username = it
-                            }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.select_language_to_learn),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+            var selection by remember { mutableStateOf("") }
+            LazyColumn {
+
+                items(listOf("English", "Spanish", "French")) { language ->
+                    Card(
+                        border = if (selection == language) {
+                            BorderStroke(2.dp, Color.Green)
+                        } else {
+                            BorderStroke(0.dp, Color.White)
                         },
-                        label = { Text(stringResource(id = R.string.enter_name)) },
-                        enabled = isEditingUsername,
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.select_language_to_learn),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
-                )
-                var selection by remember { mutableStateOf("") }
-                LazyColumn {
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clickable {
+                                Log.d("DBG", "Language $language selected")
+                                selectedLanguage = Language(language, 0, 0)
+                                selection = language
 
-                    items(listOf("English", "Spanish", "French")) { language ->
-                        Card(
-                            border = if(selection == language) {
-                                BorderStroke(2.dp, Color.Green)
-                            } else {
-                                BorderStroke(0.dp, Color.White)
-                            },
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .clickable {
-                                    Log.d("DBG", "Language $language selected")
-                                    selectedLanguage = Language(language, 0, 0)
-                                    selection = language
-
-                                }
-                        ) {
-                            Row {
-                                Text(
-                                    text = language,
-                                    modifier = Modifier
-                                        .fillMaxWidth(fraction = 0.5f)
-                                        .padding(8.dp)
-                                )
-                                Icon(
-                                    painter = painterResource(id = R.drawable.flag),
-                                    contentDescription = "Flags",
-                                    modifier = Modifier
-                                        .padding(end = 16.dp)
-                                        .size(36.dp) // Adjust the size as needed
-                                )
                             }
-
+                    ) {
+                        Row {
+                            Text(
+                                text = language,
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = 0.5f)
+                                    .padding(8.dp)
+                            )
+                            val flag = icon(language)
+                            Image(
+                                painter = painterResource(FlagKit.getResId(context, flag)),
+                                contentDescription = "Flag of $language",
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .size(36.dp)
+                            )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = {
-                        if (username.isEmpty()) {
-                            Toast.makeText(context, context.getString(R.string.please_choose_username), Toast.LENGTH_SHORT)
-                                .show()
-                        } else if (username.length < 2) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.username_min_length_error),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else if (username.length > 20) {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.username_max_length_error),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else if (selectedLanguage == null) {
-                            Toast.makeText(context, context.getString(R.string.please_choose_language)
-                                , Toast.LENGTH_SHORT)
-                                .show()
-                        }else {
-                            isEditingUsername = !isEditingUsername
-                            created = 1
-
-                            coroutineScope.launch {
-                                selectedUserProfile?.let { userProfile ->
-                                    userProfile.created = created
-                                    userProfile.currentLanguage = selectedLanguage ?: Language("English", 0, 0)
-                                    userProfileDao.updateUserProfile(userProfile)
-                                }
-                            }
-
-                        }
-                    },
-                    modifier = Modifier.size(120.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.start_adventure),
-                        textAlign = TextAlign.Center,
-                    )
-                }
             }
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = {
+                    if (username.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.please_choose_username),
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    } else if (username.length < 2) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.username_min_length_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else if (username.length > 20) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.username_max_length_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else if (selectedLanguage == null) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.please_choose_language),
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    } else {
+                        isEditingUsername = !isEditingUsername
+                        created = 1
+
+                        coroutineScope.launch {
+                            selectedUserProfile?.let { userProfile ->
+                                userProfile.created = created
+                                userProfile.currentLanguage =
+                                    selectedLanguage ?: Language("English", 0, 0)
+                                userProfileDao.updateUserProfile(userProfile)
+                            }
+                        }
+
+                    }
+                },
+                modifier = Modifier.size(120.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.start_adventure),
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
     }
 
     if (created == 1) {
@@ -592,3 +603,5 @@ fun LanguageItem(language: Language, onClick: () -> Unit) {
         Text(text = language.name)
     }
 }
+
+
