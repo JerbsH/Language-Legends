@@ -4,16 +4,18 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.R
+import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.TranslationCallback
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hexascribe.vertexai.VertexAI
-import com.hexascribe.vertexai.domain.VertexResult
 import com.hexascribe.vertexai.features.TextRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -44,8 +46,17 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
 
     private val translateAPI = TranslateAPI(application)
 
-    var userAnswer = MutableLiveData<String>()
+    //deepl languages
+    val languages = LANGUAGES
+
+    var isGeneratingQuestion = MutableLiveData<Boolean>()
+    var isQuestionAsked = MutableLiveData<Boolean>()
+    var userAnswer = mutableStateOf("")
     private var correctAnswer = MutableLiveData<String?>()
+    var resultMessage = MutableLiveData<String?>()
+    private val correctAnswerString = application.getString(R.string.correct_answer)
+    private val incorrectAnswerTryAgainString =
+        application.getString(R.string.incorrect_answer_try_again)
 
 
     // SharedPreferences to store the access token and project ID
@@ -183,70 +194,96 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
         )
     }
 
+    private fun getSelectedLanguage(): String {
+        val sharedPreferences = application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("selectedLanguageCode", "EN-US") ?: "EN-US"
+    }
+
     /** This function is called when the user asks a question.
      * It executes a text request to the VertexAI instance.
      **/
     fun onAskMeAQuestion() {
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
+            isQuestionAsked.value = true
+            isGeneratingQuestion.postValue(true)
+            resultMessage.value = ""
             if (textRequest == null) {
                 Log.e("DBG", "textRequest is not initialized")
                 return@launch
             }
 
-            var aiResponse: VertexResult<String>? = null
+            try {
+                withContext(Dispatchers.IO) {
+                    val randomNumber = (1..100).random()
 
-            withContext(Dispatchers.IO) {
-                try {
                     // Send the API call to the AI
-                    aiResponse = textRequest?.execute("Ask me a question with the theme of ${topic.value}")
+                    val aiResponse = textRequest?.execute(
+                        "Give me a short phrase related to ${topic.value} $randomNumber"
+                    )?.getOrThrow()
 
-                    Log.d("DBG", "AI response: $aiResponse")
+                    val modifiedAiResponse = aiResponse?.substringAfter(": ")
 
-                    // Extract the question from the VertexResult string
-                    val regex = Regex("data=(.*?), exception=null")
-                    val matchResult = regex.find(aiResponse.toString())
-                    val question = matchResult?.groups?.get(1)?.value
+                    Log.d("DBG", "AI response: $modifiedAiResponse")
 
-                    // Store the question as the correct answer
-                    correctAnswer.postValue(question)
-                    Log.d("DBG", "Set correctAnswer value: $question")
+                    // Translate the AI response to the selected language
+                    translateAPI.translate(
+                        modifiedAiResponse,
+                        getSelectedLanguage(),
+                        object : TranslationCallback {
+                            override fun onTranslationResult(result: String) {
+                                // Store the translated text as the correct answer
+                                correctAnswer.postValue(result)
+                                Log.d("DBG", "Set correctAnswer value: $result")
 
-                    // Translate the 'data' value using the TranslateAPI
-                    translateAPI.translate(aiResponse, "EN", object : TranslationCallback {
-                        override fun onTranslationResult(result: String) {
-                            // Set the translated 'data' value as the result
-                            response.postValue(result)
-                            Log.d("DBG", "Posted translated data to response: $result")
-                        }
+                                // Translate the AI response to English and post it to the response LiveData
+                                translateAPI.translate(
+                                    modifiedAiResponse,
+                                    "EN",
+                                    object : TranslationCallback {
+                                        override fun onTranslationResult(result: String) {
+                                            response.postValue(result)
+                                            Log.d(
+                                                "DBG",
+                                                "Posted translated data to response: $result"
+                                            )
+                                        }
 
-                        override fun onTranslationError(error: String) {
-                            Log.e("DBG", "Translation error: $error")
-                        }
-                    })
+                                        override fun onTranslationError(error: String) {
+                                            Log.e("DBG", "Translation error: $error")
+                                        }
+                                    })
+                            }
 
-                } catch (e: Exception) {
-                    Log.e("DBG", "Error executing request: ${e.message}")
-                    throw e
+                            override fun onTranslationError(error: String) {
+                                Log.e("DBG", "Translation error: $error")
+                            }
+                        })
                 }
+            } catch (e: Exception) {
+                Log.e("DBG", "Error executing request: ${e.message}")
+                throw e
+            } finally {
+                isGeneratingQuestion.postValue(false)
             }
         }
     }
 
     fun checkAnswer() {
         viewModelScope.launch {
-            val correctAnswer = correctAnswer.value
-            val userAnswer = userAnswer.value
+            val correctAnswer = correctAnswer.value?.replace("\\s".toRegex(), "")
+            val userAnswerText = userAnswer.value.replace("\\s".toRegex(), "")
             Log.d("DBG", "Correct answer: $correctAnswer")
-            Log.d("DBG", "User answer: $userAnswer")
+            Log.d("DBG", "User answer: $userAnswerText")
 
-            if (correctAnswer?.equals(userAnswer, ignoreCase = true) == true) {
-                response.value = "Correct answer!"
-                Log.d("DBG", "Correct answer!")
-                onAskMeAQuestion()
+            if (correctAnswer?.equals(userAnswerText, ignoreCase = true) == true) {
+                resultMessage.value = correctAnswerString
+                Log.d("DBG", correctAnswerString)
+                userAnswer.value = ""
+                response.value = null
             } else {
-                response.value = "Incorrect answer. Try again!"
-                Log.d("DBG", "Incorrect answer. Try again!")
+                resultMessage.value = incorrectAnswerTryAgainString
+                Log.d("DBG", incorrectAnswerTryAgainString)
             }
         }
     }

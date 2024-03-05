@@ -109,10 +109,10 @@ fun TopBar(onLanguageSelected: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = { showLanguageSelection = true }) {
+                IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
                     Icon(
                         painter = painterResource(id = R.drawable.flag),
-                        contentDescription = "Language Selection"
+                        contentDescription = stringResource(id = R.string.language_selection)
                     )
                 }
 
@@ -220,7 +220,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen(selectedLanguage).Chats()
+            ChatScreen().Chats()
         }
         composable(
             route = "exercises/{exerciseNumber}",

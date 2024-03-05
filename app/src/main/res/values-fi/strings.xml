@@ -52,5 +52,11 @@
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
 
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Valitse Kieli</string>
+    <string name="correct_answer">Oikea vastaus! Kyse uudestaan!</string>
+    <string name="incorrect_answer_try_again">Väärä vastaus. Yritä uudelleen!</string>
+    <string name="language_selection">Kielen valinta</string>
+    <string name="AIanswer">vastaa…</string>
 
 </resources>

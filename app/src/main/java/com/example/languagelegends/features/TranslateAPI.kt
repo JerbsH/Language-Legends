@@ -2,7 +2,6 @@ package com.example.languagelegends.features
 
 import android.content.Context
 import android.util.Log
-import com.hexascribe.vertexai.domain.VertexResult
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -30,7 +29,7 @@ class TranslateAPI(context: Context) {
     }
 
     fun translate(
-        text: VertexResult<String>?,
+        text: String?,
         targetLanguage: String,
         callback: TranslationCallback
     ) {
