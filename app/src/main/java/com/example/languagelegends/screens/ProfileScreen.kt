@@ -2,18 +2,17 @@ package com.example.languagelegends.screens
 
 import android.Manifest
 import android.app.Activity
-import android.app.Application
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -78,11 +78,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
     var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
 
-    // check if user is being created
-
     val context = LocalContext.current
     DatabaseProvider.getDatabase(context).userProfileDao()
-
 
     var image by remember { mutableStateOf<ByteArray?>(null) }
     val imageUri by remember { mutableStateOf<String?>(null) }
@@ -107,6 +104,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
             username = userProfile?.username ?: ""
             weeklyPoints = userProfile?.weeklyPoints ?: 0
             created = userProfile?.created ?: 0
+            selectedLanguage = userProfile?.currentLanguage
         }
     }
 
@@ -122,7 +120,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
-                        currentLanguage = Language("English", 0, 0),
+                        currentLanguage = selectedLanguage ?: Language("No selection", 0, 0),
                         weeklyPoints = 1500,
                         created = 1
                     )
@@ -356,7 +354,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
                             val newUserProfile = UserProfile(
                                 username = username,
                                 weeklyPoints = 1500,
-                                currentLanguage = Language("English", 0, 0),
+                                currentLanguage = selectedLanguage ?: Language("No selection", 0, 0),
                                 languagePoints = 0,
                                 created = 1
                             )
@@ -442,109 +440,126 @@ fun ProfileScreen(userProfileDao: UserProfileDao) {
 
     @Composable
     fun showNameScreen() {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Welcome to Language Legends!",
-                textAlign = TextAlign.Center,
-                fontSize = 22.sp
-            )
-            Text(
-                text = "Please enter your name to get started on your adventure.",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(16.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TextField(
-                    value = username,
-                    onValueChange = {
-                        if (isEditingUsername) {
-                            username = it
-                        }
-                    },
-                    label = { Text(stringResource(id = R.string.enter_name)) },
-                    enabled = isEditingUsername,
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 1
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Welcome to Language Legends!",
+                    textAlign = TextAlign.Center,
+                    fontSize = 22.sp
                 )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Select a language to start learning!",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(16.dp)
-            )
-            LazyColumn {
-                items(listOf("English", "Spanish", "French")) { language ->
-                    Card(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .clickable { Log.d("DBG", "Language $language selected") }
-                    ) {
-                        Row {
-                            Text(
-                                text = language,
-                                modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.5f)
-                                    .padding(8.dp)
-                            )
-                            Icon(
-                                painter = painterResource(id = R.drawable.flag),
-                                contentDescription = "Flags",
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .size(36.dp) // Adjust the size as needed
-                            )
-                        }
+                Text(
+                    text = "Please enter your name to get started on your adventure.",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    TextField(
+                        value = username,
+                        onValueChange = {
+                            if (isEditingUsername) {
+                                username = it
+                            }
+                        },
+                        label = { Text(stringResource(id = R.string.enter_name)) },
+                        enabled = isEditingUsername,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 1
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Select a language to start learning!",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+                var selection by remember { mutableStateOf("") }
+                LazyColumn {
 
+                    items(listOf("English", "Spanish", "French")) { language ->
+                        Card(
+                            border = if(selection == language) {
+                                BorderStroke(2.dp, Color.Green)
+                            } else {
+                                BorderStroke(0.dp, Color.White)
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .clickable {
+                                    Log.d("DBG", "Language $language selected")
+                                    selectedLanguage = Language(language, 0, 0)
+                                    selection = language
+
+                                }
+                        ) {
+                            Row {
+                                Text(
+                                    text = language,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.5f)
+                                        .padding(8.dp)
+                                )
+                                Icon(
+                                    painter = painterResource(id = R.drawable.flag),
+                                    contentDescription = "Flags",
+                                    modifier = Modifier
+                                        .padding(end = 16.dp)
+                                        .size(36.dp) // Adjust the size as needed
+                                )
+                            }
+
+                        }
                     }
                 }
-            }
-            Spacer(modifier = Modifier.height(32.dp))
-            Button(
-                onClick = {
-                    if (username.isEmpty()) {
-                        Toast.makeText(context, "Please choose username", Toast.LENGTH_SHORT).show()
-                    } else if (username.length < 2) {
-                        Toast.makeText(
-                            context,
-                            "Username should be at least 2 characters",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else if (username.length > 20) {
-                        Toast.makeText(
-                            context,
-                            "Username should be at most 20 characters",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        isEditingUsername = !isEditingUsername
-                        created = 1
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = {
+                        if (username.isEmpty()) {
+                            Toast.makeText(context, "Please choose username", Toast.LENGTH_SHORT)
+                                .show()
+                        } else if (username.length < 2) {
+                            Toast.makeText(
+                                context,
+                                "Username should be at least 2 characters",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (username.length > 20) {
+                            Toast.makeText(
+                                context,
+                                "Username should be at most 20 characters",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (selectedLanguage == null) {
+                            Toast.makeText(context, "Please choose a language", Toast.LENGTH_SHORT)
+                                .show()
+                        }else {
+                            isEditingUsername = !isEditingUsername
+                            created = 1
 
-                        coroutineScope.launch {
-                            selectedUserProfile?.let { userProfile ->
-                                userProfile.created = created
-                                userProfileDao.updateUserProfile(userProfile)
+                            coroutineScope.launch {
+                                selectedUserProfile?.let { userProfile ->
+                                    userProfile.created = created
+                                    userProfile.currentLanguage = selectedLanguage ?: Language("English", 0, 0)
+                                    userProfileDao.updateUserProfile(userProfile)
+                                }
                             }
-                        }
 
-                    }
-                },
-                modifier = Modifier.size(120.dp)
-            ) {
-                Text(
-                    "Start your adventure!",
-                    textAlign = TextAlign.Center,
-                )
+                        }
+                    },
+                    modifier = Modifier.size(120.dp)
+                ) {
+                    Text(
+                        "Start your adventure!",
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
-        }
     }
 
     if (created == 1) {
