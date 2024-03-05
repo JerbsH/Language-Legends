@@ -52,58 +52,19 @@ fun PathScreen(navController: NavController) {
             }
         }
     }
-
-    /*
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background image
-        Image(
-            painter = backgroundImage,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Create a loop for generating numbers 1-10
-            for (i in 10 downTo 1) { // Start from 10 and go down to 1
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Add spacers on the sides
-                    //Spacer(modifier = Modifier.weight(1f))
-                    // Render each number
-                    LanguageExercise(
-                        number = i,
-                        completedExercises = completedExercises
-                    ) {
-                        // Navigate to the ExercisesScreen when exercise is clicked
-                        navController.navigate("exercises/${it}")
-                    }
-                    // Add spacers on the sides
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-    }*/
 }
 
 val exercisePositions = listOf(
-    Pair(80.dp, 1165.dp), //done 1
-    Pair(285.dp, 1048.dp), //done 2
-    Pair(117.dp, 936.dp), //done 3
-    Pair(263.dp, 850.dp), // done 4
-    Pair(173.dp, 748.dp), // done 5
-    Pair(70.dp, 570.dp), // done 6
-    Pair(293.dp, 437.dp), // done 7
-    Pair(130.dp, 320.dp), //
+    Pair(80.dp, 1165.dp), // Ball 1
+    Pair(285.dp, 1048.dp),
+    Pair(117.dp, 936.dp),
+    Pair(263.dp, 850.dp),
+    Pair(173.dp, 748.dp),
+    Pair(70.dp, 570.dp),
+    Pair(293.dp, 437.dp),
+    Pair(130.dp, 320.dp),
     Pair(250.dp, 180.dp),
-    Pair(186.dp, 65.dp) // 10
+    Pair(186.dp, 65.dp) // Ball 10
 )
 
 @Composable
@@ -119,7 +80,7 @@ fun LanguageExercise(
     val isUnlocked = number <= completedExercises + 1
 
     // Determine the circle color based on the unlocked status
-    val circleColor = if (isUnlocked) Color.Cyan else Color.Gray
+    val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
     // Render the circle as a clickable surface if the exercise is unlocked
     if (isUnlocked) {
@@ -138,7 +99,7 @@ fun LanguageExercise(
             ) {
                 Text(
                     text = number.toString(),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
             }
@@ -159,7 +120,7 @@ fun LanguageExercise(
             ) {
                 Text(
                     text = number.toString(),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
             }
