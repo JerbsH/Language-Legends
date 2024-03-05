@@ -1,6 +1,8 @@
 package com.example.languagelegends.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,12 +25,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.features.SensorHelper
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -47,7 +53,8 @@ fun ExercisesScreen(navController: NavController) {
                     onNextExercise = {
                         currentExercise++
                     },
-                    onGoBack = { navController.navigate("path") }
+                    onGoBack = { navController.navigate("path") },
+                    sensorHelper = SensorHelper(LocalContext.current),
                 )
             }
 
@@ -57,6 +64,15 @@ fun ExercisesScreen(navController: NavController) {
                         currentExercise++
                     },
                     onGoBack = { navController.navigate("path") }
+                )
+            }
+
+            3 -> {
+                TiltExercise(
+                    sensorHelper = SensorHelper(LocalContext.current),
+                    onExerciseCompleted = {
+                        currentExercise++
+                    }
                 )
             }
             // Add more exercises as needed
@@ -78,7 +94,8 @@ fun ExercisesScreen(navController: NavController) {
 @Composable
 fun WordScrambleExercise(
     onNextExercise: () -> Unit,
-    onGoBack: () -> Unit
+    onGoBack: () -> Unit,
+    sensorHelper: SensorHelper // Pass the sensor helper instance
 ) {
     // List of words for the exercise
     val wordList = remember {
@@ -97,11 +114,22 @@ fun WordScrambleExercise(
     }
 
     // Shuffle the letters of the current word
-    val shuffledLetters = remember {
+    var shuffledLetters = remember {
         currentWord.toCharArray().apply {
             shuffle()
         }
     }
+
+    // Register shake detection when the composable is launched
+    LaunchedEffect(Unit) {
+        sensorHelper.setShakeListener {
+            // Shuffle the letters when the device is shaken
+            shuffledLetters = currentWord.toCharArray().apply {
+                shuffle()
+            }
+        }
+    }
+
 
     // State to track user input for the unscrambled word
     var userInput by remember { mutableStateOf("") }
@@ -307,6 +335,90 @@ fun SecondExercise(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+@Composable
+fun TiltExercise(
+    sensorHelper: SensorHelper,
+    onExerciseCompleted: () -> Unit
+) {
+    // Define the vocabulary pairs (word, category)
+    val vocabulary = remember {
+        listOf(
+            "Apple" to "Fruit",
+            "Banana" to "Fruit",
+            "Orange" to "Fruit",
+            "Grape" to "Fruit",
+            "Strawberry" to "Fruit",
+            "Tomato" to "Vegetable",
+            "Carrot" to "Vegetable",
+            "Broccoli" to "Vegetable",
+            "Lettuce" to "Vegetable",
+            "Cucumber" to "Vegetable"
+        )
+    }
+
+    // Track the current item being displayed
+    var currentItemIndex by remember { mutableStateOf(0) }
+
+    // Display the current item
+    val currentItem = vocabulary[currentItemIndex]
+
+    // Show the item and guide for tilting
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Display the item
+        Text(
+            text = currentItem.first, // Display the item
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 32.dp) // Increased padding
+        )
+
+        // Display the instructions
+        Text(
+            text = "Tilt left if the item is vegetable, and tilt right if it is a fruit",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 32.dp) // Increased padding
+        )
+
+        // Feedback text
+        var feedbackText by remember { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(currentItemIndex) {
+            while (true) {
+                delay(100) // Adjust delay as needed
+
+                // Get the sensor values
+                val sensorValues = sensorHelper.getCurrentSensorValues()
+
+                // Check if the device is tilted correctly
+                if ((currentItem.second == "Fruit" && sensorHelper.isDeviceTiltedRight(sensorValues)) ||
+                    (currentItem.second == "Vegetable" && sensorHelper.isDeviceTiltedLeft(sensorValues))
+                ) {
+                    feedbackText = "Correct!" // Provide feedback for correct tilt
+                    delay(1000) // Wait for a second before clearing the feedback
+                    feedbackText = null // Clear the feedback
+                    if (currentItemIndex < vocabulary.size - 1) {
+                        currentItemIndex++
+                    } else {
+                        onExerciseCompleted()
+                        break
+                    }
+                }
+            }
+        }
+
+        // Show feedback text only when there is feedback
+        feedbackText?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
     }
 }

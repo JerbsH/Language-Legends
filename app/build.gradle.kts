@@ -95,5 +95,4 @@ dependencies {
     implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
-
 }
