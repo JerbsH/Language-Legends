@@ -49,6 +49,7 @@
     <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
+    <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
 
 
 </resources>

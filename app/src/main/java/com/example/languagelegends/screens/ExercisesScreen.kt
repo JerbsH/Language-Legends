@@ -101,8 +101,6 @@ fun WordScrambleExercise(
     onGoBack: () -> Unit,
     sensorHelper: SensorHelper // Pass the sensor helper instance
 ) {
-
-
     // List of words for the exercise
     val wordList = remember {
         listOf(
@@ -119,18 +117,27 @@ fun WordScrambleExercise(
         wordList.random()
     }
 
+    // State to hold the shuffled letters of the current word
     var shuffledLetters by remember {
         mutableStateOf(
             currentWord.toCharArray().toList().shuffled()
         )
     }
 
+    // Ensure the shuffled word is never the same as the original word
+    while (shuffledLetters.joinToString("") == currentWord) {
+        shuffledLetters = currentWord.toCharArray().toList().shuffled()
+    }
 
     // Register shake detection when the composable is launched
     LaunchedEffect(Unit) {
         sensorHelper.setShakeListener {
             // Shuffle the letters when the device is shaken
             shuffledLetters = currentWord.toCharArray().toList().shuffled()
+            // Ensure the shuffled word is never the same as the original word
+            while (shuffledLetters.joinToString("") == currentWord) {
+                shuffledLetters = currentWord.toCharArray().toList().shuffled()
+            }
         }
     }
     DisposableEffect(Unit) {
@@ -167,6 +174,13 @@ fun WordScrambleExercise(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Display the hint
+            Text(
+                text = stringResource(id = R.string.shuffle_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 16.dp)
+            )
 
             // Display the picture of fruits
             Image(

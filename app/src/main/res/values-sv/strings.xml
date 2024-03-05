@@ -48,4 +48,5 @@
     <string name="match_country">Passa ihop varje land med motsvarande land</string>
     <string name="country_name">Landets namn</string>
     <string name="all_exercises">Alla övningar färdiga!</string>
+    <string name="shuffle_hint">Tips: Skaka telefonen för att blanda bokstäverna igen!</string>
 </resources>

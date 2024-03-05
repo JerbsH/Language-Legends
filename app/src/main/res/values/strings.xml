@@ -49,6 +49,7 @@
     <string name="match_country">Match each language with it\'s corresponding country</string>
     <string name="country_name">Country name</string>
     <string name="all_exercises">All exercises completed!</string>
+    <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
 
 
 </resources>
