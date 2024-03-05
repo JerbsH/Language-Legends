@@ -24,6 +24,15 @@
     <string name="french">French</string>
     <string name="spanish">Spanish</string>
     <string name="welcome">Welcome %1$s</string>
+    <string name="welcome_to_language_legends">Welcome to Language Legends!</string>
+    <string name="enter_name_to_start">Please enter your name to get started on your adventure.</string>
+    <string name="select_language_to_learn">Select a language to start learning!</string>
+    <string name="please_choose_username">Please choose a username</string>
+    <string name="username_min_length_error">Username should be at least 2 characters</string>
+    <string name="username_max_length_error">Username should be at most 20 characters</string>
+    <string name="please_choose_language">Please choose a language</string>
+    <string name="start_adventure">Start adventure!</string>
+
 
 
     <!-- chat -->
@@ -49,6 +58,7 @@
     <string name="match_country">Match each language with it\'s corresponding country</string>
     <string name="country_name">Country name</string>
     <string name="all_exercises">All exercises completed!</string>
+
 
 
 </resources>

@@ -24,6 +24,14 @@
     <string name="french">Ranska</string>
     <string name="spanish">Espanja</string>
     <string name="welcome">Tervetuloa %1$s</string>
+    <string name="welcome_to_language_legends">"Tervetuloa Language Legendsiin! "</string>
+    <string name="enter_name_to_start">Kirjoita nimesi aloittaaksesi seikkailusi.</string>
+    <string name="select_language_to_learn">Aloita oppiminen valitsemalla kieli!</string>
+    <string name="please_choose_username">Valitse käyttäjätunnus</string>
+    <string name="username_min_length_error">Käyttäjätunnuksessa tulee olla vähintään 2 merkkiä</string>
+    <string name="username_max_length_error">Käyttäjätunnuksessa saa olla enintään 20 merkkiä</string>
+    <string name="please_choose_language">Valitse kieli</string>
+    <string name="start_adventure">" Aloita seikkailusi!"</string>
 
 
     <!-- chat -->
@@ -49,6 +57,7 @@
     <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
+
 
 
 </resources>
