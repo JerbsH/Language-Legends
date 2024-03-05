@@ -251,4 +251,3 @@ fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
         }
     }
 }
-

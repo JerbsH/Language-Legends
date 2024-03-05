@@ -36,7 +36,7 @@
     <string name="ask_question">Ställ en fråg</string>
     <string name="weather">Väder</string>
     <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
-    <string name="check_answer">Se svarr</string>
+    <string name="check_answer">Svara</string>
 
 
     <!-- path -->
@@ -56,6 +56,7 @@
     <string name="correct_answer">Rätt svar! Ställ en annan fråga!</string>
     <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
     <string name="language_selection">Språkval</string>
-    <string name="AIanswerr">svara…</string>
+    <string name="AIanswer">svara…</string>
+
 
 </resources>

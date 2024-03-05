@@ -37,7 +37,7 @@
     <string name="ask_question">Ask Me a Question</string>
     <string name="ai_choice">You chose %1$s, the Wizard will now test your knowledge.</string>
     <string name="weather">Weather</string>
-    <string name="check_answer">Check Answer</string>
+    <string name="check_answer">Answer</string>
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>
@@ -57,6 +57,7 @@
     <string name="incorrect_answer_try_again">Incorrect answer. Try again!</string>
     <string name="language_selection">Language Selection</string>
     <string name="AIanswer">answer…</string>
+
 
 
 

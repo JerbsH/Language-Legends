@@ -23,6 +23,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
+import java.util.Locale
 
 /** This is the ViewModel for the AI Chat feature of the application.
  * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
@@ -233,8 +234,9 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                         object : TranslationCallback {
                             override fun onTranslationResult(result: String) {
                                 // Store the translated text as the correct answer
-                                correctAnswer.postValue(result)
-                                Log.d("DBG", "Set correctAnswer value: $result")
+                                val modifiedResult = result.trimEnd('.').trim('"')
+                                correctAnswer.postValue(modifiedResult)
+                                Log.d("DBG", "Set correctAnswer value: $modifiedResult")
 
                                 // Translate the AI response to English and post it to the response LiveData
                                 translateAPI.translate(
@@ -271,12 +273,15 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
 
     fun checkAnswer() {
         viewModelScope.launch {
-            val correctAnswer = correctAnswer.value?.replace("\\s".toRegex(), "")
+            val correctAnswer = correctAnswer.value?.replace("\\s".toRegex(), "")?.lowercase(
+                Locale.ROOT
+            )
             val userAnswerText = userAnswer.value.replace("\\s".toRegex(), "")
+                .lowercase(Locale.ROOT)
             Log.d("DBG", "Correct answer: $correctAnswer")
             Log.d("DBG", "User answer: $userAnswerText")
 
-            if (correctAnswer?.equals(userAnswerText, ignoreCase = true) == true) {
+            if (correctAnswer == userAnswerText) {
                 resultMessage.value = correctAnswerString
                 Log.d("DBG", correctAnswerString)
                 userAnswer.value = ""
