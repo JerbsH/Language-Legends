@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,24 +35,27 @@ import androidx.navigation.NavController
 import com.example.languagelegends.R
 import com.example.languagelegends.features.SensorHelper
 import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 
 @Composable
 fun ExercisesScreen(navController: NavController) {
+    //Define the current exercise
     var currentExercise by remember { mutableStateOf(1) }
 
-
+    //Define the layout for the exercises
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
+        // Display the appropriate exercise based on the currentExercise state
         when (currentExercise) {
             1 -> {
                 WordScrambleExercise(
                     onNextExercise = {
-                        currentExercise++
+                        currentExercise++ // Move to the next exercise
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
@@ -97,6 +101,8 @@ fun WordScrambleExercise(
     onGoBack: () -> Unit,
     sensorHelper: SensorHelper // Pass the sensor helper instance
 ) {
+
+
     // List of words for the exercise
     val wordList = remember {
         listOf(
@@ -113,23 +119,26 @@ fun WordScrambleExercise(
         wordList.random()
     }
 
-    // Shuffle the letters of the current word
-    var shuffledLetters = remember {
-        currentWord.toCharArray().apply {
-            shuffle()
-        }
+    var shuffledLetters by remember {
+        mutableStateOf(
+            currentWord.toCharArray().toList().shuffled()
+        )
     }
+
 
     // Register shake detection when the composable is launched
     LaunchedEffect(Unit) {
         sensorHelper.setShakeListener {
             // Shuffle the letters when the device is shaken
-            shuffledLetters = currentWord.toCharArray().apply {
-                shuffle()
-            }
+            shuffledLetters = currentWord.toCharArray().toList().shuffled()
         }
     }
-
+    DisposableEffect(Unit) {
+        onDispose {
+            // Unregister sensor listener when the composable is disposed
+            sensorHelper.unregisterSensorListener()
+        }
+    }
 
     // State to track user input for the unscrambled word
     var userInput by remember { mutableStateOf("") }
@@ -338,24 +347,21 @@ fun SecondExercise(
         }
     }
 }
+
 @Composable
 fun TiltExercise(
+
     sensorHelper: SensorHelper,
     onExerciseCompleted: () -> Unit
 ) {
-    // Define the vocabulary pairs (word, category)
+    // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
         listOf(
-            "Apple" to "Fruit",
-            "Banana" to "Fruit",
-            "Orange" to "Fruit",
-            "Grape" to "Fruit",
-            "Strawberry" to "Fruit",
-            "Tomato" to "Vegetable",
-            "Carrot" to "Vegetable",
-            "Broccoli" to "Vegetable",
-            "Lettuce" to "Vegetable",
-            "Cucumber" to "Vegetable"
+            Triple("Apple", "Manzana", "Naranja"),
+            Triple("Banana", "Banana", "Uva"),
+            Triple("Orange", "Naranja", "Manzana"),
+            Triple("Grape", "Uva", "Banana"),
+            Triple("Strawberry", "Fresa", "Tomate")
         )
     }
 
@@ -365,51 +371,84 @@ fun TiltExercise(
     // Display the current item
     val currentItem = vocabulary[currentItemIndex]
 
-    // Show the item and guide for tilting
+    // Randomize the position of the correct and incorrect translations
+    val isCorrectOnLeft = remember { mutableStateOf(Random.nextBoolean()) }
+
+    // Feedback text
+    var feedbackText by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(currentItemIndex) {
+        while (true) {
+            delay(100) // Adjust delay as needed
+
+            // Check if the device is tilted correctly
+            if (sensorHelper.isTiltedLeft.value) {
+                if (isCorrectOnLeft.value) {
+                    feedbackText = "Correct!" // Provide feedback for correct tilt
+                    delay(2000) // Wait for a second before clearing the feedback
+                    feedbackText = null // Clear the feedback
+                    if (currentItemIndex < vocabulary.size - 1) {
+                        currentItemIndex++
+                        isCorrectOnLeft.value = Random.nextBoolean()
+                    } else {
+                        onExerciseCompleted()
+                        break
+                    }
+                } else {
+                    feedbackText = "Wrong! Try again." // Provide feedback for incorrect tilt
+                    delay(2000) // Wait for a second before clearing the feedback
+                    feedbackText = null // Clear the feedback
+                }
+            } else if (sensorHelper.isTiltedRight.value) {
+                if (!isCorrectOnLeft.value) {
+                    feedbackText = "Correct!" // Provide feedback for correct tilt
+                    delay(2000) // Wait for a second before clearing the feedback
+                    feedbackText = null // Clear the feedback
+                    if (currentItemIndex < vocabulary.size - 1) {
+                        currentItemIndex++
+                        isCorrectOnLeft.value = Random.nextBoolean()
+                    } else {
+                        onExerciseCompleted()
+                        break
+                    }
+                } else {
+                    feedbackText = "Wrong! Try again." // Provide feedback for incorrect tilt
+                    delay(2000) // Wait for a second before clearing the feedback
+                    feedbackText = null // Clear the feedback
+                }
+            }
+        }
+    }
+
+    // Show the word and possible translations
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Display the item
+        // Display the word
         Text(
-            text = currentItem.first, // Display the item
+            text = currentItem.first, // Display the word
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(bottom = 32.dp) // Increased padding
         )
 
-        // Display the instructions
-        Text(
-            text = "Tilt left if the item is vegetable, and tilt right if it is a fruit",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 32.dp) // Increased padding
-        )
+        // Display the possible translations
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (isCorrectOnLeft.value) currentItem.second else currentItem.third, // Display the left translation
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 32.dp) // Increased padding
+            )
 
-        // Feedback text
-        var feedbackText by remember { mutableStateOf<String?>(null) }
-
-        LaunchedEffect(currentItemIndex) {
-            while (true) {
-                delay(100) // Adjust delay as needed
-
-                // Get the sensor values
-                val sensorValues = sensorHelper.getCurrentSensorValues()
-
-                // Check if the device is tilted correctly
-                if ((currentItem.second == "Fruit" && sensorHelper.isDeviceTiltedRight(sensorValues)) ||
-                    (currentItem.second == "Vegetable" && sensorHelper.isDeviceTiltedLeft(sensorValues))
-                ) {
-                    feedbackText = "Correct!" // Provide feedback for correct tilt
-                    delay(1000) // Wait for a second before clearing the feedback
-                    feedbackText = null // Clear the feedback
-                    if (currentItemIndex < vocabulary.size - 1) {
-                        currentItemIndex++
-                    } else {
-                        onExerciseCompleted()
-                        break
-                    }
-                }
-            }
+            Text(
+                text = if (isCorrectOnLeft.value) currentItem.third else currentItem.second, // Display the right translation
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 32.dp) // Increased padding
+            )
         }
 
         // Show feedback text only when there is feedback
