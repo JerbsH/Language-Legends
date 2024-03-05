@@ -45,6 +45,8 @@
     <string name="ask_question">Ställ en fråg</string>
     <string name="weather">Väder</string>
     <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
+    <string name="check_answer">Svara</string>
+
 
     <!-- path -->
     <string name="exercise_1">Ordblandningsövning</string>
@@ -57,5 +59,12 @@
     <string name="match_country">Passa ihop varje land med motsvarande land</string>
     <string name="country_name">Landets namn</string>
     <string name="all_exercises">Alla övningar färdiga!</string>
+
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Välj språk</string>
+    <string name="correct_answer">Rätt svar! Ställ en annan fråga!</string>
+    <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
+    <string name="language_selection">Språkval</string>
+    <string name="AIanswer">svara…</string>
 
 </resources>

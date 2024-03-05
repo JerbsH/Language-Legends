@@ -69,7 +69,7 @@ import kotlinx.coroutines.withContext
 data class Language(val name: String, val exercisesDone: Int, val pointsEarned: Int)
 
 @Composable
-fun ProfileScreen(userProfileDao: UserProfileDao) {
+fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String ) {
     var username by remember { mutableStateOf("") }
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }

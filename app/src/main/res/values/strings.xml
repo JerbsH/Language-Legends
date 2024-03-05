@@ -46,6 +46,7 @@
     <string name="ask_question">Ask Me a Question</string>
     <string name="ai_choice">You chose %1$s, the Wizard will now test your knowledge.</string>
     <string name="weather">Weather</string>
+    <string name="check_answer">Answer</string>
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>
@@ -58,6 +59,16 @@
     <string name="match_country">Match each language with it\'s corresponding country</string>
     <string name="country_name">Country name</string>
     <string name="all_exercises">All exercises completed!</string>
+
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Select Language</string>
+    <string name="correct_answer">Correct answer! Ask another question!</string>
+    <string name="incorrect_answer_try_again">Incorrect answer. Try again!</string>
+    <string name="language_selection">Language Selection</string>
+    <string name="AIanswer">answer…</string>
+
+
+
 
 
 

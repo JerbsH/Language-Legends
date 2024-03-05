@@ -1,6 +1,7 @@
 *.iml
 .gradle
 /app/src/main/assets/keyfile.json
+/app/src/main/assets/deeplAPIKey.json
 /local.properties
 /.idea/caches
 /.idea/libraries

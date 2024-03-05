@@ -1,7 +1,7 @@
 package com.example.languagelegends.screens
 
 import android.app.Application
-import android.util.Log
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,8 +16,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -33,7 +35,6 @@ import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 class ChatScreen {
-    //private val viewModel: AiChatViewModel = AiChatViewModel()
 
     @Composable
     fun Chats() {
@@ -46,21 +47,35 @@ class ChatScreen {
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
 
+
         // Display the chat screen
         Surface {
             if (menuVisibility) {
                 CardView(viewModel)
             } else {
-                AiChat(topic, response) {
-                    viewModel.onAskMeAQuestion()
-                }
+                AiChat(viewModel, topic, response, viewModel::onAskMeAQuestion, viewModel::checkAnswer)
             }
         }
     }
 }
 
+
 @Composable
-fun AiChat(topic: String, response: String?, onAskMeAQuestion: () -> Unit) {
+fun AiChat(
+    viewModel: AiChatViewModel,
+    topic: String,
+    response: String?,
+    onAskMeAQuestion: () -> Unit,
+    onCheckAnswer: () -> Unit
+) {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    val selectedLanguage = sharedPreferences.getString("selectedLanguageName", "English (American)") ?: "English (American)"
+    val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
+    val resultMessage by viewModel.resultMessage.observeAsState("")
+    val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
+
+
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
             // Display AI choice based on topic
@@ -83,12 +98,47 @@ fun AiChat(topic: String, response: String?, onAskMeAQuestion: () -> Unit) {
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             // Display AI response
-            Log.d("DBG", "Response: $response")
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = response.toString(),
-                textAlign = TextAlign.Center
+
+            if (isGeneratingQuestion) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            } else {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = if (!response.isNullOrEmpty()) "Translate this to $selectedLanguage: $response" else "",
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            // Text field for user's answer
+            TextField(
+                value = viewModel.userAnswer.value,
+                onValueChange = { newValue ->
+                    viewModel.userAnswer.value = newValue
+                },
+                label = { Text(stringResource(id = R.string.AIanswer)) },
+                enabled = isQuestionAsked
+
             )
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            // Button to check the answer
+            Button(onClick = {
+                onCheckAnswer()
+            }) {
+                Text(text = stringResource(id = R.string.check_answer))
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            resultMessage?.let {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = it,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -201,4 +251,3 @@ fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
         }
     }
 }
-

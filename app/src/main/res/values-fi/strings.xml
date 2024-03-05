@@ -45,6 +45,8 @@
     <string name="ask_question">Kysy minulta kysymys</string>
     <string name="weather">Sää</string>
     <string name="ai_choice">Valitsit %1$s, AI velho testaa nyt tietosi.</string>
+    <string name="check_answer">Vastaa</string>
+
 
     <!-- path -->
     <string name="exercise_1">Sanat sekaisin peli</string>
@@ -57,6 +59,13 @@
     <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
+
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Valitse Kieli</string>
+    <string name="correct_answer">Oikea vastaus! Kyse uudestaan!</string>
+    <string name="incorrect_answer_try_again">Väärä vastaus. Yritä uudelleen!</string>
+    <string name="language_selection">Kielen valinta</string>
+    <string name="AIanswer">vastaa…</string>
 
 
 
