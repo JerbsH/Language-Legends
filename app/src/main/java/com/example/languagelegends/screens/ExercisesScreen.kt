@@ -1,7 +1,17 @@
 package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,7 +41,7 @@ import com.example.languagelegends.R
 
 
 @Composable
-fun ExercisesScreen(navController: NavController, topCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, topCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
     var currentExercise by remember { mutableStateOf(1) }
 
 

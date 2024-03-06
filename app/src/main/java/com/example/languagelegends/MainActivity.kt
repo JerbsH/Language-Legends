@@ -1,5 +1,6 @@
 package com.example.languagelegends
 
+import LanguageSelection
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,8 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -61,9 +62,13 @@ class MainActivity : ComponentActivity() {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
+                var apiSelectedLanguage by remember { mutableStateOf("English") }
+
                 Scaffold(
                     topBar = {
-                        TopBar()
+                        TopBar(onLanguageSelected = { language ->
+                            apiSelectedLanguage = language
+                        })
                     },
                     bottomBar = {
                         if (buttonsTrue) {
@@ -83,6 +88,7 @@ class MainActivity : ComponentActivity() {
                                 buttonsTrue = isVisible
                             },
                             startDestination = Screen.Profile.route,
+                            selectedLanguage = apiSelectedLanguage,
                             viewState = viewState
                         )
                     }
@@ -93,7 +99,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(onLanguageSelected: (String) -> Unit) {
+    var showLanguageSelection by remember { mutableStateOf(false) }
+
     Surface(
         color = Color.White,
     ) {
@@ -106,19 +114,19 @@ fun TopBar() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.flag),
-                    contentDescription = "Flags",
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .size(36.dp) // Adjust the size as needed
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = "Add",
-                    modifier = Modifier.size(36.dp) // Adjust the size as needed
+                IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.flag),
+                        contentDescription = stringResource(id = R.string.language_selection)
+                    )
+                }
 
-                )
+                if (showLanguageSelection) {
+                    LanguageSelection(onLanguageSelected = { apiSelectedLanguage ->
+                        showLanguageSelection = false
+                        onLanguageSelected(apiSelectedLanguage)
+                    })
+                }
             }
         }
     }
@@ -205,6 +213,7 @@ fun NavHost(
     userProfileDao: UserProfileDao,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     startDestination: String,
+    selectedLanguage: String,
     viewState: ViewState
 ) {
     var completedExercises by remember { mutableIntStateOf(0) }
@@ -216,7 +225,7 @@ fun NavHost(
     ) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
-            ProfileScreen(userProfileDao)
+            ProfileScreen(userProfileDao, selectedLanguage)
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
@@ -228,13 +237,13 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController = navController, topCompletedExercises = completedExercises, onCompleteExercise = {
+            ExercisesScreen(navController = navController, selectedLanguage, topCompletedExercises = completedExercises, onCompleteExercise = {
                 viewState.completeExercise()
             })
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController, topCompletedExercises = completedExercises, onCompleteExercise = {
+            PathScreen(navController = navController, selectedLanguage, topCompletedExercises = completedExercises, onCompleteExercise = {
                 viewState.completeExercise()
             })
         }
