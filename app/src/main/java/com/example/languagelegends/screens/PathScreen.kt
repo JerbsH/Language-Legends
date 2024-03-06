@@ -1,22 +1,13 @@
 package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,14 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -72,24 +59,24 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
 }
 
 val exercisePositions = listOf(
-    Pair(80.dp, 1165.dp), // Ball 1
-    Pair(285.dp, 1048.dp),
-    Pair(117.dp, 936.dp),
-    Pair(263.dp, 850.dp),
-    Pair(173.dp, 748.dp),
-    Pair(70.dp, 570.dp),
-    Pair(293.dp, 437.dp),
-    Pair(130.dp, 320.dp),
-    Pair(250.dp, 180.dp),
-    Pair(186.dp, 65.dp) // Ball 10
+    Pair(0.33f, 1.61f), // Ball 1
+    Pair(0.21f, 1.41f),
+    Pair(0.64f, 1.25f),
+    Pair(0.33f, 1.12f),
+    Pair(0.57f, 1.01f),
+    Pair(0.42f, 0.90f),
+    Pair(0.19f, 0.692f),
+    Pair(0.65f, 0.511f),
+    Pair(0.35f, 0.383f),
+    Pair(0.56f, 0.22f) // Ball 10
 )
 
 @Composable
 fun LanguageExercise(
     modifier: Modifier = Modifier,
     number: Int,
-    x: Dp,
-    y: Dp,
+    x: Float,
+    y: Float,
     completedExercises: Int,
     onClick: (Int) -> Unit,
 ) {
@@ -104,7 +91,10 @@ fun LanguageExercise(
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(x, y),
+                .offset(
+                    x.dp * LocalConfiguration.current.screenWidthDp,
+                    y.dp * LocalConfiguration.current.screenHeightDp
+                ),
             shape = CircleShape,
             color = circleColor,
             onClick = { onClick(number) } // Call the lambda onClick with the exercise number
@@ -112,7 +102,7 @@ fun LanguageExercise(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxSize()
             ) {
                 Text(
                     text = number.toString(),
@@ -126,14 +116,17 @@ fun LanguageExercise(
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(x, y),
+                .offset(
+                    x.dp * LocalConfiguration.current.screenWidthDp,
+                    y.dp * LocalConfiguration.current.screenHeightDp
+                ),
             shape = CircleShape,
             color = circleColor,
             onClick = {}
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
                 Text(
                     text = number.toString(),
