@@ -55,6 +55,9 @@ fun icon(language: String): String {
         }
         "Chinese" -> {
             flag = "cn"
+        }
+        "No Selection" -> {
+          flag = "gb"
         } else -> {
             for (i in allLanguages) {
                 if (i.key == language) {

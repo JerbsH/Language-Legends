@@ -1,29 +1,33 @@
 package com.example.languagelegends
 
 import LanguageSelection
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -37,12 +41,20 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
+import com.example.languagelegends.screens.Language
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
+import com.murgupluoglu.flagkit.FlagKit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -50,20 +62,48 @@ class MainActivity : ComponentActivity() {
         DatabaseProvider.getDatabase(applicationContext)
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val applicationContext = this@MainActivity
 
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
+                var username by remember { mutableStateOf("") }
+                var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
+                var selectedLanguage by remember { mutableStateOf<Language?>(null) }
+                var created by remember { mutableIntStateOf(0) }
+                val coroutineScope = CoroutineScope(Dispatchers.Main)
+
+                LaunchedEffect(Unit) {
+                    coroutineScope.launch {
+                        val userProfile = withContext(Dispatchers.IO) {
+                            appDatabase.userProfileDao().getAllUserProfiles().firstOrNull()
+                        }
+                        selectedUserProfile = userProfile
+                        username = userProfile?.username ?: ""
+                        created = userProfile?.created ?: 0
+                        selectedLanguage = userProfile?.currentLanguage
+                    }
+                }
+
+                // Use LaunchedEffect to observe changes in selectedLanguage and update the API selected language
+                LaunchedEffect(selectedLanguage) {
+                    apiSelectedLanguage = selectedLanguage?.name ?: "English"
+                }
 
                 Scaffold(
                     topBar = {
-                        TopBar(onLanguageSelected = { language ->
-                            apiSelectedLanguage = language
-                        })
+                        TopBar(
+                            onLanguageSelected = { language ->
+                                apiSelectedLanguage = language
+                            },
+                            currentLang = selectedLanguage?.name ?: "English", // Pass selected language here
+                            applicationContext
+                        )
                     },
                     bottomBar = {
                         if (buttonsTrue) {
@@ -84,7 +124,6 @@ class MainActivity : ComponentActivity() {
                             },
                             startDestination = Screen.Profile.route,
                             selectedLanguage = apiSelectedLanguage
-
                         )
                     }
                 }
@@ -94,8 +133,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(onLanguageSelected: (String) -> Unit) {
+fun TopBar(onLanguageSelected: (String) -> Unit, currentLang: String, context: Context) {
     var showLanguageSelection by remember { mutableStateOf(false) }
+
+    // Updated this section to use currentLang parameter to determine the icon
+    val flag = icon(currentLang)
+    val icon = if (flag.isEmpty()) {
+        painterResource(R.drawable.smart_toy)
+    } else {
+        painterResource(FlagKit.getResId(context, flag))
+    }
 
     Surface {
         Box(
@@ -108,9 +155,12 @@ fun TopBar(onLanguageSelected: (String) -> Unit) {
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.flag),
-                        contentDescription = stringResource(id = R.string.language_selection)
+                    Image(
+                        painter = icon, // Use the icon here
+                        contentDescription = "Flag of $currentLang",
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(36.dp)
                     )
                 }
 
@@ -164,7 +214,7 @@ fun BottomBar(
     NavigationBar(
         modifier = modifier,
 
-    ) {
+        ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         screens.forEach { screen ->
