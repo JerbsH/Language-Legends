@@ -26,7 +26,7 @@ fun icon(language: String): String {
         "English (American)" -> {
             flag = "us"
         }
-        "Esthonian" -> {
+        "Estonian" -> {
             flag = "ee"
         }
         "Japanese" -> {

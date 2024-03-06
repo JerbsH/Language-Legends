@@ -5,7 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
 import kotlin.math.sqrt
 
 class SensorHelper(private val context: Context) : SensorEventListener {

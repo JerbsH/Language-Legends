@@ -1,7 +1,6 @@
 package com.example.languagelegends.screens
 
 import android.util.Log
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,9 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -226,6 +228,7 @@ fun WordScrambleExercise(
                 value = userInput,
                 onValueChange = { userInput = it },
                 label = { Text(text = stringResource(id = R.string.your_answer)) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -335,6 +338,7 @@ fun SecondExercise(
                                 userTranslations.value = newList
                             },
                             label = { Text(text = stringResource(id = R.string.country_name)) },
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                             singleLine = true,
                             modifier = Modifier.padding(start = 8.dp)
                         )
@@ -411,19 +415,13 @@ fun TiltExercise(
     // Feedback text
     var feedbackText by remember { mutableStateOf<String?>(null) }
 
-    // Progress state for the LinearProgressIndicator
-    val progress by animateFloatAsState(
-        targetValue = if (sensorHelper.isTiltedRight.value) 1f else if (sensorHelper.isTiltedLeft.value) 0f else 0.5f,
-        animationSpec = tween(durationMillis = 500, easing = LinearEasing), label = ""
-    )
-
     // Store the string resources in variables
     val correctString = stringResource(id = R.string.correct)
     val keepTryingString = stringResource(id = R.string.keep_trying)
 
     LaunchedEffect(currentItemIndex) {
         while (true) {
-            delay(100) // Adjust delay as needed
+            delay(200) // Adjust delay as needed
 
             // Check if the device is tilted correctly
             if (sensorHelper.isTiltedRight.value) { // Check for right tilt instead of left
@@ -431,9 +429,9 @@ fun TiltExercise(
                     feedbackText = correctString // Provide feedback for correct tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted right, selected answer: ${currentItem.second}"
+                        "Tilted left1, selected answer: ${currentItem.second}"
                     ) // Log the selected answer
-                    delay(2000) // Wait for a second before clearing the feedback
+                    delay(3000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
                         currentItemIndex++
@@ -446,9 +444,9 @@ fun TiltExercise(
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted right, selected answer: ${currentItem.third}"
+                        "Tilted left2, selected answer: ${currentItem.third}"
                     ) // Log the selected answer
-                    delay(2000) // Wait for a second before clearing the feedback
+                    delay(3000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
             } else if (sensorHelper.isTiltedLeft.value) { // Check for left tilt instead of right
@@ -456,9 +454,9 @@ fun TiltExercise(
                     feedbackText = correctString // Provide feedback for correct tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted left, selected answer: ${currentItem.second}"
+                        "Tilted right3, selected answer: ${currentItem.second}"
                     ) // Log the selected answer
-                    delay(2000) // Wait for a second before clearing the feedback
+                    delay(3000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
                         currentItemIndex++
@@ -471,7 +469,7 @@ fun TiltExercise(
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted left, selected answer: ${currentItem.third}"
+                        "Tilted right4, selected answer: ${currentItem.third}"
                     ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
@@ -545,11 +543,37 @@ fun TiltExercise(
             )
         }
 
-        // Show a progress indicator based on the tilt direction
-        LinearProgressIndicator(
-            progress = { progress },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            color = if (sensorHelper.isTiltedRight.value) Color.Green else if (sensorHelper.isTiltedLeft.value) Color.Red else Color.Gray,
-        )
+            horizontalArrangement = Arrangement.Center
+        ) {
+            val progressRight by animateFloatAsState(
+                targetValue = if (sensorHelper.isTiltedRight.value) 1f else 0f,
+                animationSpec = tween(durationMillis = 1000), label = ""
+            )
+
+            LinearProgressIndicator(
+                progress = { progressRight },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(8.dp)
+                    .graphicsLayer(scaleX = -1f),
+                color = Color.Green,
+            )
+
+            val progressLeft by animateFloatAsState(
+                targetValue = if (sensorHelper.isTiltedLeft.value) 1f else 0f,
+                animationSpec = tween(durationMillis = 1000), label = ""
+            )
+
+            LinearProgressIndicator(
+                progress = { progressLeft },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(8.dp),
+                color = Color.Green,
+
+                )
+        }
     }
 }
