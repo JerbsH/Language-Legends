@@ -50,6 +50,8 @@
     <string name="country_name">Country name</string>
     <string name="all_exercises">All exercises completed!</string>
     <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
+    <string name="exercise_3">Translation Exercise</string>
+    <string name="exercise3_guide">Tilt your phone to the left or right to select the correct translation of the displayed word.</string>
 
 
 </resources>

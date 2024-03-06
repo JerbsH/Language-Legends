@@ -1,17 +1,31 @@
 package com.example.languagelegends.screens
 
-import android.content.Context
+import android.util.Log
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,6 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.languagelegends.R
 import com.example.languagelegends.features.SensorHelper
@@ -48,7 +63,9 @@ fun ExercisesScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
         // Display the appropriate exercise based on the currentExercise state
         when (currentExercise) {
@@ -76,7 +93,9 @@ fun ExercisesScreen(navController: NavController) {
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
                         currentExercise++
-                    }
+                    },
+                    onGoBack = { navController.navigate("path") }
+
                 )
             }
             // Add more exercises as needed
@@ -263,6 +282,7 @@ fun SecondExercise(
         )
     }
 
+
     // State to track user input for the translations
     val userTranslations = remember {
         mutableStateOf(List(languageCountryPairs.size) { "" })
@@ -362,11 +382,12 @@ fun SecondExercise(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TiltExercise(
-
     sensorHelper: SensorHelper,
-    onExerciseCompleted: () -> Unit
+    onExerciseCompleted: () -> Unit,
+    onGoBack: () -> Unit
 ) {
     // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
@@ -391,14 +412,28 @@ fun TiltExercise(
     // Feedback text
     var feedbackText by remember { mutableStateOf<String?>(null) }
 
+    // Progress state for the LinearProgressIndicator
+    val progress by animateFloatAsState(
+        targetValue = if (sensorHelper.isTiltedRight.value) 1f else if (sensorHelper.isTiltedLeft.value) 0f else 0.5f,
+        animationSpec = tween(durationMillis = 500, easing = LinearEasing), label = ""
+    )
+
+    // Store the string resources in variables
+    val correctString = stringResource(id = R.string.correct)
+    val keepTryingString = stringResource(id = R.string.keep_trying)
+
     LaunchedEffect(currentItemIndex) {
         while (true) {
             delay(100) // Adjust delay as needed
 
             // Check if the device is tilted correctly
-            if (sensorHelper.isTiltedLeft.value) {
+            if (sensorHelper.isTiltedRight.value) { // Check for right tilt instead of left
                 if (isCorrectOnLeft.value) {
-                    feedbackText = "Correct!" // Provide feedback for correct tilt
+                    feedbackText = correctString // Provide feedback for correct tilt
+                    Log.d(
+                        "TiltExercise",
+                        "Tilted right, selected answer: ${currentItem.second}"
+                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
@@ -409,13 +444,21 @@ fun TiltExercise(
                         break
                     }
                 } else {
-                    feedbackText = "Wrong! Try again." // Provide feedback for incorrect tilt
+                    feedbackText = keepTryingString // Provide feedback for incorrect tilt
+                    Log.d(
+                        "TiltExercise",
+                        "Tilted right, selected answer: ${currentItem.third}"
+                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
-            } else if (sensorHelper.isTiltedRight.value) {
+            } else if (sensorHelper.isTiltedLeft.value) { // Check for left tilt instead of right
                 if (!isCorrectOnLeft.value) {
-                    feedbackText = "Correct!" // Provide feedback for correct tilt
+                    feedbackText = correctString // Provide feedback for correct tilt
+                    Log.d(
+                        "TiltExercise",
+                        "Tilted left, selected answer: ${currentItem.second}"
+                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
@@ -426,7 +469,11 @@ fun TiltExercise(
                         break
                     }
                 } else {
-                    feedbackText = "Wrong! Try again." // Provide feedback for incorrect tilt
+                    feedbackText = keepTryingString // Provide feedback for incorrect tilt
+                    Log.d(
+                        "TiltExercise",
+                        "Tilted left, selected answer: ${currentItem.third}"
+                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
@@ -440,11 +487,35 @@ fun TiltExercise(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        TopAppBar(
+            title = {
+                Text(
+                    text = stringResource(id = R.string.exercise_3),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 25.sp,
+                    textAlign = TextAlign.Center
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = { onGoBack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                }
+            }
+        )
+        Text(
+            text = stringResource(id = R.string.exercise3_guide),
+
+            style = MaterialTheme.typography.bodyMedium
+        )
+        HorizontalDivider(modifier = Modifier, 2.dp)
+
         // Display the word
         Text(
             text = currentItem.first, // Display the word
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 32.dp) // Increased padding
+            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(top = 32.dp, bottom = 32.dp) // Increased padding
         )
 
         // Display the possible translations
@@ -469,9 +540,17 @@ fun TiltExercise(
         feedbackText?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.bodyMedium,
+                color = if (it == stringResource(id = R.string.correct)) Color.Green else Color.Red,
+                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+
+        // Show a progress indicator based on the tilt direction
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth(),
+            color = if (sensorHelper.isTiltedRight.value) Color.Green else if (sensorHelper.isTiltedLeft.value) Color.Red else Color.Gray,
+        )
     }
 }

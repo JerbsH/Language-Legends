@@ -50,6 +50,8 @@
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
     <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
+    <string name="exercise_3">Käännöstehtävä</string>
+    <string name="exercise3_guide">Käännä puhelintasi vasemmalle tai oikealle valitaksesi oikean käännöksen sanasta.</string>
 
 
 </resources>
