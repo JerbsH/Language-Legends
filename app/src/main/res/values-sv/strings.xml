@@ -59,6 +59,9 @@
     <string name="match_country">Passa ihop varje land med motsvarande land</string>
     <string name="country_name">Landets namn</string>
     <string name="all_exercises">Alla övningar färdiga!</string>
+    <string name="shuffle_hint">Tips: Skaka telefonen för att blanda bokstäverna igen!</string>
+    <string name="exercise_3">Översättningsövning</string>
+    <string name="exercise3_guide">Luta telefonen åt vänster eller höger för att välja rätt översättning av det visade ordet.</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Välj språk</string>
@@ -66,5 +69,6 @@
     <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
     <string name="language_selection">Språkval</string>
     <string name="AIanswer">svara…</string>
+
 
 </resources>

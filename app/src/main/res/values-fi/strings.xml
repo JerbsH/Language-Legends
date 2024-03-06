@@ -59,6 +59,9 @@
     <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
     <string name="country_name">Maan nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
+    <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
+    <string name="exercise_3">Käännöstehtävä</string>
+    <string name="exercise3_guide">Käännä puhelintasi vasemmalle tai oikealle valitaksesi oikean käännöksen sanasta.</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Valitse Kieli</string>
