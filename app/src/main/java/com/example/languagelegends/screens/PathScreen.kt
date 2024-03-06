@@ -13,7 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +27,7 @@ import androidx.navigation.NavController
 @Composable
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
-    val completedExercises by remember { mutableStateOf(0) }
+    val completedExercises by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
 
     // Load the background image
@@ -60,16 +60,16 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
 
 val exercisePositions = listOf(
 
-    Pair(0.21f, 1.41f),//ball 1
-    Pair(0.64f, 1.25f),
-    Pair(0.33f, 1.12f),
-    Pair(0.57f, 1.01f),
-    Pair(0.42f, 0.90f),
-    Pair(0.19f, 0.692f),
-    Pair(0.65f, 0.511f),
-    Pair(0.35f, 0.383f),
-    Pair(0.56f, 0.22f),
-    Pair(0.44f, 0.08f),// Ball 10
+    Pair(0.16f, 1.41f),//ball 1
+    Pair(0.25f, 1.253f),
+    Pair(0.187f, 1.121f),
+    Pair(0.243f, 1.01f),
+    Pair(0.205f, 0.90f),
+    Pair(0.155f, 0.692f),
+    Pair(0.255f, 0.511f),
+    Pair(0.19f, 0.383f),
+    Pair(0.242f, 0.215f),
+    Pair(0.21f, 0.08f),// Ball 10
 )
 
 @Composable
@@ -87,15 +87,20 @@ fun LanguageExercise(
     // Determine the circle color based on the unlocked status
     val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
+    // Calculate the positions as a percentage of the screen width and height
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    val screenHeight = LocalConfiguration.current.screenHeightDp
+    val aspectRatio = 20.0f / 9.0f // Replace with the aspect ratio of your design
+    val adjustedScreenWidth = screenHeight * aspectRatio
+    val offsetX = (x * adjustedScreenWidth) - (screenWidth / 2)
+    val offsetY = y * screenHeight
+
     // Render the circle as a clickable surface if the exercise is unlocked
     if (isUnlocked) {
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(
-                    x.dp * LocalConfiguration.current.screenWidthDp,
-                    y.dp * LocalConfiguration.current.screenHeightDp
-                ),
+                .offset(offsetX.dp, offsetY.dp),
             shape = CircleShape,
             color = circleColor,
             onClick = { onClick(number) } // Call the lambda onClick with the exercise number
@@ -117,10 +122,7 @@ fun LanguageExercise(
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(
-                    x.dp * LocalConfiguration.current.screenWidthDp,
-                    y.dp * LocalConfiguration.current.screenHeightDp
-                ),
+                .offset(offsetX.dp, offsetY.dp),
             shape = CircleShape,
             color = circleColor,
             onClick = {}
