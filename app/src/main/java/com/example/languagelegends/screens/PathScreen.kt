@@ -59,8 +59,8 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
 }
 
 val exercisePositions = listOf(
-    Pair(0.33f, 1.61f), // Ball 1
-    Pair(0.21f, 1.41f),
+
+    Pair(0.21f, 1.41f),//ball 1
     Pair(0.64f, 1.25f),
     Pair(0.33f, 1.12f),
     Pair(0.57f, 1.01f),
@@ -68,7 +68,8 @@ val exercisePositions = listOf(
     Pair(0.19f, 0.692f),
     Pair(0.65f, 0.511f),
     Pair(0.35f, 0.383f),
-    Pair(0.56f, 0.22f) // Ball 10
+    Pair(0.56f, 0.22f),
+    Pair(0.44f, 0.08f),// Ball 10
 )
 
 @Composable
