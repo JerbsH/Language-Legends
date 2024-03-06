@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-
 @Composable
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
@@ -60,16 +59,16 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
 
 val exercisePositions = listOf(
 
-    Pair(0.16f, 1.41f),//ball 1
-    Pair(0.25f, 1.253f),
-    Pair(0.187f, 1.121f),
-    Pair(0.243f, 1.01f),
-    Pair(0.205f, 0.90f),
-    Pair(0.155f, 0.692f),
-    Pair(0.255f, 0.511f),
-    Pair(0.19f, 0.383f),
-    Pair(0.242f, 0.215f),
-    Pair(0.21f, 0.08f),// Ball 10
+    Pair(0.22f, 2.84f),//ball 1
+    Pair(0.63f, 2.545f),
+    Pair(0.34f, 2.26f),
+    Pair(0.57f, 2.038f),
+    Pair(0.41f, 1.82f),
+    Pair(0.19f, 1.38f),
+    Pair(0.64f, 1.05f),
+    Pair(0.35f, 0.77f),
+    Pair(0.55f, 0.444f),
+    Pair(0.444f, 0.15f),// Ball 10
 )
 
 @Composable
@@ -87,13 +86,10 @@ fun LanguageExercise(
     // Determine the circle color based on the unlocked status
     val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
-    // Calculate the positions as a percentage of the screen width and height
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    val screenHeight = LocalConfiguration.current.screenHeightDp
-    val aspectRatio = 20.0f / 9.0f // Replace with the aspect ratio of your design
-    val adjustedScreenWidth = screenHeight * aspectRatio
-    val offsetX = (x * adjustedScreenWidth) - (screenWidth / 2)
-    val offsetY = y * screenHeight
+    // Calculate the positions as a percentage of the smallest width
+    val smallestWidth = minOf(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
+    val offsetX = x * smallestWidth
+    val offsetY = y * smallestWidth
 
     // Render the circle as a clickable surface if the exercise is unlocked
     if (isUnlocked) {
