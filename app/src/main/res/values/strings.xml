@@ -24,6 +24,15 @@
     <string name="french">French</string>
     <string name="spanish">Spanish</string>
     <string name="welcome">Welcome %1$s</string>
+    <string name="welcome_to_language_legends">Welcome to Language Legends!</string>
+    <string name="enter_name_to_start">Please enter your name to get started on your adventure.</string>
+    <string name="select_language_to_learn">Select a language to start learning!</string>
+    <string name="please_choose_username">Please choose a username</string>
+    <string name="username_min_length_error">Username should be at least 2 characters</string>
+    <string name="username_max_length_error">Username should be at most 20 characters</string>
+    <string name="please_choose_language">Please choose a language</string>
+    <string name="start_adventure">Start adventure!</string>
+
 
 
     <!-- chat -->
@@ -37,6 +46,7 @@
     <string name="ask_question">Ask Me a Question</string>
     <string name="ai_choice">You chose %1$s, the Wizard will now test your knowledge.</string>
     <string name="weather">Weather</string>
+    <string name="check_answer">Answer</string>
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>
@@ -52,6 +62,17 @@
     <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
     <string name="exercise_3">Translation Exercise</string>
     <string name="exercise3_guide">Tilt your phone to the left or right to select the correct translation of the displayed word.</string>
+
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Select Language</string>
+    <string name="correct_answer">Correct answer! Ask another question!</string>
+    <string name="incorrect_answer_try_again">Incorrect answer. Try again!</string>
+    <string name="language_selection">Language Selection</string>
+    <string name="AIanswer">answer…</string>
+
+
+
+
 
 
 </resources>

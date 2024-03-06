@@ -54,8 +54,7 @@ import kotlin.random.Random
 
 
 @Composable
-fun ExercisesScreen(navController: NavController) {
-    //Define the current exercise
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
     var currentExercise by remember { mutableStateOf(1) }
 
     //Define the layout for the exercises

@@ -24,6 +24,15 @@
     <string name="french">Franska</string>
     <string name="spanish">Spanska</string>
     <string name="welcome">Välkommen %1$s</string>
+    <string name="welcome_to_language_legends">Välkommen till Language Legends!</string>
+    <string name="enter_name_to_start">Ange ditt namn för att komma igång med ditt äventyr.</string>
+    <string name="select_language_to_learn">Välj ett språk för att börja lära dig!</string>
+    <string name="please_choose_username">Välj ett användarnamn</string>
+    <string name="username_min_length_error">Användarnamnet ska bestå av minst 2 tecken</string>
+    <string name="username_max_length_error">" Användarnamn bör vara högst 20 tecken"</string>
+    <string name="please_choose_language">Välj ett språk</string>
+    <string name="start_adventure">Börja ditt äventyr!</string>
+
 
     <!-- chat -->
     <string name="ai_wizard">AI trollkarl</string>
@@ -36,6 +45,8 @@
     <string name="ask_question">Ställ en fråg</string>
     <string name="weather">Väder</string>
     <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
+    <string name="check_answer">Svara</string>
+
 
     <!-- path -->
     <string name="exercise_1">Ordblandningsövning</string>
@@ -51,5 +62,13 @@
     <string name="shuffle_hint">Tips: Skaka telefonen för att blanda bokstäverna igen!</string>
     <string name="exercise_3">Översättningsövning</string>
     <string name="exercise3_guide">Luta telefonen åt vänster eller höger för att välja rätt översättning av det visade ordet.</string>
+
+    <!-- alertdialog, languageselection -->
+    <string name="select_language">Välj språk</string>
+    <string name="correct_answer">Rätt svar! Ställ en annan fråga!</string>
+    <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
+    <string name="language_selection">Språkval</string>
+    <string name="AIanswer">svara…</string>
+
 
 </resources>

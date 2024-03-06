@@ -4,9 +4,14 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.R
+import com.example.languagelegends.features.LANGUAGES
+import com.example.languagelegends.features.TranslateAPI
+import com.example.languagelegends.features.TranslationCallback
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -14,18 +19,18 @@ import com.hexascribe.vertexai.VertexAI
 import com.hexascribe.vertexai.features.TextRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
+import java.util.Locale
 
 /** This is the ViewModel for the AI Chat feature of the application.
  * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
  * checking token expiration, and executing text requests.
  * **/
 class AiChatViewModel(private val application: Application) : ViewModel() {
+
 
     // Constants used for SharedPreferences
     companion object {
@@ -38,7 +43,22 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
     // LiveData objects to hold the state of the UI
     var menuVisibility = MutableLiveData<Boolean>()
     var topic = MutableLiveData<String>()
-    var response = MutableLiveData<String>()
+    var response = MutableLiveData<String?>()
+
+    private val translateAPI = TranslateAPI(application)
+
+    //deepl languages
+    val languages = LANGUAGES
+
+    var isGeneratingQuestion = MutableLiveData<Boolean>()
+    var isQuestionAsked = MutableLiveData<Boolean>()
+    var userAnswer = mutableStateOf("")
+    private var correctAnswer = MutableLiveData<String?>()
+    var resultMessage = MutableLiveData<String?>()
+    private val correctAnswerString = application.getString(R.string.correct_answer)
+    private val incorrectAnswerTryAgainString =
+        application.getString(R.string.incorrect_answer_try_again)
+
 
     // SharedPreferences to store the access token and project ID
     private val sharedPreferences: SharedPreferences =
@@ -73,6 +93,20 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
             buildVertexAIInstance()
         } catch (e: Exception) {
             Log.e("DBG", "Error initializing VertexAI: ${e.message}")
+        }
+    }
+
+    /**
+     * for testing purposes, need to change saveToken time also
+     * run this function on top of the initializeVertexAi function
+     * try/catch block
+     * **/
+    private fun invalidateCurrentToken() {
+        sharedPreferences.edit().apply {
+            remove(ACCESS_TOKEN)
+            remove(PROJECT_ID)
+            remove(TOKEN_EXPIRATION_TIME)
+            apply()
         }
     }
 
@@ -161,33 +195,101 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
         )
     }
 
+    private fun getSelectedLanguage(): String {
+        val sharedPreferences = application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("selectedLanguageCode", "EN-US") ?: "EN-US"
+    }
+
     /** This function is called when the user asks a question.
      * It executes a text request to the VertexAI instance.
      **/
     fun onAskMeAQuestion() {
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
+            isQuestionAsked.value = true
+            isGeneratingQuestion.postValue(true)
+            resultMessage.value = ""
             if (textRequest == null) {
                 Log.e("DBG", "textRequest is not initialized")
                 return@launch
             }
 
-            val resultFlow = MutableStateFlow<String?>(null)
+            try {
+                withContext(Dispatchers.IO) {
+                    val randomNumber = (1..100).random()
 
-            withContext(Dispatchers.IO) {
-                try {
-                    val result =
-                        textRequest?.execute("Ask me to translate phrase with the theme of ${topic.value}")
-                            ?.getOrThrow()
-                    resultFlow.value = result
-                    Log.d("DBG", "Result: $result")
-                } catch (e: Exception) {
-                    Log.e("DBG", "Error executing request: ${e.message}")
-                    throw e
+                    // Send the API call to the AI
+                    val aiResponse = textRequest?.execute(
+                        "Give me a short phrase related to ${topic.value} $randomNumber"
+                    )?.getOrThrow()
+
+                    val modifiedAiResponse = aiResponse?.substringAfter(": ")
+
+                    Log.d("DBG", "AI response: $modifiedAiResponse")
+
+                    // Translate the AI response to the selected language
+                    translateAPI.translate(
+                        modifiedAiResponse,
+                        getSelectedLanguage(),
+                        object : TranslationCallback {
+                            override fun onTranslationResult(result: String) {
+                                // Store the translated text as the correct answer
+                                val modifiedResult = result.trimEnd('.').trim('"')
+                                correctAnswer.postValue(modifiedResult)
+                                Log.d("DBG", "Set correctAnswer value: $modifiedResult")
+
+                                // Translate the AI response to English and post it to the response LiveData
+                                translateAPI.translate(
+                                    modifiedAiResponse,
+                                    "EN",
+                                    object : TranslationCallback {
+                                        override fun onTranslationResult(result: String) {
+                                            response.postValue(result)
+                                            Log.d(
+                                                "DBG",
+                                                "Posted translated data to response: $result"
+                                            )
+                                        }
+
+                                        override fun onTranslationError(error: String) {
+                                            Log.e("DBG", "Translation error: $error")
+                                        }
+                                    })
+                            }
+
+                            override fun onTranslationError(error: String) {
+                                Log.e("DBG", "Translation error: $error")
+                            }
+                        })
                 }
+            } catch (e: Exception) {
+                Log.e("DBG", "Error executing request: ${e.message}")
+                throw e
+            } finally {
+                isGeneratingQuestion.postValue(false)
             }
+        }
+    }
 
-            response.value = resultFlow.first { it != null } ?: ""
+    fun checkAnswer() {
+        viewModelScope.launch {
+            val correctAnswer = correctAnswer.value?.replace("\\s".toRegex(), "")?.lowercase(
+                Locale.ROOT
+            )
+            val userAnswerText = userAnswer.value.replace("\\s".toRegex(), "")
+                .lowercase(Locale.ROOT)
+            Log.d("DBG", "Correct answer: $correctAnswer")
+            Log.d("DBG", "User answer: $userAnswerText")
+
+            if (correctAnswer == userAnswerText) {
+                resultMessage.value = correctAnswerString
+                Log.d("DBG", correctAnswerString)
+                userAnswer.value = ""
+                response.value = null
+            } else {
+                resultMessage.value = incorrectAnswerTryAgainString
+                Log.d("DBG", incorrectAnswerTryAgainString)
+            }
         }
     }
 }
