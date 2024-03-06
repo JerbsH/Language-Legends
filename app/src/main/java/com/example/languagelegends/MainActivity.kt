@@ -97,9 +97,7 @@ class MainActivity : ComponentActivity() {
 fun TopBar(onLanguageSelected: (String) -> Unit) {
     var showLanguageSelection by remember { mutableStateOf(false) }
 
-    Surface(
-        color = Color.White,
-    ) {
+    Surface {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -165,7 +163,7 @@ fun BottomBar(
 
     NavigationBar(
         modifier = modifier,
-        containerColor = Color.White,
+
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -189,14 +187,7 @@ fun BottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedTextColor = Color.Gray,
-                    selectedTextColor = Color.Black,
-                    selectedIconColor = Color.Black,
-                    unselectedIconColor = Color.Black,
-                    indicatorColor = Color.LightGray
-                ),
+                }
             )
         }
     }

@@ -108,6 +108,7 @@ fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
                 ) {
                     Text(
                         text = stringResource(id = R.string.close),
+                        color = Color.Black,
                     )
                 }
             },
