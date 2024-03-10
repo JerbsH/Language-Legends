@@ -76,76 +76,84 @@ fun LanguageSelection(
     val languages = LANGUAGES
 
     var selectedOption by remember { mutableStateOf(languages.keys.first()) }
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(text = stringResource(id = R.string.select_language)) },
-        text = {
-            Box {
-                LazyColumn {
-                    items(languages.keys.toList()) { language ->
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (language != selectedOption) {
-                                        selectedOption = language
-                                        val sharedPreferences =
-                                            context.getSharedPreferences(
-                                                "MyPrefs",
-                                                Context.MODE_PRIVATE
-                                            )
-                                        sharedPreferences
-                                            .edit()
-                                            .putString("selectedLanguageName", language)
-                                            .putString(
-                                                "selectedLanguageCode",
-                                                languages[language] ?: "EN"
-                                            )
-                                            .apply()
-                                        onLanguageSelected(language) // Pass the full language name
+    var isDialogOpen by remember { mutableStateOf(true) } // Add this state to control the dialog visibility
 
-                                        // Update language in view model
-                                        userProfileViewModel.viewModelScope.launch {
-                                            userProfileViewModel.updateLanguage(language)
+    if (isDialogOpen) { // Show the dialog only if isDialogOpen is true
+        AlertDialog(
+            onDismissRequest = {
+                isDialogOpen = false
+            }, // Dismiss the dialog when outside is clicked
+            title = { Text(text = stringResource(id = R.string.select_language)) },
+            text = {
+                Box {
+                    LazyColumn {
+                        items(languages.keys.toList()) { language ->
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (language != selectedOption) {
+                                            selectedOption = language
+                                            val sharedPreferences =
+                                                context.getSharedPreferences(
+                                                    "MyPrefs",
+                                                    Context.MODE_PRIVATE
+                                                )
+                                            sharedPreferences
+                                                .edit()
+                                                .putString("selectedLanguageName", language)
+                                                .putString(
+                                                    "selectedLanguageCode",
+                                                    languages[language] ?: "EN"
+                                                )
+                                                .apply()
+                                            onLanguageSelected(language) // Pass the full language name
+
+                                            // Update language in view model
+                                            userProfileViewModel.viewModelScope.launch {
+                                                userProfileViewModel.updateLanguage(language)
+                                            }
                                         }
-                                    }
-                                }) {
-                            Text(
-                                text = language,
-                                style = TextStyle(fontSize = 18.sp),
-                                modifier = Modifier
-                            )
-                            val flag = icon(language)
-                            Image(
-                                painter = painterResource(FlagKit.getResId(context, flag)),
-                                contentDescription = "Flag of $language",
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .size(36.dp)
-                            )
+                                    }) {
+                                Text(
+                                    text = language,
+                                    style = TextStyle(fontSize = 18.sp),
+                                    modifier = Modifier
+                                )
+                                val flag = icon(language)
+                                Image(
+                                    painter = painterResource(FlagKit.getResId(context, flag)),
+                                    contentDescription = "Flag of $language",
+                                    modifier = Modifier
+                                        .padding(end = 16.dp)
+                                        .size(36.dp)
+                                )
+                            }
+                            HorizontalDivider()
                         }
-                        HorizontalDivider()
                     }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {},
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.LightGray)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isDialogOpen = false
+                    }, // Dismiss the dialog when the button is clicked
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.LightGray)
 
-            ) {
-                Text(
-                    text = stringResource(id = R.string.close),
-                )
-            }
-        },
-        modifier = Modifier
-            .fillMaxHeight(0.7f) // 70% of screen height
-            .fillMaxWidth(0.95f) // 70% of screen width
-    )
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.close),
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxHeight(0.7f) // 70% of screen height
+                .fillMaxWidth(0.95f) // 70% of screen width
+        )
+    }
 }
