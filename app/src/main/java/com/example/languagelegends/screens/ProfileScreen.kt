@@ -325,7 +325,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
             )
 
 
-// Fetch user profile from the database using a coroutine
+            // Fetch user profile from the database using a coroutine
             LaunchedEffect(isEditingUsername, username) {
                 try {
                     if (!isEditingUsername) {

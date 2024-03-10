@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-
 @Composable
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
