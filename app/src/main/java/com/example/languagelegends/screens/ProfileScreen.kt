@@ -421,8 +421,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
             }
 
             // Display the list of languages from the updated user profile
-            Box(modifier = Modifier.height(100.dp)) { // Set a fixed height for the list
-                LazyColumn { // Use LazyColumn for scrollable list
+            // Set a fixed height for the list
+            Box(modifier = Modifier.height(100.dp)) {
+                // Use LazyColumn to display the list of languages
+                LazyColumn {
                     items(selectedUserProfile?.languages ?: emptyList()) { language ->
                         LanguageItem(language = language) {
                             selectedLanguage = language

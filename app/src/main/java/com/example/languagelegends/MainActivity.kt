@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
                 val userProfileViewModel = remember { UserProfileViewModel(application) }
                 var isNameScreenActive by remember { mutableStateOf(false) }
 
+                userProfileViewModel.loadSelectedLanguage()
 
                 Scaffold(
                     topBar = {
