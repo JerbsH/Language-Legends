@@ -73,7 +73,12 @@ import kotlinx.coroutines.withContext
 data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int)
 
 @Composable
-fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, onBottomBarVisibilityChanged: (Boolean) -> Unit, userProfileViewModel: UserProfileViewModel) {
+fun ProfileScreen(
+    userProfileDao: UserProfileDao,
+    apiSelectedLanguage: String,
+    onBottomBarVisibilityChanged: (Boolean) -> Unit,
+    userProfileViewModel: UserProfileViewModel
+) {
     var username by remember { mutableStateOf("") }
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -175,7 +180,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
                 // Update the UserProfile in the database
                 coroutineScope.launch {
                     userProfileDao.updateUserProfile(userProfile)
-                    updateUserLanguages(userProfile, apiSelectedLanguage) // Call updateUserLanguages here
+                    updateUserLanguages(
+                        userProfile,
+                        apiSelectedLanguage
+                    ) // Call updateUserLanguages here
                 }
             }
 
@@ -366,7 +374,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
                             // If there is exactly one user, update its username
                             val firstUser = allUsers.first()
                             firstUser.username = username
-                            updateUserLanguages(firstUser, selectedLanguage?.name ?: "Default Language")
+                            updateUserLanguages(
+                                firstUser,
+                                selectedLanguage?.name ?: "Default Language"
+                            )
                             userProfileDao.updateUserProfile(firstUser)
                             Log.d("DBG", "Updating user profile in the database.")
 
@@ -390,7 +401,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
                                 languagePoints = 0,
                                 created = 1
                             )
-                            updateUserLanguages(newUserProfile, selectedLanguage?.name ?: "Default Language")
+                            updateUserLanguages(
+                                newUserProfile,
+                                selectedLanguage?.name ?: "Default Language"
+                            )
                             userProfileDao.insertUserProfile(newUserProfile)
                             Log.d(
                                 "ProfileScreen",
@@ -483,7 +497,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
 
     @Composable
     fun showNameScreen(userProfileViewModel: UserProfileViewModel) {
-    onBottomBarVisibilityChanged(false)
+        onBottomBarVisibilityChanged(false)
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -560,9 +574,12 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
                                 )
                                 val flag = icon(language)
                                 Image(
-                                    painter = painterResource(FlagKit.getResId(context,
-                                        flag
-                                    )),
+                                    painter = painterResource(
+                                        FlagKit.getResId(
+                                            context,
+                                            flag
+                                        )
+                                    ),
                                     contentDescription = "Flag of $language",
                                     modifier = Modifier
                                         .padding(end = 16.dp)
@@ -639,7 +656,13 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
 
 
 fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
-    userProfile.languages.add(Language(selectedLanguage, 0, 0))
+    val existingLanguage = userProfile.languages.find { it.name == selectedLanguage }
+    if (existingLanguage != null) {
+        existingLanguage.exercisesDone = 0
+        existingLanguage.pointsEarned = 0
+    } else {
+        userProfile.languages.add(Language(selectedLanguage, 0, 0))
+    }
     userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
     userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }
 }

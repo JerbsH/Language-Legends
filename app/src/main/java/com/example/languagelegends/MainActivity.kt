@@ -1,7 +1,5 @@
 package com.example.languagelegends
 
-import com.example.languagelegends.features.LanguageSelection
-import com.example.languagelegends.features.UserProfileViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -41,6 +39,8 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.LanguageSelection
+import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
@@ -48,7 +48,6 @@ import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 import com.murgupluoglu.flagkit.FlagKit
-
 
 
 class MainActivity : ComponentActivity() {
@@ -144,8 +143,6 @@ fun TopBar(userProfileViewModel: UserProfileViewModel) {
 }
 
 
-
-
 sealed class Screen(
     val route: String,
     val title: Int? = null,
@@ -236,7 +233,12 @@ fun NavHost(
     ) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
-            ProfileScreen(userProfileDao, selectedLanguage, onBottomBarVisibilityChanged, userProfileViewModel)
+            ProfileScreen(
+                userProfileDao,
+                selectedLanguage,
+                onBottomBarVisibilityChanged,
+                userProfileViewModel
+            )
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
