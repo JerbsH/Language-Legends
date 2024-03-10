@@ -9,7 +9,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 
 class Converters {
-
+/*
     @TypeConverter
     fun fromLanguageList(value: String?): List<Language>? {
         val listType = object : TypeToken<List<Language>>() {}.type
@@ -19,6 +19,19 @@ class Converters {
     @TypeConverter
     fun toLanguageList(list: List<Language>?): String? {
         return Gson().toJson(list)
+    }*/
+
+    private val gson = Gson()
+
+    @TypeConverter
+    fun fromLanguageList(value: MutableList<Language>?): String {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toLanguageList(value: String): MutableList<Language>? {
+        val type = object : TypeToken<MutableList<Language>>() {}.type
+        return gson.fromJson(value, type)
     }
 
     @TypeConverter

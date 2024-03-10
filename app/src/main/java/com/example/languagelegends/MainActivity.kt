@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,9 +41,13 @@ import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
+import com.example.languagelegends.screens.Language
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class MainActivity : ComponentActivity() {
@@ -61,9 +66,9 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     topBar = {
-                        TopBar(onLanguageSelected = { language ->
+                        TopBar(appDatabase.userProfileDao()) { language ->
                             apiSelectedLanguage = language
-                        })
+                        }
                     },
                     bottomBar = {
                         if (buttonsTrue) {
@@ -94,8 +99,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(onLanguageSelected: (String) -> Unit) {
+fun TopBar(userProfileDao: UserProfileDao, onLanguageSelected: (String) -> Unit) {
     var showLanguageSelection by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val selectedLanguage by remember { mutableStateOf("English") }
 
     Surface(
         color = Color.White,
@@ -120,6 +127,18 @@ fun TopBar(onLanguageSelected: (String) -> Unit) {
                     LanguageSelection(onLanguageSelected = { apiSelectedLanguage ->
                         showLanguageSelection = false
                         onLanguageSelected(apiSelectedLanguage)
+
+
+                        // Update the UserProfile in the database
+                        coroutineScope.launch {
+                            val userProfile = withContext(Dispatchers.IO) {
+                                userProfileDao.getAllUserProfiles().firstOrNull()
+                            }
+                            if (userProfile != null && selectedLanguage != userProfile.currentLanguage.name) {
+                                userProfile.currentLanguage = Language(selectedLanguage, 0, 0)
+                                userProfileDao.updateUserProfile(userProfile)
+                            }
+                        }
                     })
                 }
             }

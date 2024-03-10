@@ -25,8 +25,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -60,6 +62,7 @@ import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
+import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.CoroutineScope
@@ -67,7 +70,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class Language(val name: String, val exercisesDone: Int, val pointsEarned: Int)
+data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int)
 
 @Composable
 fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
@@ -150,13 +153,29 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
         selectedUserProfile?.created
     ) {
         selectedUserProfile?.let { userProfile ->
-            coroutineScope.launch {
-                userProfileDao.updateUserProfile(userProfile)
+            val newLanguage = if (apiSelectedLanguage.isNotEmpty()) {
+                Language(apiSelectedLanguage, 0, 0)
+            } else {
+                selectedLanguage ?: Language("Default", 0, 0)
             }
-            Log.d("DBG", "User profile updated in the database.")
+            userProfile.currentLanguage = newLanguage
+            // Update the currentLanguage when apiSelectedLanguage changes
+            if (apiSelectedLanguage != userProfile.currentLanguage.name) {
+                userProfile.currentLanguage = Language(apiSelectedLanguage, 0, 0)
+                // Check if the language is already in the list
+                val existingLanguage = userProfile.languages.find { it.name == apiSelectedLanguage }
+                if (existingLanguage != null) {
+                    // Update the existing language
+                    existingLanguage.exercisesDone = 0
+                    existingLanguage.pointsEarned = 0
+                } else {
+                    // Add the new language to the list of languages
+                    userProfile.languages.add(Language(apiSelectedLanguage, 0, 0))
+                }
+            }
+
         }
     }
-
     @Composable
     fun showProfile() {
         Column(
@@ -341,7 +360,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                             // If there is exactly one user, update its username
                             val firstUser = allUsers.first()
                             firstUser.username = username
-                            updateUserLanguages(firstUser)
+                            updateUserLanguages(firstUser, selectedLanguage?.name ?: "Default Language")
                             userProfileDao.updateUserProfile(firstUser)
                             Log.d("DBG", "Updating user profile in the database.")
 
@@ -365,7 +384,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                                 languagePoints = 0,
                                 created = 1
                             )
-                            updateUserLanguages(newUserProfile)
+                            updateUserLanguages(newUserProfile, selectedLanguage?.name ?: "Default Language")
                             userProfileDao.insertUserProfile(newUserProfile)
                             Log.d(
                                 "ProfileScreen",
@@ -388,10 +407,10 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
 
 // Display the list of languages from the user profile
             LazyColumn {
-                selectedUserProfile?.languages?.let { languages ->
-                    items(languages) { language ->
-                        LanguageItem(language = language) {
-                            selectedLanguage = language
+                selectedUserProfile?.currentLanguage?.let { languages ->
+                    item {
+                        LanguageItem(language = languages) {
+                            selectedLanguage = languages
                             isDialogOpen = true
                         }
                     }
@@ -488,39 +507,43 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                 modifier = Modifier.padding(16.dp)
             )
             var selection by remember { mutableStateOf("") }
-            LazyColumn {
 
-                items(listOf("English", "Spanish", "French")) { language ->
-                    Card(
-                        border = if (selection == language) {
-                            BorderStroke(2.dp, Color.Green)
-                        } else {
-                            BorderStroke(0.dp, Color.White)
-                        },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .clickable {
-                                Log.d("DBG", "Language $language selected")
-                                selectedLanguage = Language(language, 0, 0)
-                                selection = language
-
+            Box(
+                modifier = Modifier
+                    .height(190.dp) // Set the height of the list
+            ) {
+                LazyColumn {
+                    items(LANGUAGES.keys.toList()) { language ->
+                        Card(
+                            border = if (selection == language) {
+                                BorderStroke(2.dp, Color.Green)
+                            } else {
+                                BorderStroke(0.dp, Color.White)
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .clickable {
+                                    Log.d("DBG", "Language $language selected")
+                                    selectedLanguage = Language(language, 0, 0)
+                                    selection = language
+                                }
+                        ) {
+                            Row {
+                                Text(
+                                    text = language,
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = 0.5f)
+                                        .padding(8.dp)
+                                )
+                                val flag = icon(language)
+                                Image(
+                                    painter = painterResource(FlagKit.getResId(context, flag)),
+                                    contentDescription = "Flag of $language",
+                                    modifier = Modifier
+                                        .padding(end = 16.dp)
+                                        .size(36.dp)
+                                )
                             }
-                    ) {
-                        Row {
-                            Text(
-                                text = language,
-                                modifier = Modifier
-                                    .fillMaxWidth(fraction = 0.5f)
-                                    .padding(8.dp)
-                            )
-                            val flag = icon(language)
-                            Image(
-                                painter = painterResource(FlagKit.getResId(context, flag)),
-                                contentDescription = "Flag of $language",
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .size(36.dp)
-                            )
                         }
                     }
                 }
@@ -569,7 +592,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
 
                     }
                 },
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(114.dp)
             ) {
                 Text(
                     text = stringResource(R.string.start_adventure),
@@ -588,11 +611,15 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
 }
 
 
-fun updateUserLanguages(userProfile: UserProfile) {
-    val updatedLanguages = listOf(
-        Language("English", 50, 3000), Language("Spanish", 50, 500), Language("French", 70, 12000)
-    )
-    userProfile.languages = updatedLanguages
+fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
+    val updatedLanguages = LANGUAGES.keys.map { language ->
+        if (language == selectedLanguage) {
+            Language(language, 50, 3000) // initial values for the selected language
+        } else {
+            Language(language, 0, 0) // initial values for the non-selected languages
+        }
+    }
+    userProfile.languages.addAll(updatedLanguages)
     userProfile.exercisesDone = updatedLanguages.sumOf { it.exercisesDone }
     userProfile.languagePoints = updatedLanguages.sumOf { it.pointsEarned }
 }
@@ -608,5 +635,3 @@ fun LanguageItem(language: Language, onClick: () -> Unit) {
         Text(text = language.name)
     }
 }
-
-
