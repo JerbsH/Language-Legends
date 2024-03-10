@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -39,12 +40,15 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.Language
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
+import com.example.languagelegends.screens.updateUserLanguages
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
+import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,7 +70,7 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     topBar = {
-                        TopBar(appDatabase.userProfileDao()) { language ->
+                        TopBar(appDatabase.userProfileDao(), apiSelectedLanguage) { language ->
                             apiSelectedLanguage = language
                         }
                     },
@@ -99,10 +103,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(userProfileDao: UserProfileDao, onLanguageSelected: (String) -> Unit) {
+fun TopBar(userProfileDao: UserProfileDao, selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
     var showLanguageSelection by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    val selectedLanguage by remember { mutableStateOf("English") }
+    //val selectedLanguage by remember { mutableStateOf("English") }
+    val localContext = LocalContext.current
 
     Surface(
         color = Color.White,
@@ -116,26 +121,31 @@ fun TopBar(userProfileDao: UserProfileDao, onLanguageSelected: (String) -> Unit)
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
+
                 IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
+                    val flagIcon = icon(selectedLanguage)
+                    val flagResId = FlagKit.getResId(LocalContext.current, flagIcon)
                     Icon(
-                        painter = painterResource(id = R.drawable.flag),
+                        painter = painterResource(id = flagResId),
                         contentDescription = stringResource(id = R.string.language_selection)
                     )
                 }
 
                 if (showLanguageSelection) {
                     LanguageSelection(onLanguageSelected = { apiSelectedLanguage ->
+                        // Close the language selection menu
                         showLanguageSelection = false
                         onLanguageSelected(apiSelectedLanguage)
-
 
                         // Update the UserProfile in the database
                         coroutineScope.launch {
                             val userProfile = withContext(Dispatchers.IO) {
                                 userProfileDao.getAllUserProfiles().firstOrNull()
                             }
-                            if (userProfile != null && selectedLanguage != userProfile.currentLanguage.name) {
-                                userProfile.currentLanguage = Language(selectedLanguage, 0, 0)
+                            if (userProfile != null) {
+                                val selectedLanguage = Language(apiSelectedLanguage, 0, 0)
+                                userProfile.currentLanguage = selectedLanguage
+                                updateUserLanguages(userProfile, apiSelectedLanguage) // Update languages
                                 userProfileDao.updateUserProfile(userProfile)
                             }
                         }

@@ -25,10 +25,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -171,6 +169,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                 } else {
                     // Add the new language to the list of languages
                     userProfile.languages.add(Language(apiSelectedLanguage, 0, 0))
+                }
+                // Update the UserProfile in the database
+                coroutineScope.launch {
+                    userProfileDao.updateUserProfile(userProfile)
+                    updateUserLanguages(userProfile, apiSelectedLanguage) // Call updateUserLanguages here
                 }
             }
 
@@ -405,12 +408,22 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                 }
             }
 
-// Display the list of languages from the user profile
-            LazyColumn {
-                selectedUserProfile?.currentLanguage?.let { languages ->
-                    item {
-                        LanguageItem(language = languages) {
-                            selectedLanguage = languages
+            // Fetch the updated user profile from the database when the selected language changes
+            LaunchedEffect(selectedLanguage) {
+                coroutineScope.launch {
+                    val updatedUserProfile = withContext(Dispatchers.IO) {
+                        userProfileDao.getAllUserProfiles().firstOrNull()
+                    }
+                    selectedUserProfile = updatedUserProfile
+                }
+            }
+
+            // Display the list of languages from the updated user profile
+            Box(modifier = Modifier.height(100.dp)) { // Set a fixed height for the list
+                LazyColumn { // Use LazyColumn for scrollable list
+                    items(selectedUserProfile?.languages ?: emptyList()) { language ->
+                        LanguageItem(language = language) {
+                            selectedLanguage = language
                             isDialogOpen = true
                         }
                     }
@@ -612,16 +625,9 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
 
 
 fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
-    val updatedLanguages = LANGUAGES.keys.map { language ->
-        if (language == selectedLanguage) {
-            Language(language, 50, 3000) // initial values for the selected language
-        } else {
-            Language(language, 0, 0) // initial values for the non-selected languages
-        }
-    }
-    userProfile.languages.addAll(updatedLanguages)
-    userProfile.exercisesDone = updatedLanguages.sumOf { it.exercisesDone }
-    userProfile.languagePoints = updatedLanguages.sumOf { it.pointsEarned }
+    userProfile.languages.add(Language(selectedLanguage, 0, 0))
+    userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
+    userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }
 }
 
 @Composable
