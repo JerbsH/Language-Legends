@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
@@ -72,7 +73,7 @@ import kotlinx.coroutines.withContext
 data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int)
 
 @Composable
-fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
+fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, onBottomBarVisibilityChanged: (Boolean) -> Unit, userProfileViewModel: UserProfileViewModel) {
     var username by remember { mutableStateOf("") }
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -80,6 +81,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
     var isDialogOpen by remember { mutableStateOf(false) }
     var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
+
+
 
     val context = LocalContext.current
     DatabaseProvider.getDatabase(context).userProfileDao()
@@ -182,6 +185,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
     }
     @Composable
     fun showProfile() {
+        onBottomBarVisibilityChanged(true)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -478,7 +482,8 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
     }
 
     @Composable
-    fun showNameScreen() {
+    fun showNameScreen(userProfileViewModel: UserProfileViewModel) {
+    onBottomBarVisibilityChanged(false)
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -539,6 +544,11 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                                     Log.d("DBG", "Language $language selected")
                                     selectedLanguage = Language(language, 0, 0)
                                     selection = language
+
+                                    // Update language in view model
+                                    userProfileViewModel.viewModelScope.launch {
+                                        userProfileViewModel.updateLanguage(language)
+                                    }
                                 }
                         ) {
                             Row {
@@ -600,12 +610,14 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                                 userProfile.currentLanguage =
                                     selectedLanguage ?: Language("English", 0, 0)
                                 userProfileDao.updateUserProfile(userProfile)
+
                             }
                         }
 
                     }
                 },
                 modifier = Modifier.size(114.dp)
+
             ) {
                 Text(
                     text = stringResource(R.string.start_adventure),
@@ -618,7 +630,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
     if (created == 1) {
         showProfile()
     } else if (username.isEmpty() || isEditingUsername) {
-        showNameScreen()
+        showNameScreen(userProfileViewModel)
     }
 
 }
