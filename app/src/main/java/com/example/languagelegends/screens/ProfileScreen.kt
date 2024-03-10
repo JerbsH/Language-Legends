@@ -61,6 +61,7 @@ import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
 import com.example.languagelegends.features.LANGUAGES
+import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.CoroutineScope
@@ -408,8 +409,7 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String) {
                 }
             }
 
-            // Fetch the updated user profile from the database when the selected language changes
-            LaunchedEffect(selectedLanguage) {
+            LaunchedEffect(apiSelectedLanguage) {
                 coroutineScope.launch {
                     val updatedUserProfile = withContext(Dispatchers.IO) {
                         userProfileDao.getAllUserProfiles().firstOrNull()

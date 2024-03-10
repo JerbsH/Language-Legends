@@ -1,3 +1,4 @@
+package com.example.languagelegends.features
 
 import android.content.Context
 import androidx.compose.foundation.Image
@@ -33,89 +34,118 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
-import com.example.languagelegends.features.LANGUAGES
-import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.screens.Language
+import com.example.languagelegends.screens.updateUserLanguages
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-@Composable
-fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
-    val context = LocalContext.current
-    //deepl languages
-    val languages = LANGUAGES
+class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
+    val selectedLanguage: String by mutableStateOf("English") // Default language
+    var selectedLanguageIcon: String by mutableStateOf(icon(selectedLanguage)) // Default language icon
 
-    var selectedOption by remember { mutableStateOf(languages.keys.first()) }
-    var showDialog by remember { mutableStateOf(true) } // Set showDialog to true by default
-
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(text = stringResource(id = R.string.select_language)) },
-            text = {
-                Box {
-                    LazyColumn {
-                        items(languages.keys.toList()) { language ->
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        if (language != selectedOption) {
-                                            selectedOption = language
-                                            val sharedPreferences =
-                                                context.getSharedPreferences(
-                                                    "MyPrefs",
-                                                    Context.MODE_PRIVATE
-                                                )
-                                            sharedPreferences
-                                                .edit()
-                                                .putString("selectedLanguageName", language)
-                                                .putString(
-                                                    "selectedLanguageCode",
-                                                    languages[language] ?: "EN"
-                                                )
-                                                .apply()
-                                            onLanguageSelected(language) // Pass the full language name
-                                            showDialog = false
-                                        }
-                                    }) {
-                                Text(
-                                    text = language,
-                                    style = TextStyle(fontSize = 18.sp),
-                                    modifier = Modifier
-                                )
-                                val flag = icon(language)
-                                Image(
-                                    painter = painterResource(FlagKit.getResId(context, flag)),
-                                    contentDescription = "Flag of $language",
-                                    modifier = Modifier
-                                        .padding(end = 16.dp)
-                                        .size(36.dp)
-                                )
-                            }
-                            HorizontalDivider()
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showDialog = false },
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.LightGray)
-
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.close),
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxHeight(0.7f) // 70% of screen height
-                .fillMaxWidth(0.95f) // 70% of screen width
-        )
+    fun updateLanguage(newLanguage: String) {
+        viewModelScope.launch {
+            val userProfile = withContext(Dispatchers.IO) {
+                userProfileDao.getAllUserProfiles().firstOrNull()
+            }
+            if (userProfile != null) {
+                val selectedLanguage = Language(newLanguage, 0, 0)
+                userProfile.currentLanguage = selectedLanguage
+                updateUserLanguages(userProfile, newLanguage) // Update languages
+                userProfileDao.updateUserProfile(userProfile)
+                selectedLanguageIcon = icon(newLanguage) // Update language icon
+            }
+        }
     }
 }
 
+@Composable
+fun LanguageSelection(
+    userProfileViewModel: UserProfileViewModel,
+    onLanguageSelected: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val languages = LANGUAGES
 
+    var selectedOption by remember { mutableStateOf(languages.keys.first()) }
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(text = stringResource(id = R.string.select_language)) },
+        text = {
+            Box {
+                LazyColumn {
+                    items(languages.keys.toList()) { language ->
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (language != selectedOption) {
+                                        selectedOption = language
+                                        val sharedPreferences =
+                                            context.getSharedPreferences(
+                                                "MyPrefs",
+                                                Context.MODE_PRIVATE
+                                            )
+                                        sharedPreferences
+                                            .edit()
+                                            .putString("selectedLanguageName", language)
+                                            .putString(
+                                                "selectedLanguageCode",
+                                                languages[language] ?: "EN"
+                                            )
+                                            .apply()
+                                        onLanguageSelected(language) // Pass the full language name
+
+                                        // Update language in view model
+                                        userProfileViewModel.viewModelScope.launch {
+                                            userProfileViewModel.updateLanguage(language)
+                                        }
+                                    }
+                                }) {
+                            Text(
+                                text = language,
+                                style = TextStyle(fontSize = 18.sp),
+                                modifier = Modifier
+                            )
+                            val flag = icon(language)
+                            Image(
+                                painter = painterResource(FlagKit.getResId(context, flag)),
+                                contentDescription = "Flag of $language",
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .size(36.dp)
+                            )
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {},
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.LightGray)
+
+            ) {
+                Text(
+                    text = stringResource(id = R.string.close),
+                )
+            }
+        },
+        modifier = Modifier
+            .fillMaxHeight(0.7f) // 70% of screen height
+            .fillMaxWidth(0.95f) // 70% of screen width
+    )
+}
