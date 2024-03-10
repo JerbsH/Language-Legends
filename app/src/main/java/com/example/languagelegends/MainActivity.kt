@@ -41,6 +41,7 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
@@ -133,6 +134,7 @@ fun TopBar(userProfileViewModel: UserProfileViewModel) {
                         // Close the language selection menu
                         showLanguageSelection = false
                         userProfileViewModel.updateLanguage(apiSelectedLanguage)
+                        userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
                     }
                 )
             }

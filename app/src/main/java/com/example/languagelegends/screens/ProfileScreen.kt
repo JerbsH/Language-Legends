@@ -82,8 +82,6 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
     var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
 
-
-
     val context = LocalContext.current
     DatabaseProvider.getDatabase(context).userProfileDao()
 
@@ -560,7 +558,9 @@ fun ProfileScreen(userProfileDao: UserProfileDao, apiSelectedLanguage: String, o
                                 )
                                 val flag = icon(language)
                                 Image(
-                                    painter = painterResource(FlagKit.getResId(context, flag)),
+                                    painter = painterResource(FlagKit.getResId(context,
+                                        flag
+                                    )),
                                     contentDescription = "Flag of $language",
                                     modifier = Modifier
                                         .padding(end = 16.dp)

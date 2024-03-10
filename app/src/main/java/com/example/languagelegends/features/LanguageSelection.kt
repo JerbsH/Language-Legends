@@ -46,6 +46,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
+class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
+    var selectedLanguage by mutableStateOf("English") // Default language
+    var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
+
+    fun updateLanguage(newLanguage: String) {
+        viewModelScope.launch {
+            val userProfile = withContext(Dispatchers.IO) {
+                userProfileDao.getAllUserProfiles().firstOrNull()
+            }
+            if (userProfile != null) {
+                val selectedLanguage = Language(newLanguage, 0, 0)
+                userProfile.currentLanguage = selectedLanguage
+                updateUserLanguages(userProfile, newLanguage) // Update languages
+                userProfileDao.updateUserProfile(userProfile)
+                this@UserProfileViewModel.selectedLanguage = newLanguage
+                selectedLanguageIcon = icon(newLanguage) // Update language icon
+            }
+        }
+    }
+}
+/*
 class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
     val selectedLanguage: String by mutableStateOf("English") // Default language
@@ -65,7 +88,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
     }
-}
+}*/
 
 @Composable
 fun LanguageSelection(
@@ -96,19 +119,6 @@ fun LanguageSelection(
                                     .clickable {
                                         if (language != selectedOption) {
                                             selectedOption = language
-                                            val sharedPreferences =
-                                                context.getSharedPreferences(
-                                                    "MyPrefs",
-                                                    Context.MODE_PRIVATE
-                                                )
-                                            sharedPreferences
-                                                .edit()
-                                                .putString("selectedLanguageName", language)
-                                                .putString(
-                                                    "selectedLanguageCode",
-                                                    languages[language] ?: "EN"
-                                                )
-                                                .apply()
                                             onLanguageSelected(language) // Pass the full language name
 
                                             // Update language in view model
