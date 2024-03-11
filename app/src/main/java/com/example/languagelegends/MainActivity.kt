@@ -1,21 +1,21 @@
 package com.example.languagelegends
 
-import LanguageSelection
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,11 +39,15 @@ import androidx.navigation.navArgument
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.LanguageSelection
+import com.example.languagelegends.features.UserProfileViewModel
+import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
+import com.murgupluoglu.flagkit.FlagKit
 
 
 class MainActivity : ComponentActivity() {
@@ -58,12 +63,17 @@ class MainActivity : ComponentActivity() {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
+                val application = this.application
+                val userProfileViewModel = remember { UserProfileViewModel(application) }
+                var isNameScreenActive by remember { mutableStateOf(false) }
+
+                userProfileViewModel.loadSelectedLanguage()
 
                 Scaffold(
                     topBar = {
-                        TopBar(onLanguageSelected = { language ->
-                            apiSelectedLanguage = language
-                        })
+                        if (!isNameScreenActive) {
+                            TopBar(userProfileViewModel)
+                        }
                     },
                     bottomBar = {
                         if (buttonsTrue) {
@@ -81,9 +91,10 @@ class MainActivity : ComponentActivity() {
                             userProfileDao = appDatabase.userProfileDao(),
                             onBottomBarVisibilityChanged = { isVisible ->
                                 buttonsTrue = isVisible
+                                isNameScreenActive = !isVisible
                             },
                             startDestination = Screen.Profile.route,
-                            selectedLanguage = apiSelectedLanguage
+                            selectedLanguage = apiSelectedLanguage, userProfileViewModel
 
                         )
                     }
@@ -94,32 +105,38 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(onLanguageSelected: (String) -> Unit) {
+fun TopBar(userProfileViewModel: UserProfileViewModel) {
     var showLanguageSelection by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
 
-    Surface {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.flag),
-                        contentDescription = stringResource(id = R.string.language_selection)
-                    )
-                }
+            IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
+                val selectedLanguageIcon = userProfileViewModel.selectedLanguageIcon
+                val flagResId = FlagKit.getResId(LocalContext.current, selectedLanguageIcon)
+                Image(
+                    painter = painterResource(flagResId),
+                    contentDescription = "Flag of selected language",
+                    modifier = Modifier.size(36.dp)
+                )
+            }
 
-                if (showLanguageSelection) {
-                    LanguageSelection(onLanguageSelected = { apiSelectedLanguage ->
+            if (showLanguageSelection) {
+                LanguageSelection(
+                    userProfileViewModel = userProfileViewModel,
+                    onLanguageSelected = { apiSelectedLanguage ->
+                        // Close the language selection menu
                         showLanguageSelection = false
-                        onLanguageSelected(apiSelectedLanguage)
-                    })
-                }
+                        userProfileViewModel.updateLanguage(apiSelectedLanguage)
+                        userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
+                    }
+                )
             }
         }
     }
@@ -199,7 +216,9 @@ fun NavHost(
     userProfileDao: UserProfileDao,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     startDestination: String,
-    selectedLanguage: String
+    selectedLanguage: String,
+    userProfileViewModel: UserProfileViewModel
+
 ) {
     androidx.navigation.compose.NavHost(
         navController = navController,
@@ -207,7 +226,12 @@ fun NavHost(
     ) {
         composable(Screen.Profile.route) {
             onBottomBarVisibilityChanged(true)
-            ProfileScreen(userProfileDao, selectedLanguage)
+            ProfileScreen(
+                userProfileDao,
+                selectedLanguage,
+                onBottomBarVisibilityChanged,
+                userProfileViewModel
+            )
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
