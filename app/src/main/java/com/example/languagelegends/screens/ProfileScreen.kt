@@ -59,7 +59,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
-import com.example.languagelegends.database.Language
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
@@ -688,7 +687,7 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     }
     userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
     userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }
-    userProfile.currentLanguage = Language(selectedLanguage, 0, 0, countryCode)
+    userProfile.currentLanguage = Language(selectedLanguage, countryCode, 0, 0)
 
 }
 
