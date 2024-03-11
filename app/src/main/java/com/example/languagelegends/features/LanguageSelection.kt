@@ -1,5 +1,8 @@
+package com.example.languagelegends.features
 
+import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,23 +35,69 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.AndroidViewModel
 import com.example.languagelegends.R
-import com.example.languagelegends.features.LANGUAGES
-import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
+import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.screens.Language
+import com.example.languagelegends.screens.updateUserLanguages
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+
+class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
+    private val sharedPreferences: SharedPreferences = application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
+
+    var selectedLanguage by mutableStateOf(sharedPreferences.getString("selectedLanguage", "English") ?: "English") // Default language
+    var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
+
+
+    fun updateLanguage(newLanguage: String) {
+        viewModelScope.launch {
+            val userProfile = withContext(Dispatchers.IO) {
+                userProfileDao.getAllUserProfiles().firstOrNull()
+            }
+            // Update language icon
+            selectedLanguageIcon = icon(newLanguage)
+
+            if (userProfile != null) {
+                val selectedLanguage = Language(newLanguage, 0, 0)
+                userProfile.currentLanguage = selectedLanguage
+                updateUserLanguages(userProfile, newLanguage) // Update languages
+                userProfileDao.updateUserProfile(userProfile)
+                this@UserProfileViewModel.selectedLanguage = newLanguage
+                selectedLanguageIcon = icon(newLanguage) // Update language icon
+            }
+            // Save the selected language to SharedPreferences
+            sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
+        }
+    }
+    fun loadSelectedLanguage() {
+        selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
+        selectedLanguageIcon = icon(selectedLanguage)
+    }
+}
 
 @Composable
-fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
+fun LanguageSelection(
+    userProfileViewModel: UserProfileViewModel,
+    onLanguageSelected: (String) -> Unit
+) {
     val context = LocalContext.current
-    //deepl languages
     val languages = LANGUAGES
 
     var selectedOption by remember { mutableStateOf(languages.keys.first()) }
-    var showDialog by remember { mutableStateOf(true) } // Set showDialog to true by default
+    var isDialogOpen by remember { mutableStateOf(true) } // Add this state to control the dialog visibility
 
-    if (showDialog) {
+    if (isDialogOpen) { // Show the dialog only if isDialogOpen is true
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                isDialogOpen = false
+            }, // Dismiss the dialog when outside is clicked
             title = { Text(text = stringResource(id = R.string.select_language)) },
             text = {
                 Box {
@@ -62,21 +111,12 @@ fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
                                     .clickable {
                                         if (language != selectedOption) {
                                             selectedOption = language
-                                            val sharedPreferences =
-                                                context.getSharedPreferences(
-                                                    "MyPrefs",
-                                                    Context.MODE_PRIVATE
-                                                )
-                                            sharedPreferences
-                                                .edit()
-                                                .putString("selectedLanguageName", language)
-                                                .putString(
-                                                    "selectedLanguageCode",
-                                                    languages[language] ?: "EN"
-                                                )
-                                                .apply()
                                             onLanguageSelected(language) // Pass the full language name
-                                            showDialog = false
+
+                                            // Update language in view model
+                                            userProfileViewModel.viewModelScope.launch {
+                                                userProfileViewModel.updateLanguage(language)
+                                            }
                                         }
                                     }) {
                                 Text(
@@ -100,7 +140,9 @@ fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
             },
             confirmButton = {
                 TextButton(
-                    onClick = { showDialog = false },
+                    onClick = {
+                        isDialogOpen = false
+                    }, // Dismiss the dialog when the button is clicked
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.LightGray)
@@ -118,5 +160,3 @@ fun LanguageSelection(onLanguageSelected: (String) -> Unit) {
         )
     }
 }
-
-
