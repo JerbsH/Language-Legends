@@ -46,6 +46,13 @@
     <string name="weather">Väder</string>
     <string name="ai_choice">Du valde %1$s, trollkarl kommer nu pröva din kunskap.</string>
     <string name="check_answer">Svara</string>
+    <string name="free_chat">Chatt</string>
+    <string name="AIchat_send">Skicka</string>
+    <string name="AIwelcometext">Hej, Vad skulle du vilja fråga?</string>
+    <string name="AItextfield">Fråga…</string>
+
+
+
 
 
     <!-- path -->

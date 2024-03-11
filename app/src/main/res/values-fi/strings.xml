@@ -46,6 +46,14 @@
     <string name="weather">Sää</string>
     <string name="ai_choice">Valitsit %1$s, AI velho testaa nyt tietosi.</string>
     <string name="check_answer">Vastaa</string>
+    <string name="free_chat">Chatti</string>
+    <string name="AIchat_send">Lähetä</string>
+    <string name="AIwelcometext">Hei, Mitä haluat kysyä?</string>
+    <string name="AItextfield">Kysy…</string>
+
+
+
+
 
 
     <!-- path -->

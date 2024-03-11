@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
                     apiSelectedLanguage = newLanguage
                 }
+
 
                 userProfileViewModel.loadSelectedLanguage()
 
@@ -184,7 +186,7 @@ fun BottomBar(
     NavigationBar(
         modifier = modifier,
 
-    ) {
+        ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         screens.forEach { screen ->

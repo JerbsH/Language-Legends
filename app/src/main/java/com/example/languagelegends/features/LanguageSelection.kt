@@ -3,6 +3,7 @@ package com.example.languagelegends.features
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,38 +51,48 @@ import kotlinx.coroutines.withContext
 
 
 class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
-    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
-    private val sharedPreferences: SharedPreferences = application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
+    private val userProfileDao: UserProfileDao =
+        DatabaseProvider.getDatabase(application).userProfileDao()
+    private val sharedPreferences: SharedPreferences =
+        application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
 
-    var selectedLanguage by mutableStateOf(sharedPreferences.getString("selectedLanguage", "English") ?: "English") // Default language
+    var selectedLanguage by mutableStateOf(
+        sharedPreferences.getString(
+            "selectedLanguage",
+            "English"
+        ) ?: "English"
+    ) // Default language
     var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
     val selectedLanguageLiveData = MutableLiveData<String>()
 
-
-
     fun updateLanguage(newLanguage: String) {
         viewModelScope.launch {
-            val userProfile = withContext(Dispatchers.IO) {
-                userProfileDao.getAllUserProfiles().firstOrNull()
-            }
-            // Update language icon
-            selectedLanguageIcon = icon(newLanguage)
+            try {
+                val userProfile = withContext(Dispatchers.IO) {
+                    userProfileDao.getAllUserProfiles().firstOrNull()
+                }
 
-            if (userProfile != null) {
-                val countryCode = LANGUAGES[newLanguage] ?: "EN-GB"
-                val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
-                userProfile.currentLanguage = selectedLanguage
-                updateUserLanguages(userProfile, newLanguage) // Update languages
-                userProfileDao.updateUserProfile(userProfile)
-                this@UserProfileViewModel.selectedLanguage = newLanguage
-                selectedLanguageIcon = icon(newLanguage) // Update language icon
-            }
-            // Save the selected language to SharedPreferences and livedata
-            sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
-            selectedLanguageLiveData.value = newLanguage
+                if (userProfile != null) {
+                    val countryCode = LANGUAGES[newLanguage] ?: "EN-GB"
+                    val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
+                    userProfile.currentLanguage = selectedLanguage
+                    updateUserLanguages(userProfile, newLanguage) // Update languages
+                    userProfileDao.updateUserProfile(userProfile)
+                }
 
+                // Save the selected language to SharedPreferences and livedata
+                sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
+                selectedLanguageLiveData.value = newLanguage
+
+                // Update the ViewModel's selectedLanguage and selectedLanguageIcon
+                selectedLanguage = newLanguage
+                selectedLanguageIcon = icon(newLanguage)
+            } catch (e: Exception) {
+                Log.e("DBG", "Error updating language: ${e.message}")
+            }
         }
     }
+
     fun loadSelectedLanguage() {
         selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
         selectedLanguageIcon = icon(selectedLanguage)
