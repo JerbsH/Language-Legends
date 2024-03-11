@@ -15,7 +15,7 @@ Adventure through the forest and improve your language skills. On your adventure
 ### Point Tracking: 
 See how you have been progressing your learning from your profile view. Your profile lists all your learned languages and tracks your point progress.
 ### Many languages to learn: 
-20+ Languages to select from and start learning. 
+20+ Languages to select from and start learning. 🇧🇬🇨🇿🇩🇰🇩🇪🇬🇷🇬🇧🇪🇸🇪🇪🇫🇮🇨🇵🇭🇺🇮🇩🇮🇹🇯🇵🇰🇷🇱🇹🇱🇻🇳🇴🇱🇺🇵🇱🇵🇹🇧🇷🇷🇴🇷🇺🇸🇰🇸🇮🇸🇪🇹🇷🇺🇦🇨🇳
 ### Feature 5: 
 TODO: write about feature
 
