@@ -50,10 +50,17 @@ import kotlinx.coroutines.withContext
 
 
 class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
-    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
-    private val sharedPreferences: SharedPreferences = application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
+    private val userProfileDao: UserProfileDao =
+        DatabaseProvider.getDatabase(application).userProfileDao()
+    private val sharedPreferences: SharedPreferences =
+        application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
 
-    var selectedLanguage by mutableStateOf(sharedPreferences.getString("selectedLanguage", "English") ?: "English") // Default language
+    var selectedLanguage by mutableStateOf(
+        sharedPreferences.getString(
+            "selectedLanguage",
+            "English"
+        ) ?: "English"
+    ) // Default language
     var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
     val selectedLanguageLiveData = MutableLiveData<String>()
 
@@ -64,17 +71,31 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             val userProfile = withContext(Dispatchers.IO) {
                 userProfileDao.getAllUserProfiles().firstOrNull()
             }
-            // Update language icon
-            selectedLanguageIcon = icon(newLanguage)
+            userProfile?.let { profile ->
+                // Save the current points and exercises done
+                val currentLanguage = profile.currentLanguage
+                currentLanguage.let {
+                    it.pointsEarned = it.pointsEarned
+                    it.exercisesDone = it.exercisesDone
+                }
+                // Update language icon
+                selectedLanguageIcon = icon(newLanguage)
 
-            if (userProfile != null) {
-                val countryCode = LANGUAGES[newLanguage] ?: "EN-GB"
-                val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
+                val selectedLanguage =
+                    Language(
+                        name = newLanguage,
+                        exercisesDone = 0,
+                        pointsEarned = 0,
+                        exerciseTimestamp = System.currentTimeMillis(),
+                        countryCode = ""
+                    )
+
                 userProfile.currentLanguage = selectedLanguage
                 updateUserLanguages(userProfile, newLanguage) // Update languages
                 userProfileDao.updateUserProfile(userProfile)
                 this@UserProfileViewModel.selectedLanguage = newLanguage
                 selectedLanguageIcon = icon(newLanguage) // Update language icon
+                // Save the selected language to SharedPreferences
             }
             // Save the selected language to SharedPreferences and livedata
             sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
@@ -82,87 +103,88 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
 
         }
     }
-    fun loadSelectedLanguage() {
-        selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
-        selectedLanguageIcon = icon(selectedLanguage)
+        fun loadSelectedLanguage() {
+            selectedLanguage =
+                sharedPreferences.getString("selectedLanguage", "English") ?: "English"
+            selectedLanguageIcon = icon(selectedLanguage)
+        }
     }
-}
 
-@Composable
-fun LanguageSelection(
-    userProfileViewModel: UserProfileViewModel,
-    onLanguageSelected: (String) -> Unit
-) {
-    val context = LocalContext.current
-    val languages = LANGUAGES
+    @Composable
+    fun LanguageSelection(
+        userProfileViewModel: UserProfileViewModel,
+        onLanguageSelected: (String) -> Unit
+    ) {
+        val context = LocalContext.current
+        val languages = LANGUAGES
 
-    var selectedOption by remember { mutableStateOf(languages.keys.first()) }
-    var isDialogOpen by remember { mutableStateOf(true) } // Add this state to control the dialog visibility
+        var selectedOption by remember { mutableStateOf(languages.keys.first()) }
+        var isDialogOpen by remember { mutableStateOf(true) } // Add this state to control the dialog visibility
 
-    if (isDialogOpen) { // Show the dialog only if isDialogOpen is true
-        AlertDialog(
-            onDismissRequest = {
-                isDialogOpen = false
-            }, // Dismiss the dialog when outside is clicked
-            title = { Text(text = stringResource(id = R.string.select_language)) },
-            text = {
-                Box {
-                    LazyColumn {
-                        items(languages.keys.toList()) { language ->
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        if (language != selectedOption) {
-                                            selectedOption = language
-                                            onLanguageSelected(language) // Pass the full language name
+        if (isDialogOpen) { // Show the dialog only if isDialogOpen is true
+            AlertDialog(
+                onDismissRequest = {
+                    isDialogOpen = false
+                }, // Dismiss the dialog when outside is clicked
+                title = { Text(text = stringResource(id = R.string.select_language)) },
+                text = {
+                    Box {
+                        LazyColumn {
+                            items(languages.keys.toList()) { language ->
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (language != selectedOption) {
+                                                selectedOption = language
+                                                onLanguageSelected(language) // Pass the full language name
 
-                                            // Update language in view model
-                                            userProfileViewModel.viewModelScope.launch {
-                                                userProfileViewModel.updateLanguage(language)
+                                                // Update language in view model
+                                                userProfileViewModel.viewModelScope.launch {
+                                                    userProfileViewModel.updateLanguage(language)
+                                                }
                                             }
-                                        }
-                                    }) {
-                                Text(
-                                    text = language,
-                                    style = TextStyle(fontSize = 18.sp),
-                                    modifier = Modifier
-                                )
-                                val flag = icon(language)
-                                Image(
-                                    painter = painterResource(FlagKit.getResId(context, flag)),
-                                    contentDescription = "Flag of $language",
-                                    modifier = Modifier
-                                        .padding(end = 16.dp)
-                                        .size(36.dp)
-                                )
+                                        }) {
+                                    Text(
+                                        text = language,
+                                        style = TextStyle(fontSize = 18.sp),
+                                        modifier = Modifier
+                                    )
+                                    val flag = icon(language)
+                                    Image(
+                                        painter = painterResource(FlagKit.getResId(context, flag)),
+                                        contentDescription = "Flag of $language",
+                                        modifier = Modifier
+                                            .padding(end = 16.dp)
+                                            .size(36.dp)
+                                    )
+                                }
+                                HorizontalDivider()
                             }
-                            HorizontalDivider()
                         }
                     }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        isDialogOpen = false
-                    }, // Dismiss the dialog when the button is clicked
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.LightGray)
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            isDialogOpen = false
+                        }, // Dismiss the dialog when the button is clicked
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.LightGray)
 
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.close),
-                        color = Color.Black,
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxHeight(0.7f) // 70% of screen height
-                .fillMaxWidth(0.95f) // 70% of screen width
-        )
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.close),
+                            color = Color.Black,
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxHeight(0.7f) // 70% of screen height
+                    .fillMaxWidth(0.95f) // 70% of screen width
+            )
+        }
     }
-}

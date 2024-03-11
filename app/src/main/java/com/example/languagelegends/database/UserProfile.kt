@@ -3,6 +3,9 @@ package com.example.languagelegends.database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+import com.example.languagelegends.features.Language
+
+
 @Entity(tableName = "user_profile")
 data class UserProfile(
     @PrimaryKey(autoGenerate = true)
@@ -14,5 +17,9 @@ data class UserProfile(
     var languagePoints: Int = 0,
     var exercisesDone: Int? = 0,
     var image: ByteArray? = null,
-    var created: Int?
+    var created: Int?,
+
+    var pointsEarned: Int,
+    var exerciseTimestamp: Long = 0L // Add this line
+
 )
