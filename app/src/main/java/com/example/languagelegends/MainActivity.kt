@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
                 val application = this.application
                 val userProfileViewModel = remember { UserProfileViewModel(application) }
                 var isNameScreenActive by remember { mutableStateOf(false) }
+
 
                 userProfileViewModel.loadSelectedLanguage()
 
@@ -220,6 +222,8 @@ fun NavHost(
     userProfileViewModel: UserProfileViewModel
 
 ) {
+
+
     androidx.navigation.compose.NavHost(
         navController = navController,
         startDestination = startDestination

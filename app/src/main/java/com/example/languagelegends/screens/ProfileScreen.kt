@@ -94,7 +94,7 @@ fun ProfileScreen(
     val imageUri by remember { mutableStateOf<String?>(null) }
 
 // Fixed value for weeklyPoints
-    var weeklyPoints = 0
+    var weeklyPoints by remember { mutableIntStateOf(0) }
 
     val coroutineScope = CoroutineScope(Dispatchers.Main)
 
@@ -107,9 +107,21 @@ fun ProfileScreen(
             selectedUserProfile = userProfile
             image = userProfile?.image
             username = userProfile?.username ?: ""
-            weeklyPoints = userProfile?.weeklyPoints ?: 0
+            // Calculate weeklyPoints based on exercise timestamps
+            val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+            weeklyPoints = userProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
+
+            // Set the weeklyPoints value of the UserProfile object
+            userProfile?.weeklyPoints = weeklyPoints
+
+            // Update the UserProfile in the database
+            withContext(Dispatchers.IO) {
+                if (userProfile != null) {
+                    userProfileDao.updateUserProfile(userProfile)
+                }
+            }
         }
     }
 
@@ -126,7 +138,7 @@ fun ProfileScreen(
                     selectedUserProfile = UserProfile(
                         username = username,
                         currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
-                        weeklyPoints = 1500,
+                        weeklyPoints = 0,
                         created = 1,
                         pointsEarned = 0
                     )
@@ -183,7 +195,6 @@ fun ProfileScreen(
                     ) // Call updateUserLanguages here
                 }
             }
-
         }
     }
     @Composable
@@ -390,7 +401,7 @@ fun ProfileScreen(
                             // If the database is empty or has more than one user, create a new user profile
                             val newUserProfile = UserProfile(
                                 username = username,
-                                weeklyPoints = 1500,
+                                weeklyPoints = 0,
                                 currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
                                 languagePoints = 0,
                                 created = 1,

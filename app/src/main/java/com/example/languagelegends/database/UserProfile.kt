@@ -4,14 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.languagelegends.features.Language
 
-/*
-data class Language
-    (
-    val name: String,
-    var exercisesDone: Int,
-    var pointsEarned: Int,
-    var exerciseTimestamp: Long = System.currentTimeMillis()
-)*/
 
 @Entity(tableName = "user_profile")
 data class UserProfile(

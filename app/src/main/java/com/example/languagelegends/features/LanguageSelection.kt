@@ -79,21 +79,19 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                 // Update language icon
                 selectedLanguageIcon = icon(newLanguage)
 
-                if (userProfile != null) {
-                    val selectedLanguage =
-                        Language(
-                            name = newLanguage,
-                            exercisesDone = 0,
-                            pointsEarned = 0,
-                            exerciseTimestamp = System.currentTimeMillis(),
-                            countryCode = ""
-                        )
-                    userProfile.currentLanguage = selectedLanguage
-                    updateUserLanguages(userProfile, newLanguage) // Update languages
-                    userProfileDao.updateUserProfile(userProfile)
-                    this@UserProfileViewModel.selectedLanguage = newLanguage
-                    selectedLanguageIcon = icon(newLanguage) // Update language icon
-                }
+                val selectedLanguage =
+                    Language(
+                        name = newLanguage,
+                        exercisesDone = 0,
+                        pointsEarned = 0,
+                        exerciseTimestamp = System.currentTimeMillis(),
+                        countryCode = ""
+                    )
+                userProfile.currentLanguage = selectedLanguage
+                updateUserLanguages(userProfile, newLanguage) // Update languages
+                userProfileDao.updateUserProfile(userProfile)
+                this@UserProfileViewModel.selectedLanguage = newLanguage
+                selectedLanguageIcon = icon(newLanguage) // Update language icon
                 // Save the selected language to SharedPreferences
                 sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
             }
