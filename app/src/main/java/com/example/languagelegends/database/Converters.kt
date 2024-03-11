@@ -1,12 +1,12 @@
 package com.example.languagelegends.database
 
 import androidx.room.TypeConverter
-import com.example.languagelegends.screens.Language
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.ByteArrayOutputStream
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.example.languagelegends.features.Language
 
 class Converters {
 /*

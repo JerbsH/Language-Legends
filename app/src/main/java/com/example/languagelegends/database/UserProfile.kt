@@ -1,9 +1,17 @@
 package com.example.languagelegends.database
 
-import android.graphics.Bitmap
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.languagelegends.screens.Language
+import com.example.languagelegends.features.Language
+
+/*
+data class Language
+    (
+    val name: String,
+    var exercisesDone: Int,
+    var pointsEarned: Int,
+    var exerciseTimestamp: Long = System.currentTimeMillis()
+)*/
 
 @Entity(tableName = "user_profile")
 data class UserProfile(
@@ -11,7 +19,6 @@ data class UserProfile(
     val userId: Long = 0,
     var username: String,
     var weeklyPoints: Int,
-    //var languages: List<Language> = emptyList(),
     var languages: MutableList<Language> = mutableListOf(),
     var currentLanguage: Language,
     var languagePoints: Int = 0,
@@ -19,6 +26,7 @@ data class UserProfile(
     var image: ByteArray? = null,
     var created: Int?,
 
+    var pointsEarned: Int,
     var exerciseTimestamp: Long = 0L // Add this line
 
 )

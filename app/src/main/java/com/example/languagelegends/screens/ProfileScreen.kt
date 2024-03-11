@@ -62,6 +62,7 @@ import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
 import com.example.languagelegends.features.LANGUAGES
+import com.example.languagelegends.features.Language
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
@@ -70,7 +71,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int, var exerciseTimestamp: Long = 0L)
 
 @Composable
 fun ProfileScreen(
@@ -94,11 +94,7 @@ fun ProfileScreen(
     val imageUri by remember { mutableStateOf<String?>(null) }
 
 // Fixed value for weeklyPoints
-    var weeklyPoints = 1500
-
-    if (selectedUserProfile == null) {
-        weeklyPoints = 0
-    }
+    var weeklyPoints = 0
 
     val coroutineScope = CoroutineScope(Dispatchers.Main)
 
@@ -129,9 +125,10 @@ fun ProfileScreen(
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
-                        currentLanguage = selectedLanguage ?: Language("No selection", 0, 0),
+                        currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
                         weeklyPoints = 1500,
-                        created = 1
+                        created = 1,
+                        pointsEarned = 0
                     )
                 }
                 // Update the image of selectedUserProfile
@@ -159,14 +156,14 @@ fun ProfileScreen(
     ) {
         selectedUserProfile?.let { userProfile ->
             val newLanguage = if (apiSelectedLanguage.isNotEmpty()) {
-                Language(apiSelectedLanguage, 0, 0)
+                Language(apiSelectedLanguage, "", 0,0,0)
             } else {
-                selectedLanguage ?: Language("Default", 0, 0)
+                selectedLanguage ?: Language("Default", "", 0,0,0)
             }
             userProfile.currentLanguage = newLanguage
             // Update the currentLanguage when apiSelectedLanguage changes
             if (apiSelectedLanguage != userProfile.currentLanguage.name) {
-                userProfile.currentLanguage = Language(apiSelectedLanguage, 0, 0)
+                userProfile.currentLanguage = Language(apiSelectedLanguage, "", 0,0,0)
                 // Check if the language is already in the list
                 val existingLanguage = userProfile.languages.find { it.name == apiSelectedLanguage }
                 if (existingLanguage != null) {
@@ -175,7 +172,7 @@ fun ProfileScreen(
                     existingLanguage.pointsEarned = 0
                 } else {
                     // Add the new language to the list of languages
-                    userProfile.languages.add(Language(apiSelectedLanguage, 0, 0))
+                    userProfile.languages.add(Language(apiSelectedLanguage, "", 0,0,0))
                 }
                 // Update the UserProfile in the database
                 coroutineScope.launch {
@@ -394,13 +391,10 @@ fun ProfileScreen(
                             val newUserProfile = UserProfile(
                                 username = username,
                                 weeklyPoints = 1500,
-                                currentLanguage = selectedLanguage ?: Language(
-                                    "No selection",
-                                    0,
-                                    0
-                                ),
+                                currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
                                 languagePoints = 0,
-                                created = 1
+                                created = 1,
+                                pointsEarned = 0
                             )
                             updateUserLanguages(
                                 newUserProfile,
@@ -561,7 +555,7 @@ fun ProfileScreen(
                                 .padding(8.dp)
                                 .clickable {
                                     Log.d("DBG", "Language $language selected")
-                                    selectedLanguage = Language(language, 0, 0)
+                                    selectedLanguage = Language(language, "", 0,0,0)
                                     selection = language
 
                                     // Update language in view model
@@ -632,7 +626,7 @@ fun ProfileScreen(
                             selectedUserProfile?.let { userProfile ->
                                 userProfile.created = created
                                 userProfile.currentLanguage =
-                                    selectedLanguage ?: Language("English", 0, 0)
+                                    selectedLanguage ?: Language("English", "", 0,0,0)
                                 userProfileDao.updateUserProfile(userProfile)
 
                             }
@@ -666,7 +660,7 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
         existingLanguage.exercisesDone = 0
         existingLanguage.pointsEarned = 0
     } else {
-        userProfile.languages.add(Language(selectedLanguage, 0, 0))
+        userProfile.languages.add(Language(selectedLanguage, "", 0,0,0))
     }
     userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
     userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }

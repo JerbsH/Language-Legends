@@ -56,8 +56,10 @@ import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.SensorHelper
 import com.example.languagelegends.features.UserProfileViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 
@@ -274,16 +276,32 @@ fun WordScrambleExercise(
                 onClick = {
                     if (isCorrect) {
 
-                        // Update points and timestamp in userProfile
-                        userProfileViewModel.viewModelScope.launch {
-                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
-                            userProfile?.let {
-                                it.currentLanguage.pointsEarned += points
-                                it.currentLanguage.exerciseTimestamp = System.currentTimeMillis()
-                                userProfileDao.updateUserProfile(it)
+                        if (isCorrect) {
+                            // Update points, exercisesDone and timestamp in userProfile
+                            userProfileViewModel.viewModelScope.launch {
+                                val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+                                userProfile?.let {
+                                    val currentLanguage =
+                                        it.languages.find { it.name == userProfile.currentLanguage.name }
+                                    currentLanguage?.let { language ->
+                                        language.pointsEarned += points
+                                        language.exercisesDone += 1 // Increment exercisesDone
+                                        language.exerciseTimestamp = System.currentTimeMillis()
+                                        // Update total language points
+                                        it.languagePoints =
+                                            it.languages.sumOf { language -> language.pointsEarned }
+                                        // Update exercisesDone and pointsEarned in UserProfile
+                                        it.exercisesDone = it.exercisesDone?.plus(1) // Increment exercisesDone
+                                        it.pointsEarned += points // Increment pointsEarned
+                                        withContext(Dispatchers.IO) {
+                                            userProfileDao.updateUserProfile(it)
+                                            userProfileDao.updateUserProfile(it) // Update the language in the database
+                                        }
+                                    }
+                                }
+                                onNextExercise()
                             }
                         }
-                        onNextExercise()
                     }
                 },
                 enabled = isCorrect,
