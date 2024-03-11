@@ -41,7 +41,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.database.DatabaseProvider
-import com.example.languagelegends.database.Language
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.screens.updateUserLanguages
 import com.murgupluoglu.flagkit.FlagKit
@@ -69,40 +68,39 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
 
             try {
-                
-            val userProfile = withContext(Dispatchers.IO) {
-                userProfileDao.getAllUserProfiles().firstOrNull()
-            }
-            userProfile?.let { profile ->
-                // Save the current points and exercises done
-               val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
-                val currentLanguage = profile.currentLanguage
-                currentLanguage.let {
-                    it.pointsEarned = it.pointsEarned
-                    it.exercisesDone = it.exercisesDone
+
+                val userProfile = withContext(Dispatchers.IO) {
+                    userProfileDao.getAllUserProfiles().firstOrNull()
                 }
-                // Update language icon
-                selectedLanguageIcon = icon(newLanguage)
+                userProfile?.let { profile ->
+                    // Save the current points and exercises done
+                    val currentLanguage = profile.currentLanguage
+                    currentLanguage.let {
+                        it.pointsEarned = it.pointsEarned
+                        it.exercisesDone = it.exercisesDone
+                    }
+                    // Update language icon
+                    selectedLanguageIcon = icon(newLanguage)
 
-                val selectedLanguage =
-                    Language(
-                        name = newLanguage,
-                        exercisesDone = 0,
-                        pointsEarned = 0,
-                        exerciseTimestamp = System.currentTimeMillis(),
-                        countryCode = ""
-                    )
+                    val selectedLanguage =
+                        Language(
+                            name = newLanguage,
+                            exercisesDone = 0,
+                            pointsEarned = 0,
+                            exerciseTimestamp = System.currentTimeMillis(),
+                            countryCode = ""
+                        )
 
-                userProfile.currentLanguage = selectedLanguage
-                updateUserLanguages(userProfile, newLanguage) // Update languages
-                userProfileDao.updateUserProfile(userProfile)
-                this@UserProfileViewModel.selectedLanguage = newLanguage
-                selectedLanguageIcon = icon(newLanguage) // Update language icon
-                // Save the selected language to SharedPreferences
-            }
-            // Save the selected language to SharedPreferences and livedata
-            sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
-            selectedLanguageLiveData.value = newLanguage
+                    userProfile.currentLanguage = selectedLanguage
+                    updateUserLanguages(userProfile, newLanguage) // Update languages
+                    userProfileDao.updateUserProfile(userProfile)
+                    this@UserProfileViewModel.selectedLanguage = newLanguage
+                    selectedLanguageIcon = icon(newLanguage) // Update language icon
+                    // Save the selected language to SharedPreferences
+                }
+                // Save the selected language to SharedPreferences and livedata
+                sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
+                selectedLanguageLiveData.value = newLanguage
 
                 // Update the ViewModel's selectedLanguage and selectedLanguageIcon
                 selectedLanguage = newLanguage
@@ -112,6 +110,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
     }
+
     fun loadSelectedLanguage() {
         selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
         selectedLanguageIcon = icon(selectedLanguage)
@@ -196,3 +195,4 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             )
         }
     }
+}
