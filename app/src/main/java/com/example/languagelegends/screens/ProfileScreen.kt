@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,11 +59,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
-import com.example.languagelegends.database.Language
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
 import com.example.languagelegends.features.LANGUAGES
+import com.example.languagelegends.features.Language
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
@@ -83,7 +84,11 @@ fun ProfileScreen(
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
     var selectedLanguage by remember { mutableStateOf<Language?>(null) }
-    val countryCode by remember(selectedLanguage) { mutableStateOf(LANGUAGES[selectedLanguage?.name] ?: "EN-GB") }
+    val countryCode by remember(selectedLanguage) {
+        mutableStateOf(
+            LANGUAGES[selectedLanguage?.name] ?: "EN-GB"
+        )
+    }
     var isDialogOpen by remember { mutableStateOf(false) }
     var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
@@ -95,11 +100,7 @@ fun ProfileScreen(
     val imageUri by remember { mutableStateOf<String?>(null) }
 
 // Fixed value for weeklyPoints
-    var weeklyPoints = 1500
-
-    if (selectedUserProfile == null) {
-        weeklyPoints = 0
-    }
+    var weeklyPoints by remember { mutableIntStateOf(0) }
 
     val coroutineScope = CoroutineScope(Dispatchers.Main)
 
@@ -112,9 +113,21 @@ fun ProfileScreen(
             selectedUserProfile = userProfile
             image = userProfile?.image
             username = userProfile?.username ?: ""
-            weeklyPoints = userProfile?.weeklyPoints ?: 0
+            // Calculate weeklyPoints based on exercise timestamps
+            val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+            weeklyPoints = userProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
+
+            // Set the weeklyPoints value of the UserProfile object
+            userProfile?.weeklyPoints = weeklyPoints
+
+            // Update the UserProfile in the database
+            withContext(Dispatchers.IO) {
+                if (userProfile != null) {
+                    userProfileDao.updateUserProfile(userProfile)
+                }
+            }
         }
     }
 
@@ -130,9 +143,11 @@ fun ProfileScreen(
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
-                        currentLanguage = selectedLanguage ?: Language("No selection", 0, 0, countryCode),
-                        weeklyPoints = 1500,
-                        created = 1
+                        currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
+                        weeklyPoints = 0,
+                        created = 1,
+                        pointsEarned = 0
+
                     )
                 }
                 // Update the image of selectedUserProfile
@@ -160,14 +175,16 @@ fun ProfileScreen(
     ) {
         selectedUserProfile?.let { userProfile ->
             val newLanguage = if (apiSelectedLanguage.isNotEmpty()) {
-                Language(apiSelectedLanguage, 0, 0, countryCode)
+                Language(apiSelectedLanguage, countryCode, 0,0,0)
             } else {
-                selectedLanguage ?: Language("Default", 0, 0, countryCode)
+                selectedLanguage ?: Language("Default", countryCode, 0,0,0)
+
             }
             userProfile.currentLanguage = newLanguage
             // Update the currentLanguage when apiSelectedLanguage changes
             if (apiSelectedLanguage != userProfile.currentLanguage.name) {
-                userProfile.currentLanguage = Language(apiSelectedLanguage, 0, 0, countryCode)
+                userProfile.currentLanguage = Language(apiSelectedLanguage, countryCode, 0,0,0)
+
                 // Check if the language is already in the list
                 val existingLanguage = userProfile.languages.find { it.name == apiSelectedLanguage }
                 if (existingLanguage != null) {
@@ -176,7 +193,8 @@ fun ProfileScreen(
                     existingLanguage.pointsEarned = 0
                 } else {
                     // Add the new language to the list of languages
-                    userProfile.languages.add(Language(apiSelectedLanguage, 0, 0, countryCode))
+                    userProfile.languages.add(Language(apiSelectedLanguage, countryCode, 0,0,0))
+
                 }
                 // Update the UserProfile in the database
                 coroutineScope.launch {
@@ -187,7 +205,6 @@ fun ProfileScreen(
                     ) // Call updateUserLanguages here
                 }
             }
-
         }
     }
     @Composable
@@ -222,14 +239,15 @@ fun ProfileScreen(
                         bitmap = imageBitmap.value!!,
                         contentDescription = null,
                         modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp))
                             .size(
                                 LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
                                 LocalConfiguration.current.screenHeightDp.dp * 1 / 5
-                            )
-                            .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp)),
+                            ),
                         alignment = Alignment.Center,
-
-                        )
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
             // Buttons for selecting picture
@@ -389,19 +407,17 @@ fun ProfileScreen(
                             }
                             // Update selectedUserProfile
                             selectedUserProfile = updatedUserProfile
+
                         } else {
                             // If the database is empty or has more than one user, create a new user profile
                             val newUserProfile = UserProfile(
                                 username = username,
-                                weeklyPoints = 1500,
-                                currentLanguage = selectedLanguage ?: Language(
-                                    "No selection",
-                                    0,
-                                    0,
-                                    countryCode
-                                ),
+                                weeklyPoints = 0,
+                                currentLanguage = selectedLanguage ?: Language("No selection", countryCode, 0, 0,0),
+
                                 languagePoints = 0,
-                                created = 1
+                                created = 1,
+                                pointsEarned = 0
                             )
                             updateUserLanguages(
                                 newUserProfile,
@@ -421,7 +437,11 @@ fun ProfileScreen(
                             // Update selectedUserProfile
                             selectedUserProfile = updatedUserProfile
                         }
+                        // Calculate weeklyPoints based on exercise timestamps
+                        val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                        weeklyPoints = selectedUserProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
                     }
+
                 } catch (e: Exception) {
                     Log.e("DBG", "Error updating user profile: ${e.message}", e)
                 }
@@ -558,7 +578,7 @@ fun ProfileScreen(
                                 .padding(8.dp)
                                 .clickable {
                                     Log.d("DBG", "Language $language selected")
-                                    selectedLanguage = Language(language, 0, 0,countryCode)
+                                    selectedLanguage = Language(language, countryCode, 0,0,0)
                                     selection = language
 
                                     // Update language in view model
@@ -628,7 +648,8 @@ fun ProfileScreen(
                         coroutineScope.launch {
                             selectedUserProfile?.let { userProfile ->
                                 userProfile.created = created
-                                userProfile.currentLanguage = selectedLanguage ?: Language("English", 0, 0, countryCode)
+                                userProfile.currentLanguage =
+                                    selectedLanguage ?: Language("English", countryCode, 0,0,0)
                                 userProfileDao.updateUserProfile(userProfile)
                             }
                         }
@@ -662,11 +683,11 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
         existingLanguage.exercisesDone = 0
         existingLanguage.pointsEarned = 0
     } else {
-        userProfile.languages.add(Language(selectedLanguage, 0, 0, countryCode))
+        userProfile.languages.add(Language(selectedLanguage, countryCode, 0,0,0))
     }
     userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
     userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }
-    userProfile.currentLanguage = Language(selectedLanguage, 0, 0, countryCode)
+    userProfile.currentLanguage = Language(selectedLanguage, countryCode, 0, 0)
 
 }
 

@@ -27,7 +27,8 @@ import androidx.navigation.NavController
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
     val completedExercises by remember { mutableIntStateOf(0) }
-    val scrollState = rememberScrollState()
+    val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
+    val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
     // Load the background image
     val backgroundImage = painterResource(id = com.example.languagelegends.R.drawable.path)
@@ -42,7 +43,6 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
         )
-
         exercisePositions.forEachIndexed { index, (x, y) ->
             LanguageExercise(
                 number = index + 1,
@@ -73,7 +73,6 @@ val exercisePositions = listOf(
 
 @Composable
 fun LanguageExercise(
-    modifier: Modifier = Modifier,
     number: Int,
     x: Float,
     y: Float,
@@ -87,7 +86,8 @@ fun LanguageExercise(
     val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
     // Calculate the positions as a percentage of the smallest width
-    val smallestWidth = minOf(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
+    val smallestWidth =
+        minOf(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
     val offsetX = x * smallestWidth
     val offsetY = y * smallestWidth
 

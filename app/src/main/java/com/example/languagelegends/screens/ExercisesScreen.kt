@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,16 +49,29 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.SensorHelper
+import com.example.languagelegends.features.UserProfileViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 
 @Composable
 fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
-    var currentExercise by remember { mutableStateOf(1) }
+    var currentExercise by remember { mutableIntStateOf(1) }
+
+    // Define userProfileDao and exerciseTimestamp here
+    val context = LocalContext.current
+    val userProfileDao = DatabaseProvider.getDatabase(context).userProfileDao()
+    val exerciseTimestamp = System.currentTimeMillis()
 
     //Define the layout for the exercises
     Column(
@@ -77,6 +91,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
+                    userProfileDao = userProfileDao,
+
                 )
             }
 
@@ -85,7 +101,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     onNextExercise = {
                         currentExercise++
                     },
-                    onGoBack = { navController.navigate("path") }
+                    onGoBack = { navController.navigate("path") },
+                    userProfileDao = userProfileDao,
                 )
             }
 
@@ -95,9 +112,9 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     onExerciseCompleted = {
                         currentExercise++
                     },
-                    onGoBack = { navController.navigate("path") }
-
-                )
+                    onGoBack = { navController.navigate("path") },
+                    userProfileDao = userProfileDao,
+                    )
             }
             // Add more exercises as needed
             else -> {
@@ -119,7 +136,11 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
 fun WordScrambleExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
-    sensorHelper: SensorHelper // Pass the sensor helper instance
+    sensorHelper: SensorHelper, // Pass the sensor helper instance
+    userProfileDao: UserProfileDao,
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    //exerciseTimestamp: Long = 0L
+
 ) {
     // List of words for the exercise
     val wordList = remember {
@@ -173,6 +194,9 @@ fun WordScrambleExercise(
     // State to track if the user's input is correct
     var isCorrect by remember { mutableStateOf(false) }
 
+    val points = 10
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -202,9 +226,18 @@ fun WordScrambleExercise(
                 modifier = Modifier.padding(top = 16.dp)
             )
 
+            val image =
+                when (currentWord) {
+                    "apple" -> R.drawable.apple
+                    "banana" -> R.drawable.banana
+                    "orange" -> R.drawable.orange
+                    "grape" -> R.drawable.grape
+                    "strawberry" -> R.drawable.strawberry
+                    else -> R.drawable.fruit
+                }
             // Display the picture of fruits
             Image(
-                painter = painterResource(id = R.drawable.fruit),
+                painter = painterResource(id = image),
                 contentDescription = "Fruits",
                 modifier = Modifier
                     .size(200.dp)
@@ -252,7 +285,34 @@ fun WordScrambleExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
-                        onNextExercise()
+
+                        if (isCorrect) {
+                            // Update points, exercisesDone and timestamp in userProfile
+                            userProfileViewModel.viewModelScope.launch {
+                                val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+                                userProfile?.let {
+                                    val currentLanguage =
+                                        it.languages.find { it.name == userProfile.currentLanguage.name }
+                                    currentLanguage?.let { language ->
+                                        language.pointsEarned += points
+                                        language.exercisesDone += 1 // Increment exercisesDone
+                                        language.exerciseTimestamp = System.currentTimeMillis()
+                                        // Update total language points
+                                        it.languagePoints =
+                                            it.languages.sumOf { language -> language.pointsEarned }
+                                        // Update exercisesDone and pointsEarned in UserProfile
+                                        it.exercisesDone =
+                                            it.exercisesDone?.plus(1) // Increment exercisesDone
+                                        it.pointsEarned += points // Increment pointsEarned
+                                        withContext(Dispatchers.IO) {
+                                            userProfileDao.updateUserProfile(it)
+                                            userProfileDao.updateUserProfile(it) // Update the language in the database
+                                        }
+                                    }
+                                }
+                                onNextExercise()
+                            }
+                        }
                     }
                 },
                 enabled = isCorrect,
@@ -272,7 +332,9 @@ fun WordScrambleExercise(
 @Composable
 fun SecondExercise(
     onNextExercise: () -> Unit,
-    onGoBack: () -> Unit
+    onGoBack: () -> Unit,
+    userProfileDao: UserProfileDao,
+    userProfileViewModel: UserProfileViewModel = viewModel()
 ) {
     // List of languages and corresponding countries
     val languageCountryPairs = remember {
@@ -284,11 +346,12 @@ fun SecondExercise(
         )
     }
 
-
     // State to track user input for the translations
     val userTranslations = remember {
         mutableStateOf(List(languageCountryPairs.size) { "" })
     }
+
+    val points = 10
 
     Column(
         modifier = Modifier
@@ -371,7 +434,31 @@ fun SecondExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
-                        onNextExercise()
+                        // Update points, exercisesDone and timestamp in userProfile
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+                            userProfile?.let {
+                                val currentLanguage =
+                                    it.languages.find { it.name == userProfile.currentLanguage.name }
+                                currentLanguage?.let { language ->
+                                    language.pointsEarned += points
+                                    language.exercisesDone += 1 // Increment exercisesDone
+                                    language.exerciseTimestamp = System.currentTimeMillis()
+                                    // Update total language points
+                                    it.languagePoints =
+                                        it.languages.sumOf { language -> language.pointsEarned }
+                                    // Update exercisesDone and pointsEarned in UserProfile
+                                    it.exercisesDone =
+                                        it.exercisesDone?.plus(1) // Increment exercisesDone
+                                    it.pointsEarned += points // Increment pointsEarned
+                                    withContext(Dispatchers.IO) {
+                                        userProfileDao.updateUserProfile(it)
+                                        userProfileDao.updateUserProfile(it) // Update the language in the database
+                                    }
+                                }
+                            }
+                            onNextExercise()
+                        }
                     }
                 },
                 enabled = isCorrect,
@@ -390,7 +477,9 @@ fun SecondExercise(
 fun TiltExercise(
     sensorHelper: SensorHelper,
     onExerciseCompleted: () -> Unit,
-    onGoBack: () -> Unit
+    onGoBack: () -> Unit,
+    userProfileDao: UserProfileDao,
+    userProfileViewModel: UserProfileViewModel = viewModel()
 ) {
     // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
@@ -404,7 +493,7 @@ fun TiltExercise(
     }
 
     // Track the current item being displayed
-    var currentItemIndex by remember { mutableStateOf(0) }
+    var currentItemIndex by remember { mutableIntStateOf(0) }
 
     // Display the current item
     val currentItem = vocabulary[currentItemIndex]
@@ -418,6 +507,9 @@ fun TiltExercise(
     // Store the string resources in variables
     val correctString = stringResource(id = R.string.correct)
     val keepTryingString = stringResource(id = R.string.keep_trying)
+
+    val points = 10
+
 
     LaunchedEffect(currentItemIndex) {
         while (true) {
@@ -462,7 +554,31 @@ fun TiltExercise(
                         currentItemIndex++
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
-                        onExerciseCompleted()
+// Update points, exercisesDone and timestamp in userProfile
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+                            userProfile?.let {
+                                val currentLanguage =
+                                    it.languages.find { it.name == userProfile.currentLanguage.name }
+                                currentLanguage?.let { language ->
+                                    language.pointsEarned += points
+                                    language.exercisesDone += 1 // Increment exercisesDone
+                                    language.exerciseTimestamp = System.currentTimeMillis()
+                                    // Update total language points
+                                    it.languagePoints =
+                                        it.languages.sumOf { language -> language.pointsEarned }
+                                    // Update exercisesDone and pointsEarned in UserProfile
+                                    it.exercisesDone =
+                                        it.exercisesDone?.plus(1) // Increment exercisesDone
+                                    it.pointsEarned += points // Increment pointsEarned
+                                    withContext(Dispatchers.IO) {
+                                        userProfileDao.updateUserProfile(it)
+                                        userProfileDao.updateUserProfile(it) // Update the language in the database
+                                    }
+                                }
+                            }
+                            onExerciseCompleted()
+                        }
                         break
                     }
                 } else {
@@ -506,6 +622,24 @@ fun TiltExercise(
             style = MaterialTheme.typography.bodyMedium
         )
         HorizontalDivider(modifier = Modifier, 2.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        val image =
+            when (currentItem.first) {
+                "Apple" -> R.drawable.apple
+                "Banana" -> R.drawable.banana
+                "Orange" -> R.drawable.orange
+                "Grape" -> R.drawable.grape
+                "Strawberry" -> R.drawable.strawberry
+                else -> R.drawable.fruit
+            }
+        Image(
+            painter = painterResource(id = image),
+            contentDescription = "Fruits",
+            modifier = Modifier
+                .size(200.dp)
+                .padding(bottom = 16.dp)
+        )
 
         // Display the word
         Text(
@@ -530,16 +664,6 @@ fun TiltExercise(
                 text = if (isCorrectOnLeft.value) currentItem.third else currentItem.second, // Display the right translation
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 32.dp) // Increased padding
-            )
-        }
-
-        // Show feedback text only when there is feedback
-        feedbackText?.let {
-            Text(
-                text = it,
-                color = if (it == stringResource(id = R.string.correct)) Color.Green else Color.Red,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 16.dp)
             )
         }
 
@@ -574,6 +698,16 @@ fun TiltExercise(
                 color = Color.Green,
 
                 )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Show feedback text only when there is feedback
+        feedbackText?.let {
+            Text(
+                text = it,
+                color = if (it == stringResource(id = R.string.correct)) Color.Green else Color.Red,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
     }
 }
