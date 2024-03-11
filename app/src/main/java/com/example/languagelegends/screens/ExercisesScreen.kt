@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,7 +58,7 @@ import kotlin.random.Random
 
 @Composable
 fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
-    var currentExercise by remember { mutableStateOf(1) }
+    var currentExercise by remember { mutableIntStateOf(1) }
 
     //Define the layout for the exercises
     Column(
@@ -202,9 +203,18 @@ fun WordScrambleExercise(
                 modifier = Modifier.padding(top = 16.dp)
             )
 
+            val image =
+                when (currentWord) {
+                    "apple" -> R.drawable.apple
+                    "banana" -> R.drawable.banana
+                    "orange" -> R.drawable.orange
+                    "grape" -> R.drawable.grape
+                    "strawberry" -> R.drawable.strawberry
+                    else -> R.drawable.fruit
+                }
             // Display the picture of fruits
             Image(
-                painter = painterResource(id = R.drawable.fruit),
+                painter = painterResource(id = image),
                 contentDescription = "Fruits",
                 modifier = Modifier
                     .size(200.dp)
@@ -404,7 +414,7 @@ fun TiltExercise(
     }
 
     // Track the current item being displayed
-    var currentItemIndex by remember { mutableStateOf(0) }
+    var currentItemIndex by remember { mutableIntStateOf(0) }
 
     // Display the current item
     val currentItem = vocabulary[currentItemIndex]
@@ -506,6 +516,24 @@ fun TiltExercise(
             style = MaterialTheme.typography.bodyMedium
         )
         HorizontalDivider(modifier = Modifier, 2.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        val image =
+            when (currentItem.first) {
+                "Apple" -> R.drawable.apple
+                "Banana" -> R.drawable.banana
+                "Orange" -> R.drawable.orange
+                "Grape" -> R.drawable.grape
+                "Strawberry" -> R.drawable.strawberry
+                else -> R.drawable.fruit
+            }
+        Image(
+            painter = painterResource(id = image),
+            contentDescription = "Fruits",
+            modifier = Modifier
+                .size(200.dp)
+                .padding(bottom = 16.dp)
+        )
 
         // Display the word
         Text(
@@ -530,16 +558,6 @@ fun TiltExercise(
                 text = if (isCorrectOnLeft.value) currentItem.third else currentItem.second, // Display the right translation
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 32.dp) // Increased padding
-            )
-        }
-
-        // Show feedback text only when there is feedback
-        feedbackText?.let {
-            Text(
-                text = it,
-                color = if (it == stringResource(id = R.string.correct)) Color.Green else Color.Red,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 16.dp)
             )
         }
 
@@ -574,6 +592,16 @@ fun TiltExercise(
                 color = Color.Green,
 
                 )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Show feedback text only when there is feedback
+        feedbackText?.let {
+            Text(
+                text = it,
+                color = if (it == stringResource(id = R.string.correct)) Color.Green else Color.Red,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
     }
 }
