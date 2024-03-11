@@ -1,46 +1,32 @@
 package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-
 @Composable
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
-    val completedExercises by remember { mutableStateOf(0) }
+    val completedExercises by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
 
     // Load the background image
@@ -72,24 +58,25 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
 }
 
 val exercisePositions = listOf(
-    Pair(80.dp, 1165.dp), // Ball 1
-    Pair(285.dp, 1048.dp),
-    Pair(117.dp, 936.dp),
-    Pair(263.dp, 850.dp),
-    Pair(173.dp, 748.dp),
-    Pair(70.dp, 570.dp),
-    Pair(293.dp, 437.dp),
-    Pair(130.dp, 320.dp),
-    Pair(250.dp, 180.dp),
-    Pair(186.dp, 65.dp) // Ball 10
+
+    Pair(0.22f, 2.84f),//ball 1
+    Pair(0.63f, 2.545f),
+    Pair(0.34f, 2.26f),
+    Pair(0.57f, 2.038f),
+    Pair(0.41f, 1.82f),
+    Pair(0.19f, 1.38f),
+    Pair(0.64f, 1.05f),
+    Pair(0.35f, 0.77f),
+    Pair(0.55f, 0.444f),
+    Pair(0.444f, 0.15f),// Ball 10
 )
 
 @Composable
 fun LanguageExercise(
     modifier: Modifier = Modifier,
     number: Int,
-    x: Dp,
-    y: Dp,
+    x: Float,
+    y: Float,
     completedExercises: Int,
     onClick: (Int) -> Unit,
 ) {
@@ -99,12 +86,17 @@ fun LanguageExercise(
     // Determine the circle color based on the unlocked status
     val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
+    // Calculate the positions as a percentage of the smallest width
+    val smallestWidth = minOf(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
+    val offsetX = x * smallestWidth
+    val offsetY = y * smallestWidth
+
     // Render the circle as a clickable surface if the exercise is unlocked
     if (isUnlocked) {
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(x, y),
+                .offset(offsetX.dp, offsetY.dp),
             shape = CircleShape,
             color = circleColor,
             onClick = { onClick(number) } // Call the lambda onClick with the exercise number
@@ -112,7 +104,7 @@ fun LanguageExercise(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxSize()
             ) {
                 Text(
                     text = number.toString(),
@@ -126,14 +118,14 @@ fun LanguageExercise(
         Surface(
             modifier = Modifier
                 .size(40.dp)
-                .offset(x, y),
+                .offset(offsetX.dp, offsetY.dp),
             shape = CircleShape,
             color = circleColor,
             onClick = {}
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
                 Text(
                     text = number.toString(),

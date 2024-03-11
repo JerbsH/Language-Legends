@@ -107,7 +107,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TopBar(userProfileViewModel: UserProfileViewModel) {
     var showLanguageSelection by remember { mutableStateOf(false) }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,6 +115,7 @@ fun TopBar(userProfileViewModel: UserProfileViewModel) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
+
         ) {
             IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
                 val selectedLanguageIcon = userProfileViewModel.selectedLanguageIcon
@@ -180,7 +180,7 @@ fun BottomBar(
 
     NavigationBar(
         modifier = modifier,
-        containerColor = Color.White,
+
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -204,14 +204,7 @@ fun BottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedTextColor = Color.Gray,
-                    selectedTextColor = Color.Black,
-                    selectedIconColor = Color.Black,
-                    unselectedIconColor = Color.Black,
-                    indicatorColor = Color.LightGray
-                ),
+                }
             )
         }
     }
