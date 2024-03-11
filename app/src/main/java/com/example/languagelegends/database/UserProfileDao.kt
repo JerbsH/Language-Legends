@@ -19,4 +19,5 @@ interface UserProfileDao {
     @Update
     suspend fun updateUserProfile(userProfile: UserProfile)
 
+
 }

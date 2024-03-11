@@ -36,13 +36,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
-import com.example.languagelegends.R
-import com.murgupluoglu.flagkit.FlagKit
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.languagelegends.R
 import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.Language
 import com.example.languagelegends.database.UserProfileDao
-import com.example.languagelegends.screens.Language
 import com.example.languagelegends.screens.updateUserLanguages
+import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,6 +55,8 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
 
     var selectedLanguage by mutableStateOf(sharedPreferences.getString("selectedLanguage", "English") ?: "English") // Default language
     var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
+    val selectedLanguageLiveData = MutableLiveData<String>()
+
 
 
     fun updateLanguage(newLanguage: String) {
@@ -65,15 +68,18 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             selectedLanguageIcon = icon(newLanguage)
 
             if (userProfile != null) {
-                val selectedLanguage = Language(newLanguage, 0, 0)
+                val countryCode = LANGUAGES[newLanguage] ?: "EN-GB"
+                val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
                 userProfile.currentLanguage = selectedLanguage
                 updateUserLanguages(userProfile, newLanguage) // Update languages
                 userProfileDao.updateUserProfile(userProfile)
                 this@UserProfileViewModel.selectedLanguage = newLanguage
                 selectedLanguageIcon = icon(newLanguage) // Update language icon
             }
-            // Save the selected language to SharedPreferences
+            // Save the selected language to SharedPreferences and livedata
             sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
+            selectedLanguageLiveData.value = newLanguage
+
         }
     }
     fun loadSelectedLanguage() {
