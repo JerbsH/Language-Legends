@@ -2,45 +2,64 @@ package com.example.languagelegends.screens
 
 import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.features.Message
 import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
 
     @Composable
     fun Chats(userProfileViewModel: UserProfileViewModel) {
-
         val context = LocalContext.current
         val application = context.applicationContext as Application
         val viewModel = AiChatViewModel(application, userProfileViewModel)
@@ -48,103 +67,232 @@ class ChatScreen {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
+        var isFreeChat by remember { mutableStateOf(false) }
+
 
         // Display the chat screen
         Surface {
-            if (menuVisibility) {
-                CardView(viewModel)
+            if (isFreeChat) {
+                FreeChatScreen(viewModel, viewModel::onFreeChat)
             } else {
-                AiChat(viewModel, userProfileViewModel, topic, response, viewModel::onAskMeAQuestion, viewModel::checkAnswer)
+                if (menuVisibility) {
+                    CardView(viewModel) {
+                        isFreeChat = true
+                    }
+                } else {
+                    AiChat(
+                        viewModel,
+                        userProfileViewModel,
+                        topic,
+                        response,
+                        viewModel::onAskMeAQuestion,
+                        viewModel::checkAnswer,
+                    )
+                }
+            }
+        }
+    }
+
+
+    @Composable
+    fun AiChat(
+        viewModel: AiChatViewModel,
+        userProfileViewModel: UserProfileViewModel,
+        topic: String,
+        response: String?,
+        onAskMeAQuestion: () -> Unit,
+        onCheckAnswer: () -> Unit
+    ) {
+        val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
+        val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
+        val resultMessage by viewModel.resultMessage.observeAsState("")
+        val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
+
+
+        Column {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                // Display AI choice based on topic
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(
+                        id = R.string.ai_choice,
+                        topic
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                // Button to ask a question
+                Button(onClick = {
+                    onAskMeAQuestion()
+                }) {
+                    Text(text = stringResource(id = R.string.ask_question))
+                }
+            }
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
+            ) {
+                // Display AI response
+
+                if (isGeneratingQuestion) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                } else {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                // Text field for user's answer
+                TextField(
+                    value = viewModel.userAnswer.value,
+                    onValueChange = { newValue ->
+                        viewModel.userAnswer.value = newValue
+                    },
+                    label = { Text(stringResource(id = R.string.AIanswer)) },
+                    enabled = isQuestionAsked,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                )
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                // Button to check the answer
+                Button(onClick = {
+                    onCheckAnswer()
+                }) {
+                    Text(text = stringResource(id = R.string.check_answer))
+                }
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                resultMessage?.let {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = it,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
 }
-
-
 @Composable
-fun AiChat(
+fun FreeChatScreen(
     viewModel: AiChatViewModel,
-    userProfileViewModel: UserProfileViewModel,
-    topic: String,
-    response: String?,
-    onAskMeAQuestion: () -> Unit,
-    onCheckAnswer: () -> Unit
+    onFreeChat: (String) -> Unit
 ) {
-    val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
-    val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
-    val resultMessage by viewModel.resultMessage.observeAsState("")
-    val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
+    var userInput by remember { mutableStateOf("") }
+    val messages by viewModel.messages.observeAsState(emptyList())
+    val isGeneratingAnswer by viewModel.isGeneratingQuestion.observeAsState(false)
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val lazyListState = rememberLazyListState()
 
-
-    Column {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Display AI choice based on topic
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(
-                    id = R.string.ai_choice,
-                    topic
-                ),
-                textAlign = TextAlign.Center
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            // Button to ask a question
-            Button(onClick = {
-                onAskMeAQuestion()
-            }) {
-                Text(text = stringResource(id = R.string.ask_question))
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            state = lazyListState
+        ) {
+            item {
+                ChatMessage(message = Message(stringResource(id = R.string.AIwelcometext), false))
             }
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Display AI response
 
-            if (isGeneratingQuestion) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            } else {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
-                    textAlign = TextAlign.Center
-                )
+            items(messages) { message ->
+                ChatMessage(message = message)
             }
         }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            // Text field for user's answer
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
             TextField(
-                value = viewModel.userAnswer.value,
+                value = userInput,
                 onValueChange = { newValue ->
-                    viewModel.userAnswer.value = newValue
+                    userInput = newValue
                 },
-                label = { Text(stringResource(id = R.string.AIanswer)) },
-                enabled = isQuestionAsked,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                label = { Text(stringResource(id = R.string.AItextfield)) },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Send
+                ),
+                singleLine = true,
+                enabled = !isGeneratingAnswer,
+                keyboardActions = KeyboardActions(onSend = {
+                    onFreeChat(userInput)
+                    userInput = ""
+                    keyboardController?.hide()
+                })
+            )
+
+            IconButton(
+                onClick = {
+                    onFreeChat(userInput)
+                    userInput = ""
+                    keyboardController?.hide()
+                },
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = stringResource(id = R.string.AIchat_send)
+                )
+            }
+        }
+
+        if (isGeneratingAnswer) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             )
         }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            // Button to check the answer
-            Button(onClick = {
-                onCheckAnswer()
-            }) {
-                Text(text = stringResource(id = R.string.check_answer))
-            }
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            resultMessage?.let {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = it,
-                    textAlign = TextAlign.Center
-                )
-            }
+        // Use LaunchedEffect to scroll to the last item when the LazyColumn recomposes
+        LaunchedEffect(messages.size) {
+            lazyListState.scrollToItem(messages.size)
         }
     }
 }
 
+
 @Composable
-fun CardView(viewModel: AiChatViewModel) {
+fun ChatMessage(message: Message) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = if (message.isFromUser) Arrangement.End else Arrangement.Start
+    ) {
+        Card(
+            modifier = Modifier
+                .padding(8.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = message.text,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+    }
+}
+
+
+
+@Composable
+fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     // Resolve topic strings
     val coffeeTopic = stringResource(id = R.string.cafe)
     val transportTopic = stringResource(id = R.string.transport)
@@ -172,7 +320,27 @@ fun CardView(viewModel: AiChatViewModel) {
             )
         }
         HorizontalDivider()
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                onClick = {
+                    viewModel.topic.value = ""
+                    viewModel.menuVisibility.value = false
+                    onFreeChatClicked()
+                },
+                modifier = Modifier.widthIn(150.dp) // Set a max width
+            ) {
+                Text(text = stringResource(id = R.string.free_chat))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),

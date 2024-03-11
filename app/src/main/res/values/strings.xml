@@ -47,6 +47,11 @@
     <string name="ai_choice">You chose %1$s, the Wizard will now test your knowledge.</string>
     <string name="weather">Weather</string>
     <string name="check_answer">Answer</string>
+    <string name="free_chat">Chat</string>
+    <string name="AIchat_send">Send</string>
+    <string name="AIwelcometext">Hello, What would you like to ask?</string>
+    <string name="AItextfield">Ask…</string>
+
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>

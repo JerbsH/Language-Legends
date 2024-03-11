@@ -3,6 +3,7 @@ package com.example.languagelegends.features
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,15 +65,17 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
     var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
     val selectedLanguageLiveData = MutableLiveData<String>()
 
-
-
     fun updateLanguage(newLanguage: String) {
         viewModelScope.launch {
+
+            try {
+                
             val userProfile = withContext(Dispatchers.IO) {
                 userProfileDao.getAllUserProfiles().firstOrNull()
             }
             userProfile?.let { profile ->
                 // Save the current points and exercises done
+               val selectedLanguage = Language(newLanguage, 0, 0, countryCode)
                 val currentLanguage = profile.currentLanguage
                 currentLanguage.let {
                     it.pointsEarned = it.pointsEarned
@@ -101,13 +104,18 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
             sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
             selectedLanguageLiveData.value = newLanguage
 
+                // Update the ViewModel's selectedLanguage and selectedLanguageIcon
+                selectedLanguage = newLanguage
+                selectedLanguageIcon = icon(newLanguage)
+            } catch (e: Exception) {
+                Log.e("DBG", "Error updating language: ${e.message}")
+            }
         }
     }
-        fun loadSelectedLanguage() {
-            selectedLanguage =
-                sharedPreferences.getString("selectedLanguage", "English") ?: "English"
-            selectedLanguageIcon = icon(selectedLanguage)
-        }
+    fun loadSelectedLanguage() {
+        selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
+        selectedLanguageIcon = icon(selectedLanguage)
+
     }
 
     @Composable

@@ -186,7 +186,7 @@ fun BottomBar(
     NavigationBar(
         modifier = modifier,
 
-    ) {
+        ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         screens.forEach { screen ->

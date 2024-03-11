@@ -12,6 +12,7 @@ import com.example.languagelegends.R
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.LANGUAGES
+import com.example.languagelegends.features.Message
 import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.features.UserProfileViewModel
@@ -35,6 +36,7 @@ import java.util.Locale
 class AiChatViewModel(private val application: Application, private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
 
 
+
     // Constants used for SharedPreferences
     companion object {
         const val PROJECT_ID = "projectId"
@@ -50,12 +52,15 @@ class AiChatViewModel(private val application: Application, private val userProf
     var questionLanguage = MutableLiveData<String>()
 
 
-    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
+
+    private val userProfileDao: UserProfileDao =
+        DatabaseProvider.getDatabase(application).userProfileDao()
     private val translateAPI = TranslateAPI(application)
 
     //deepl languages
     val languages = LANGUAGES
 
+    var messages = MutableLiveData<List<Message>>()
     var isGeneratingQuestion = MutableLiveData<Boolean>()
     var isQuestionAsked = MutableLiveData<Boolean>()
     var userAnswer = mutableStateOf("")
@@ -194,11 +199,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     // This function logs the remaining time for the token to expire.
     private fun logRemainingTime(tokenExpirationTime: Long, currentTime: Long) {
         val remainingTimeMillis = tokenExpirationTime - currentTime
-        val remainingTimeSeconds = remainingTimeMillis / 1000
-        Log.d(
-            "DBG",
-            "Remaining time for token to expire: $remainingTimeSeconds seconds"
-        )
+        remainingTimeMillis / 1000
     }
 
     private suspend fun getSelectedLanguageCountryCode(): String {
@@ -301,4 +302,48 @@ class AiChatViewModel(private val application: Application, private val userProf
             }
         }
     }
+
+    fun onFreeChat(userInput: String) {
+        if (userInput.isBlank()) {
+            Log.e("DBG", "User input is empty or contains only whitespace.")
+            return
+        }
+
+        viewModelScope.launch {
+            isQuestionAsked.value = true
+            isGeneratingQuestion.postValue(true)
+            resultMessage.value = ""
+
+            // Update UI with the user's message
+            val userMessage = Message(userInput, true)
+            messages.postValue(messages.value?.plus(userMessage) ?: listOf(userMessage))
+
+            try {
+                withContext(Dispatchers.IO) {
+                    // Process user input and get AI response
+                    val aiResponse = textRequest?.execute(userInput)?.getOrThrow()
+                    val modifiedAiResponse = aiResponse?.substringAfter(": ")
+                    Log.d("DBG", "AI response: $modifiedAiResponse")
+
+                    // Update UI with AI response
+                    modifiedAiResponse?.let {
+                        val currentMessages = messages.value ?: emptyList()
+
+                        // Add AI message to the list
+                        val updatedMessages = currentMessages + Message(it, false)
+
+                        // Post the updated list of messages
+                        messages.postValue(updatedMessages)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("DBG", "Error executing request: ${e.message}")
+                throw e
+            } finally {
+                isGeneratingQuestion.postValue(false)
+            }
+        }
+    }
+
 }
+
