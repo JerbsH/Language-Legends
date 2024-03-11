@@ -4,21 +4,20 @@ Are you ready to embark on an epic journey of language mastery? Look no further 
 
 ## Why Language Legends?
 
-Language Legends isn't just another language learning app – it's your ticket to becoming a true language hero. Our innovative approach combines cutting-edge technology with time-tested learning methods to provide you with an immersive and effective language learning experience.
+Language Legends isn't just another language learning app – it's your ticket to becoming a true language hero. Our innovative approach combines cutting-edge technology with time-tested learning methods to provide you with an immersive and effective language learning experience. Learn new languages by letting our AI-Wizard test your knowledge or adventure through the forest and complete challenging games.
 
 ## Features:
 
-### Feature 1: 
-TODO: write about feature
-### Feature 2: 
-TODO: write about feature
-### Feature 3: 
-TODO: write about feature
-### Feature 4: 
-TODO: write about feature
+### AI-Wizard: 
+Let the wizard test your knowledge in different categories or freely chat with the wizard. Easy way to test your knowledge and quickly learn useful words and sentences. 
+### Adventure Path: 
+Adventure through the forest and improve your language skills. On your adventure you will come across many interesting games and activities.
+### Point Tracking: 
+See how you have been progressing your learning from your profile view. Your profile lists all your learned languages and tracks your point progress.
+### Many languages to learn: 
+20+ Languages to select from and start learning. 
 ### Feature 5: 
 TODO: write about feature
 
 ## Getting Setup:
-Add "assets" folder to the same level as res in project files and add your service account keyfile.json in there. 
-ProjectID and other required IDs for AI functionality will be picked from there automatically. 
+Insert your service account information and deepl api key into their files according to the templates found in assets folder. (Filenames need to be keyfile.json and deeplAPIKey.json)
