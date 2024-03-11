@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -83,7 +84,11 @@ fun ProfileScreen(
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }
     var selectedLanguage by remember { mutableStateOf<Language?>(null) }
-    val countryCode by remember(selectedLanguage) { mutableStateOf(LANGUAGES[selectedLanguage?.name] ?: "EN-GB") }
+    val countryCode by remember(selectedLanguage) {
+        mutableStateOf(
+            LANGUAGES[selectedLanguage?.name] ?: "EN-GB"
+        )
+    }
     var isDialogOpen by remember { mutableStateOf(false) }
     var created by remember { mutableIntStateOf(0) }
     Log.d("DBG", "Initial username: $username") // Log the initial username
@@ -130,7 +135,12 @@ fun ProfileScreen(
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
-                        currentLanguage = selectedLanguage ?: Language("No selection", 0, 0, countryCode),
+                        currentLanguage = selectedLanguage ?: Language(
+                            "No selection",
+                            0,
+                            0,
+                            countryCode
+                        ),
                         weeklyPoints = 1500,
                         created = 1
                     )
@@ -222,14 +232,15 @@ fun ProfileScreen(
                         bitmap = imageBitmap.value!!,
                         contentDescription = null,
                         modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp))
                             .size(
                                 LocalConfiguration.current.screenWidthDp.dp * 1 / 2,
                                 LocalConfiguration.current.screenHeightDp.dp * 1 / 5
-                            )
-                            .border(2.dp, Color.Green, shape = RoundedCornerShape(16.dp)),
+                            ),
                         alignment = Alignment.Center,
-
-                        )
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
             // Buttons for selecting picture
@@ -558,7 +569,7 @@ fun ProfileScreen(
                                 .padding(8.dp)
                                 .clickable {
                                     Log.d("DBG", "Language $language selected")
-                                    selectedLanguage = Language(language, 0, 0,countryCode)
+                                    selectedLanguage = Language(language, 0, 0, countryCode)
                                     selection = language
 
                                     // Update language in view model
@@ -628,7 +639,8 @@ fun ProfileScreen(
                         coroutineScope.launch {
                             selectedUserProfile?.let { userProfile ->
                                 userProfile.created = created
-                                userProfile.currentLanguage = selectedLanguage ?: Language("English", 0, 0, countryCode)
+                                userProfile.currentLanguage =
+                                    selectedLanguage ?: Language("English", 0, 0, countryCode)
                                 userProfileDao.updateUserProfile(userProfile)
                             }
                         }
