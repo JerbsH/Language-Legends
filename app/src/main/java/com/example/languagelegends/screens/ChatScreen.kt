@@ -1,7 +1,6 @@
 package com.example.languagelegends.screens
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,27 +34,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
 
     @Composable
-    fun Chats() {
+    fun Chats(userProfileViewModel: UserProfileViewModel) {
 
         val context = LocalContext.current
         val application = context.applicationContext as Application
-        val viewModel = AiChatViewModel(application)
+        val viewModel = AiChatViewModel(application, userProfileViewModel)
 
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
-
 
         // Display the chat screen
         Surface {
             if (menuVisibility) {
                 CardView(viewModel)
             } else {
-                AiChat(viewModel, topic, response, viewModel::onAskMeAQuestion, viewModel::checkAnswer)
+                AiChat(viewModel, userProfileViewModel, topic, response, viewModel::onAskMeAQuestion, viewModel::checkAnswer)
             }
         }
     }
@@ -65,14 +64,13 @@ class ChatScreen {
 @Composable
 fun AiChat(
     viewModel: AiChatViewModel,
+    userProfileViewModel: UserProfileViewModel,
     topic: String,
     response: String?,
     onAskMeAQuestion: () -> Unit,
     onCheckAnswer: () -> Unit
 ) {
-    val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-    val selectedLanguage = sharedPreferences.getString("selectedLanguageName", "English (American)") ?: "English (American)"
+    val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
     val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
     val resultMessage by viewModel.resultMessage.observeAsState("")
     val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
@@ -106,7 +104,7 @@ fun AiChat(
             } else {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = if (!response.isNullOrEmpty()) "Translate this to $selectedLanguage: $response" else "",
+                    text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
                     textAlign = TextAlign.Center
                 )
             }

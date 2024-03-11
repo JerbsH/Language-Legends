@@ -9,9 +9,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
+import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.TranslationCallback
+import com.example.languagelegends.features.UserProfileViewModel
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -29,7 +32,7 @@ import java.util.Locale
  * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
  * checking token expiration, and executing text requests.
  * **/
-class AiChatViewModel(private val application: Application) : ViewModel() {
+class AiChatViewModel(private val application: Application, private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
 
 
     // Constants used for SharedPreferences
@@ -44,7 +47,10 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
     var menuVisibility = MutableLiveData<Boolean>()
     var topic = MutableLiveData<String>()
     var response = MutableLiveData<String?>()
+    var questionLanguage = MutableLiveData<String>()
 
+
+    private val userProfileDao: UserProfileDao = DatabaseProvider.getDatabase(application).userProfileDao()
     private val translateAPI = TranslateAPI(application)
 
     //deepl languages
@@ -195,9 +201,9 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
         )
     }
 
-    private fun getSelectedLanguage(): String {
-        val sharedPreferences = application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("selectedLanguageCode", "EN-US") ?: "EN-US"
+    private suspend fun getSelectedLanguageCountryCode(): String {
+        val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+        return userProfile?.currentLanguage?.countryCode ?: "EN-GB" // default
     }
 
     /** This function is called when the user asks a question.
@@ -206,6 +212,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
     fun onAskMeAQuestion() {
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
+            questionLanguage.value = userProfileViewModel.selectedLanguageLiveData.value
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
             resultMessage.value = ""
@@ -228,9 +235,11 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                     Log.d("DBG", "AI response: $modifiedAiResponse")
 
                     // Translate the AI response to the selected language
+                    val targetLanguageCode = getSelectedLanguageCountryCode()
+
                     translateAPI.translate(
                         modifiedAiResponse,
-                        getSelectedLanguage(),
+                        targetLanguageCode,
                         object : TranslationCallback {
                             override fun onTranslationResult(result: String) {
                                 // Store the translated text as the correct answer
@@ -241,7 +250,7 @@ class AiChatViewModel(private val application: Application) : ViewModel() {
                                 // Translate the AI response to English and post it to the response LiveData
                                 translateAPI.translate(
                                     modifiedAiResponse,
-                                    "EN",
+                                    "EN-GB",
                                     object : TranslationCallback {
                                         override fun onTranslationResult(result: String) {
                                             response.postValue(result)
