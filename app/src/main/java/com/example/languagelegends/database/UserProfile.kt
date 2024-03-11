@@ -2,6 +2,7 @@ package com.example.languagelegends.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+
 import com.example.languagelegends.features.Language
 
 

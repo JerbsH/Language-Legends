@@ -14,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,12 +22,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -64,9 +63,13 @@ class MainActivity : ComponentActivity() {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
-                val application = this.application
-                val userProfileViewModel = remember { UserProfileViewModel(application) }
                 var isNameScreenActive by remember { mutableStateOf(false) }
+                val userProfileViewModel: UserProfileViewModel = viewModel()
+
+
+                userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
+                    apiSelectedLanguage = newLanguage
+                }
 
 
                 userProfileViewModel.loadSelectedLanguage()
@@ -239,7 +242,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats()
+            ChatScreen().Chats(userProfileViewModel)
         }
         composable(
             route = "exercises/{exerciseNumber}",
