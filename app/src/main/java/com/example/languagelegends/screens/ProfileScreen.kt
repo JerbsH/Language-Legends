@@ -70,7 +70,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int)
+data class Language(val name: String, var exercisesDone: Int, var pointsEarned: Int, var exerciseTimestamp: Long = 0L)
 
 @Composable
 fun ProfileScreen(
@@ -388,6 +388,7 @@ fun ProfileScreen(
                             }
                             // Update selectedUserProfile
                             selectedUserProfile = updatedUserProfile
+
                         } else {
                             // If the database is empty or has more than one user, create a new user profile
                             val newUserProfile = UserProfile(
@@ -419,7 +420,11 @@ fun ProfileScreen(
                             // Update selectedUserProfile
                             selectedUserProfile = updatedUserProfile
                         }
+                        // Calculate weeklyPoints based on exercise timestamps
+                        val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                        weeklyPoints = selectedUserProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
                     }
+
                 } catch (e: Exception) {
                     Log.e("DBG", "Error updating user profile: ${e.message}", e)
                 }

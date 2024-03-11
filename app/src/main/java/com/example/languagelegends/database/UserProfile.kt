@@ -17,5 +17,8 @@ data class UserProfile(
     var languagePoints: Int = 0,
     var exercisesDone: Int? = 0,
     var image: ByteArray? = null,
-    var created: Int?
+    var created: Int?,
+
+    var exerciseTimestamp: Long = 0L // Add this line
+
 )

@@ -48,16 +48,27 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.SensorHelper
+import com.example.languagelegends.features.UserProfileViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 
 @Composable
 fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
     var currentExercise by remember { mutableStateOf(1) }
+
+    // Define userProfileDao and exerciseTimestamp here
+    val context = LocalContext.current
+    val userProfileDao = DatabaseProvider.getDatabase(context).userProfileDao()
+    val exerciseTimestamp = System.currentTimeMillis()
 
     //Define the layout for the exercises
     Column(
@@ -77,6 +88,9 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
+                    userProfileDao = userProfileDao, // Add this line
+                    exerciseTimestamp = exerciseTimestamp // Add this line
+
                 )
             }
 
@@ -119,7 +133,11 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
 fun WordScrambleExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
-    sensorHelper: SensorHelper // Pass the sensor helper instance
+    sensorHelper: SensorHelper, // Pass the sensor helper instance
+    userProfileDao: UserProfileDao,
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    exerciseTimestamp: Long = 0L
+
 ) {
     // List of words for the exercise
     val wordList = remember {
@@ -172,6 +190,9 @@ fun WordScrambleExercise(
 
     // State to track if the user's input is correct
     var isCorrect by remember { mutableStateOf(false) }
+
+    val points = 10
+
 
     Column(
         modifier = Modifier
@@ -252,6 +273,16 @@ fun WordScrambleExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
+
+                        // Update points and timestamp in userProfile
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
+                            userProfile?.let {
+                                it.currentLanguage.pointsEarned += points
+                                it.currentLanguage.exerciseTimestamp = System.currentTimeMillis()
+                                userProfileDao.updateUserProfile(it)
+                            }
+                        }
                         onNextExercise()
                     }
                 },
