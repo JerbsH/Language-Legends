@@ -63,6 +63,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
+// Move points to a constant value
+private const val POINTS_PER_EXERCISE = 10
 
 @Composable
 fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
@@ -93,7 +95,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
 
-                )
+                    )
             }
 
             2 -> {
@@ -114,7 +116,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    )
+                )
             }
             // Add more exercises as needed
             else -> {
@@ -139,9 +141,8 @@ fun WordScrambleExercise(
     sensorHelper: SensorHelper, // Pass the sensor helper instance
     userProfileDao: UserProfileDao,
     userProfileViewModel: UserProfileViewModel = viewModel(),
-    //exerciseTimestamp: Long = 0L
 
-) {
+    ) {
     // List of words for the exercise
     val wordList = remember {
         listOf(
@@ -194,7 +195,7 @@ fun WordScrambleExercise(
     // State to track if the user's input is correct
     var isCorrect by remember { mutableStateOf(false) }
 
-    val points = 10
+    val points = POINTS_PER_EXERCISE
 
 
     Column(
@@ -285,34 +286,12 @@ fun WordScrambleExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
-
-                        if (isCorrect) {
-                            // Update points, exercisesDone and timestamp in userProfile
-                            userProfileViewModel.viewModelScope.launch {
-                                val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
-                                userProfile?.let {
-                                    val currentLanguage =
-                                        it.languages.find { it.name == userProfile.currentLanguage.name }
-                                    currentLanguage?.let { language ->
-                                        language.pointsEarned += points
-                                        language.exercisesDone += 1 // Increment exercisesDone
-                                        language.exerciseTimestamp = System.currentTimeMillis()
-                                        // Update total language points
-                                        it.languagePoints =
-                                            it.languages.sumOf { language -> language.pointsEarned }
-                                        // Update exercisesDone and pointsEarned in UserProfile
-                                        it.exercisesDone =
-                                            it.exercisesDone?.plus(1) // Increment exercisesDone
-                                        it.pointsEarned += points // Increment pointsEarned
-                                        withContext(Dispatchers.IO) {
-                                            userProfileDao.updateUserProfile(it)
-                                            userProfileDao.updateUserProfile(it) // Update the language in the database
-                                        }
-                                    }
-                                }
-                                onNextExercise()
-                            }
-                        }
+                        updatePointsAndProceed(
+                            userProfileDao,
+                            onNextExercise,
+                            points,
+                            userProfileViewModel
+                        )
                     }
                 },
                 enabled = isCorrect,
@@ -351,7 +330,7 @@ fun SecondExercise(
         mutableStateOf(List(languageCountryPairs.size) { "" })
     }
 
-    val points = 10
+    val points = POINTS_PER_EXERCISE
 
     Column(
         modifier = Modifier
@@ -434,31 +413,12 @@ fun SecondExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
-                        // Update points, exercisesDone and timestamp in userProfile
-                        userProfileViewModel.viewModelScope.launch {
-                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
-                            userProfile?.let {
-                                val currentLanguage =
-                                    it.languages.find { it.name == userProfile.currentLanguage.name }
-                                currentLanguage?.let { language ->
-                                    language.pointsEarned += points
-                                    language.exercisesDone += 1 // Increment exercisesDone
-                                    language.exerciseTimestamp = System.currentTimeMillis()
-                                    // Update total language points
-                                    it.languagePoints =
-                                        it.languages.sumOf { language -> language.pointsEarned }
-                                    // Update exercisesDone and pointsEarned in UserProfile
-                                    it.exercisesDone =
-                                        it.exercisesDone?.plus(1) // Increment exercisesDone
-                                    it.pointsEarned += points // Increment pointsEarned
-                                    withContext(Dispatchers.IO) {
-                                        userProfileDao.updateUserProfile(it)
-                                        userProfileDao.updateUserProfile(it) // Update the language in the database
-                                    }
-                                }
-                            }
-                            onNextExercise()
-                        }
+                        updatePointsAndProceed(
+                            userProfileDao,
+                            onNextExercise,
+                            points,
+                            userProfileViewModel
+                        )
                     }
                 },
                 enabled = isCorrect,
@@ -508,7 +468,7 @@ fun TiltExercise(
     val correctString = stringResource(id = R.string.correct)
     val keepTryingString = stringResource(id = R.string.keep_trying)
 
-    val points = 10
+    val points = POINTS_PER_EXERCISE
 
 
     LaunchedEffect(currentItemIndex) {
@@ -529,16 +489,21 @@ fun TiltExercise(
                         currentItemIndex++
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
-                        onExerciseCompleted()
+                        updatePointsAndProceed(
+                            userProfileDao,
+                            onExerciseCompleted,
+                            points,
+                            userProfileViewModel
+                        )
                         break
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted left2, selected answer: ${currentItem.third}"
+                        "Tilted right, selected answer: ${currentItem.third}"
                     ) // Log the selected answer
-                    delay(3000) // Wait for a second before clearing the feedback
+                    delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
             } else if (sensorHelper.isTiltedLeft.value) { // Check for left tilt instead of right
@@ -554,38 +519,19 @@ fun TiltExercise(
                         currentItemIndex++
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
-// Update points, exercisesDone and timestamp in userProfile
-                        userProfileViewModel.viewModelScope.launch {
-                            val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
-                            userProfile?.let {
-                                val currentLanguage =
-                                    it.languages.find { it.name == userProfile.currentLanguage.name }
-                                currentLanguage?.let { language ->
-                                    language.pointsEarned += points
-                                    language.exercisesDone += 1 // Increment exercisesDone
-                                    language.exerciseTimestamp = System.currentTimeMillis()
-                                    // Update total language points
-                                    it.languagePoints =
-                                        it.languages.sumOf { language -> language.pointsEarned }
-                                    // Update exercisesDone and pointsEarned in UserProfile
-                                    it.exercisesDone =
-                                        it.exercisesDone?.plus(1) // Increment exercisesDone
-                                    it.pointsEarned += points // Increment pointsEarned
-                                    withContext(Dispatchers.IO) {
-                                        userProfileDao.updateUserProfile(it)
-                                        userProfileDao.updateUserProfile(it) // Update the language in the database
-                                    }
-                                }
-                            }
-                            onExerciseCompleted()
-                        }
+                        updatePointsAndProceed(
+                            userProfileDao,
+                            onExerciseCompleted,
+                            points,
+                            userProfileViewModel
+                        )
                         break
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
                     Log.d(
                         "TiltExercise",
-                        "Tilted right4, selected answer: ${currentItem.third}"
+                        "Tilted left, selected answer: ${currentItem.third}"
                     ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
@@ -593,7 +539,6 @@ fun TiltExercise(
             }
         }
     }
-
     // Show the word and possible translations
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -709,5 +654,38 @@ fun TiltExercise(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+    }
+}
+
+// Helper function to update points and move to the next exercise
+fun updatePointsAndProceed(
+    userProfileDao: UserProfileDao,
+    onNextExercise: () -> Unit,
+    points: Int,
+    viewModel: UserProfileViewModel
+) {
+
+    // Launch a coroutine using viewModelScope
+    viewModel.viewModelScope.launch {
+        // Perform database operations within a coroutine
+        val userProfile = withContext(Dispatchers.IO) {
+            userProfileDao.getAllUserProfiles().firstOrNull()
+        }
+
+        userProfile?.let { profile ->
+            val currentLanguage = profile.languages.find { it.name == profile.currentLanguage.name }
+            currentLanguage?.let { language ->
+                language.pointsEarned += points
+                language.exercisesDone++ // Increment exercisesDone
+                language.exerciseTimestamp = System.currentTimeMillis()
+                profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
+                profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
+                profile.pointsEarned += points // Increment pointsEarned
+                withContext(Dispatchers.IO) {
+                    userProfileDao.updateUserProfile(profile)
+                }
+            }
+        }
+        onNextExercise()
     }
 }
