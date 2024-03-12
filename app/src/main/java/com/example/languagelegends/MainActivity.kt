@@ -131,7 +131,7 @@ fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatVi
             Button(onClick = {
                 toggle()
             }) {
-                Text(text = "back")
+                Text(text = stringResource(id = R.string.backButton))
             }
         }
         Row(
