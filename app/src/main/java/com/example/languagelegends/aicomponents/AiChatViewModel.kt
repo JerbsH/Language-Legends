@@ -35,8 +35,9 @@ import java.util.Locale
  * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
  * checking token expiration, and executing text requests.
  * **/
-class AiChatViewModel(private val application: Application, private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
+class AiChatViewModel(private val application: Application, userProfileViewModel: UserProfileViewModel) : ViewModel() {
 
+    var questionAskedLanguage = mutableStateOf(userProfileViewModel.selectedLanguage)
 
 
     // Constants used for SharedPreferences
@@ -51,11 +52,8 @@ class AiChatViewModel(private val application: Application, private val userProf
     var menuVisibility = MutableLiveData<Boolean>()
     var topic = MutableLiveData<String>()
     var response = MutableLiveData<String?>()
-    var questionLanguage = MutableLiveData<String>()
     var isFreeChat = MutableLiveData<Boolean>()
     var chatVisible = MutableLiveData<Boolean>()
-
-
 
 
     private val userProfileDao: UserProfileDao =
@@ -219,7 +217,6 @@ class AiChatViewModel(private val application: Application, private val userProf
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
             resetHint()
-            questionLanguage.value = userProfileViewModel.selectedLanguageLiveData.value
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
             resultMessage.value = ""
@@ -243,6 +240,8 @@ class AiChatViewModel(private val application: Application, private val userProf
 
                     // Translate the AI response to the selected language
                     val targetLanguageCode = getSelectedLanguageCountryCode()
+                    Log.d("dbg", "Selected language code: $targetLanguageCode")
+
 
                     translateAPI.translate(
                         modifiedAiResponse,
@@ -387,4 +386,5 @@ class AiChatViewModel(private val application: Application, private val userProf
     }
 
 }
+
 

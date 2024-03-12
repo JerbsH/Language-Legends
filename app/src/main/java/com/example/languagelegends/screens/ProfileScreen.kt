@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,11 +56,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.Converters
-import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.ImagePickerActivity
@@ -68,11 +67,9 @@ import com.example.languagelegends.features.Language
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.murgupluoglu.flagkit.FlagKit
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 @Composable
 fun ProfileScreen(
@@ -94,20 +91,16 @@ fun ProfileScreen(
     }
     var isDialogOpen by remember { mutableStateOf(false) }
     var created by remember { mutableIntStateOf(0) }
-    Log.d("DBG", "Initial username: $username") // Log the initial username
+    var weeklyPoints by remember { mutableIntStateOf(0) }
 
     val context = LocalContext.current
-    DatabaseProvider.getDatabase(context).userProfileDao()
 
     var image by remember { mutableStateOf<ByteArray?>(null) }
     val imageUri by remember { mutableStateOf<String?>(null) }
 
-// Fixed value for weeklyPoints
-    var weeklyPoints by remember { mutableIntStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
 
-    val coroutineScope = CoroutineScope(Dispatchers.Main)
-
-// Fetch the user profile from the database when the ProfileScreen is shown
+    // Fetch the user profile from the database when the ProfileScreen is shown
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val userProfile = withContext(Dispatchers.IO) {
@@ -116,9 +109,11 @@ fun ProfileScreen(
             selectedUserProfile = userProfile
             image = userProfile?.image
             username = userProfile?.username ?: ""
+
             // Calculate weeklyPoints based on exercise timestamps
             val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
-            weeklyPoints = userProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
+            weeklyPoints = userProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }
+                ?.sumOf { it.pointsEarned } ?: 0
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
 
@@ -134,11 +129,10 @@ fun ProfileScreen(
         }
     }
 
-// Function to handle image selection
+    // Function to handle image selection
     val pickImageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                Log.d("DBG", "Image selected")
                 val newImage = result.data?.getByteArrayExtra("image")
 
                 // Check if selectedUserProfile is null
@@ -146,11 +140,10 @@ fun ProfileScreen(
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
                         username = username,
-                        currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0,0),
+                        currentLanguage = selectedLanguage ?: Language("No selection", "", 0, 0, 0),
                         weeklyPoints = 0,
                         created = 1,
                         pointsEarned = 0
-
                     )
                 }
                 // Update the image of selectedUserProfile
@@ -158,7 +151,6 @@ fun ProfileScreen(
 
                 // Update the user profile in the database
                 coroutineScope.launch {
-                    Log.d("DBG", "Updating user profile in database")
                     selectedUserProfile?.let { userProfileDao.updateUserProfile(it) }
                 }
                 // Update the image variable
@@ -166,7 +158,7 @@ fun ProfileScreen(
             }
         }
 
-// Update the user profile in the database when values change
+    // Update the user profile in the database when values change
     LaunchedEffect(
         image, imageUri,
         selectedUserProfile?.weeklyPoints,
@@ -178,15 +170,14 @@ fun ProfileScreen(
     ) {
         selectedUserProfile?.let { userProfile ->
             val newLanguage = if (apiSelectedLanguage.isNotEmpty()) {
-                Language(apiSelectedLanguage, countryCode, 0,0,0)
+                Language(apiSelectedLanguage, countryCode, 0, 0, 0)
             } else {
-                selectedLanguage ?: Language("Default", countryCode, 0,0,0)
-
+                selectedLanguage ?: Language("Default", countryCode, 0, 0, 0)
             }
             userProfile.currentLanguage = newLanguage
             // Update the currentLanguage when apiSelectedLanguage changes
             if (apiSelectedLanguage != userProfile.currentLanguage.name) {
-                userProfile.currentLanguage = Language(apiSelectedLanguage, countryCode, 0,0,0)
+                userProfile.currentLanguage = Language(apiSelectedLanguage, countryCode, 0, 0, 0)
 
                 // Check if the language is already in the list
                 val existingLanguage = userProfile.languages.find { it.name == apiSelectedLanguage }
@@ -196,8 +187,7 @@ fun ProfileScreen(
                     existingLanguage.pointsEarned = 0
                 } else {
                     // Add the new language to the list of languages
-                    userProfile.languages.add(Language(apiSelectedLanguage, countryCode, 0,0,0))
-
+                    userProfile.languages.add(Language(apiSelectedLanguage, countryCode, 0, 0, 0))
                 }
                 // Update the UserProfile in the database
                 coroutineScope.launch {
@@ -210,6 +200,7 @@ fun ProfileScreen(
             }
         }
     }
+
     @Composable
     fun showProfile() {
         onBottomBarVisibilityChanged(true)
@@ -277,14 +268,12 @@ fun ProfileScreen(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
                 Button(onClick = {
-                    Log.d("DBG", "Take Photo button clicked")
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }) {
                     Text(stringResource(id = R.string.take_photo))
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Button(onClick = {
-                    Log.d("DBG", "From Gallery button clicked")
                     val pickImageIntent = Intent(context, ImagePickerActivity::class.java)
                     pickImageIntent.putExtra("requestType", "gallery")
                     pickImageIntent.putExtra("username", username)
@@ -331,7 +320,6 @@ fun ProfileScreen(
 
                             Button(
                                 onClick = {
-                                    Log.d("DBG", "Edit Username button clicked")
                                     // Update UI
                                     isEditingUsername = !isEditingUsername
 
@@ -382,15 +370,13 @@ fun ProfileScreen(
 
             // Fetch user profile from the database using a coroutine
             LaunchedEffect(isEditingUsername, username) {
+
                 try {
                     if (!isEditingUsername) {
                         // User not found, check if the database is empty
                         val allUsers = withContext(Dispatchers.IO) {
                             userProfileDao.getAllUserProfiles()
                         }
-
-                        Log.d("ProfileScreen", "All users: $allUsers") // Log all users
-
 
                         if (allUsers.size == 1) {
                             // If there is exactly one user, update its username
@@ -401,8 +387,6 @@ fun ProfileScreen(
                                 selectedLanguage?.name ?: "Default Language"
                             )
                             userProfileDao.updateUserProfile(firstUser)
-                            Log.d("DBG", "Updating user profile in the database.")
-
                             // Fetch the updated user profile from the database
                             val updatedUserProfile = withContext(Dispatchers.IO) {
                                 userProfileDao.getAllUserProfiles()
@@ -416,7 +400,13 @@ fun ProfileScreen(
                             val newUserProfile = UserProfile(
                                 username = username,
                                 weeklyPoints = 0,
-                                currentLanguage = selectedLanguage ?: Language("No selection", countryCode, 0, 0,0),
+                                currentLanguage = selectedLanguage ?: Language(
+                                    "No selection",
+                                    countryCode,
+                                    0,
+                                    0,
+                                    0
+                                ),
 
                                 languagePoints = 0,
                                 created = 1,
@@ -427,10 +417,6 @@ fun ProfileScreen(
                                 selectedLanguage?.name ?: "Default Language"
                             )
                             userProfileDao.insertUserProfile(newUserProfile)
-                            Log.d(
-                                "ProfileScreen",
-                                "New user profile created and added to the database."
-                            )
 
                             // Fetch the updated user profile from the database
                             val updatedUserProfile = withContext(Dispatchers.IO) {
@@ -442,7 +428,9 @@ fun ProfileScreen(
                         }
                         // Calculate weeklyPoints based on exercise timestamps
                         val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
-                        weeklyPoints = selectedUserProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }?.sumOf { it.pointsEarned } ?: 0
+                        weeklyPoints =
+                            selectedUserProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }
+                                ?.sumOf { it.pointsEarned } ?: 0
                     }
 
                 } catch (e: Exception) {
@@ -508,7 +496,6 @@ fun ProfileScreen(
             }
             // Button to clear database at the bottom
             Button(onClick = {
-                Log.d("DBG", "Clear Database button clicked")
                 coroutineScope.launch {
                     userProfileDao.clearDatabase()
                     selectedUserProfile = null
@@ -580,14 +567,8 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .padding(8.dp)
                                 .clickable {
-                                    Log.d("DBG", "Language $language selected")
-                                    selectedLanguage = Language(language, countryCode, 0,0,0)
+                                    selectedLanguage = Language(language, countryCode, 0, 0, 0)
                                     selection = language
-
-                                    // Update language in view model
-                                    userProfileViewModel.viewModelScope.launch {
-                                        userProfileViewModel.updateLanguage(language)
-                                    }
                                 }
                         ) {
                             Row {
@@ -652,7 +633,7 @@ fun ProfileScreen(
                             selectedUserProfile?.let { userProfile ->
                                 userProfile.created = created
                                 userProfile.currentLanguage =
-                                    selectedLanguage ?: Language("English", countryCode, 0,0,0)
+                                    selectedLanguage ?: Language("English", countryCode, 0, 0, 0)
                                 userProfileDao.updateUserProfile(userProfile)
                             }
                         }
@@ -686,7 +667,7 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
         existingLanguage.exercisesDone = 0
         existingLanguage.pointsEarned = 0
     } else {
-        userProfile.languages.add(Language(selectedLanguage, countryCode, 0,0,0))
+        userProfile.languages.add(Language(selectedLanguage, countryCode, 0, 0, 0))
     }
     userProfile.exercisesDone = userProfile.languages.sumOf { it.exercisesDone }
     userProfile.languagePoints = userProfile.languages.sumOf { it.pointsEarned }
