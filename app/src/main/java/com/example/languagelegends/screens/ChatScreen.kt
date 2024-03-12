@@ -136,15 +136,14 @@ class ChatScreen {
                     .padding(bottom = 8.dp),
                 onClick = {
                     onAskMeAQuestion()
-                }
+                }){
+                Text(text = stringResource(id = R.string.ask_question))
             }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
-                Text(text = stringResource(id = R.string.ask_question))
-            }
 
             // Display AI response or loading indicator
             Box(
@@ -168,6 +167,7 @@ class ChatScreen {
                         )
                     }
                 }
+            }
             }
 
             // Text field for user's answer
