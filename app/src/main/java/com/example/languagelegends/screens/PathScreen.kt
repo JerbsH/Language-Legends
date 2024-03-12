@@ -12,9 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,13 +19,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 @Composable
 
-fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, totalCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
     aiChatViewModel.chatVisible.value = false
-    val completedExercises by remember { mutableIntStateOf(0) }
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
@@ -50,7 +47,7 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
                 number = index + 1,
                 x = x,
                 y = y,
-                completedExercises = completedExercises,
+                completedExercises = totalCompletedExercises,
             ) {
                 // Navigate to the ExercisesScreen when exercise is clicked
                 navController.navigate("exercises/${it}")

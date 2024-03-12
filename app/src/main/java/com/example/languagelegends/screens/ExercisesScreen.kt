@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
@@ -68,7 +69,7 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, onCompleteExercise: OnCompleteExercise) {
     var currentExercise by remember { mutableIntStateOf(1) }
     aiChatViewModel.chatVisible.value = false
 
@@ -115,6 +116,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
                         currentExercise++
+                        onCompleteExercise()
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
