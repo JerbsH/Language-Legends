@@ -23,6 +23,8 @@ import com.hexascribe.vertexai.VertexAI
 import com.hexascribe.vertexai.features.TextRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,6 +55,7 @@ class AiChatViewModel(private val application: Application, private val userProf
 
 
 
+
     private val userProfileDao: UserProfileDao =
         DatabaseProvider.getDatabase(application).userProfileDao()
     private val translateAPI = TranslateAPI(application)
@@ -66,10 +69,9 @@ class AiChatViewModel(private val application: Application, private val userProf
     var userAnswer = mutableStateOf("")
     private var correctAnswer = MutableLiveData<String?>()
     var resultMessage = MutableLiveData<String?>()
-    private val correctAnswerString = application.getString(R.string.correct_answer)
+    val correctAnswerString = application.getString(R.string.correct_answer)
     private val incorrectAnswerTryAgainString =
         application.getString(R.string.incorrect_answer_try_again)
-
 
     // SharedPreferences to store the access token and project ID
     private val sharedPreferences: SharedPreferences =
@@ -302,6 +304,28 @@ class AiChatViewModel(private val application: Application, private val userProf
             }
         }
     }
+
+    private var hintProgress = 0
+    private val _hint = MutableStateFlow("")
+    val hint: StateFlow<String> get() = _hint
+    // Function to update hint value
+    private fun updateHint(newHint: String) {
+        _hint.value = newHint
+    }
+
+    // Function to request a hint
+    fun requestHint() {
+        val currentCorrectAnswer = correctAnswer.value.orEmpty()
+        if (hintProgress < currentCorrectAnswer.split(" ").size) {
+            val hintWord = currentCorrectAnswer.split(" ")[hintProgress]
+            hintProgress++
+            updateHint(hintWord)
+        } else {
+            // Handle the case when no more hints are available
+            // You can show a message or disable the hint button
+        }
+    }
+
 
     fun onFreeChat(userInput: String) {
         if (userInput.isBlank()) {

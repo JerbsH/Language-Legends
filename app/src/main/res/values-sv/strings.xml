@@ -50,6 +50,8 @@
     <string name="AIchat_send">Skicka</string>
     <string name="AIwelcometext">Hej, Vad skulle du vilja fråga?</string>
     <string name="AItextfield">Fråga…</string>
+    <string name="request_hint">Antydan</string>
+
 
 
 
