@@ -50,6 +50,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     var topic = MutableLiveData<String>()
     var response = MutableLiveData<String?>()
     var questionLanguage = MutableLiveData<String>()
+    var isFreeChat = MutableLiveData<Boolean>()
 
 
 
@@ -106,6 +107,7 @@ class AiChatViewModel(private val application: Application, private val userProf
             Log.e("DBG", "Error initializing VertexAI: ${e.message}")
         }
     }
+
 
     /**
      * for testing purposes, need to change saveToken time also

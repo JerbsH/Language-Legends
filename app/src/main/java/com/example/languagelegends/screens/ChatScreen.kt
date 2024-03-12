@@ -67,7 +67,7 @@ class ChatScreen {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
-        var isFreeChat by remember { mutableStateOf(false) }
+        val isFreeChat by viewModel.isFreeChat.observeAsState(false)
 
 
         // Display the chat screen
@@ -77,7 +77,7 @@ class ChatScreen {
             } else {
                 if (menuVisibility) {
                     CardView(viewModel) {
-                        isFreeChat = true
+                        viewModel.isFreeChat.value = true
                     }
                 } else {
                     AiChat(
@@ -91,6 +91,7 @@ class ChatScreen {
                 }
             }
         }
+
     }
 
 
@@ -101,7 +102,7 @@ class ChatScreen {
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,
-        onCheckAnswer: () -> Unit
+        onCheckAnswer: () -> Unit,
     ) {
         val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
@@ -110,8 +111,12 @@ class ChatScreen {
 
 
         Column {
+            Button(onClick = { viewModel.menuVisibility.value = true }) {
+                Text(text = "back")
+            }
             Row(modifier = Modifier.fillMaxWidth()) {
                 // Display AI choice based on topic
+
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(
@@ -129,9 +134,10 @@ class ChatScreen {
                     Text(text = stringResource(id = R.string.ask_question))
                 }
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
                 // Display AI response
 
@@ -179,6 +185,7 @@ class ChatScreen {
         }
     }
 }
+
 @Composable
 fun FreeChatScreen(
     viewModel: AiChatViewModel,
@@ -190,9 +197,19 @@ fun FreeChatScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val lazyListState = rememberLazyListState()
 
+    fun toggle() {
+        viewModel.isFreeChat.value = false
+        viewModel.menuVisibility.value = true
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        Button(onClick = {
+            toggle()
+        }) {
+            Text(text = "back")
+        }
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -288,7 +305,6 @@ fun ChatMessage(message: Message) {
         }
     }
 }
-
 
 
 @Composable
