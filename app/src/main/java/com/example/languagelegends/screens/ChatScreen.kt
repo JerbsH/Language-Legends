@@ -41,14 +41,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,6 +59,7 @@ import com.example.languagelegends.features.Message
 import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
+
 
     @Composable
     fun Chats(userProfileViewModel: UserProfileViewModel) {
@@ -113,7 +112,11 @@ class ChatScreen {
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
         val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
-        val hint by viewModel.hint.collectAsState("")
+        val hintState by viewModel.hint.collectAsState()
+        val keyboardController = LocalSoftwareKeyboardController.current
+
+
+
 
         Column(
             modifier = Modifier
@@ -127,8 +130,7 @@ class ChatScreen {
                     .padding(bottom = 8.dp),
                 text = stringResource(id = R.string.ai_choice, topic),
                 textAlign = TextAlign.Center,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 20.sp,
             )
 
             // Button to ask a question
@@ -147,16 +149,23 @@ class ChatScreen {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6)
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 8)
             ) {
                 if (isGeneratingQuestion) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 } else {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
-                        textAlign = TextAlign.Center
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -171,20 +180,33 @@ class ChatScreen {
                 },
                 label = { Text(stringResource(id = R.string.AIanswer)) },
                 enabled = isQuestionAsked,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onCheckAnswer()
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onCheckAnswer()
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
             )
 
-            // Button to check the answer
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                onClick = {
-                    onCheckAnswer()
-                }
-            ) {
-                Text(text = stringResource(id = R.string.check_answer))
-            }
 
             // Display result message
             resultMessage?.let {
@@ -194,7 +216,6 @@ class ChatScreen {
                         .padding(bottom = 8.dp),
                     text = it,
                     textAlign = TextAlign.Center,
-                    color = if (it == viewModel.correctAnswerString) Color.Green else Color.Red
                 )
             }
 
@@ -211,15 +232,17 @@ class ChatScreen {
             }
 
             // Display hint
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                text = "Hint: $hint",
-                textAlign = TextAlign.Center,
-                fontStyle = FontStyle.Italic,
-                color = Color.Gray
-            )
+            if (hintState.isNotEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    text = stringResource(id = R.string.request_hint) + ": " + hintState,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp,
+                )
+            }
+
         }
     }
 }
@@ -261,39 +284,44 @@ fun FreeChatScreen(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
+            // Text field for user's answer
             TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 value = userInput,
                 onValueChange = { newValue ->
                     userInput = newValue
                 },
                 label = { Text(stringResource(id = R.string.AItextfield)) },
+                enabled = !isGeneratingAnswer,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Send
                 ),
-                singleLine = true,
-                enabled = !isGeneratingAnswer,
-                keyboardActions = KeyboardActions(onSend = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                })
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onFreeChat(userInput)
+                        userInput = ""
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onFreeChat(userInput)
+                            userInput = ""
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
             )
-
-            IconButton(
-                onClick = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(id = R.string.AIchat_send)
-                )
-            }
         }
 
         if (isGeneratingAnswer) {
@@ -333,7 +361,6 @@ fun ChatMessage(message: Message) {
         }
     }
 }
-
 
 
 @Composable

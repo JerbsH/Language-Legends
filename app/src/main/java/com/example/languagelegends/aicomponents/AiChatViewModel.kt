@@ -69,7 +69,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     var userAnswer = mutableStateOf("")
     private var correctAnswer = MutableLiveData<String?>()
     var resultMessage = MutableLiveData<String?>()
-    val correctAnswerString = application.getString(R.string.correct_answer)
+    private val correctAnswerString = application.getString(R.string.correct_answer)
     private val incorrectAnswerTryAgainString =
         application.getString(R.string.incorrect_answer_try_again)
 
@@ -215,6 +215,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     fun onAskMeAQuestion() {
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
+            resetHint()
             questionLanguage.value = userProfileViewModel.selectedLanguageLiveData.value
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
@@ -298,6 +299,7 @@ class AiChatViewModel(private val application: Application, private val userProf
                 Log.d("DBG", correctAnswerString)
                 userAnswer.value = ""
                 response.value = null
+                resetHint()
             } else {
                 resultMessage.value = incorrectAnswerTryAgainString
                 Log.d("DBG", incorrectAnswerTryAgainString)
@@ -308,23 +310,35 @@ class AiChatViewModel(private val application: Application, private val userProf
     private var hintProgress = 0
     private val _hint = MutableStateFlow("")
     val hint: StateFlow<String> get() = _hint
-    // Function to update hint value
+
     private fun updateHint(newHint: String) {
         _hint.value = newHint
     }
 
-    // Function to request a hint
     fun requestHint() {
         val currentCorrectAnswer = correctAnswer.value.orEmpty()
-        if (hintProgress < currentCorrectAnswer.split(" ").size) {
-            val hintWord = currentCorrectAnswer.split(" ")[hintProgress]
+
+        if (currentCorrectAnswer.isNotBlank()) {
+            // Split the correct answer into words
+            val answerWords = currentCorrectAnswer.split(" ")
+            val hintIndex = hintProgress % answerWords.size
+            val hintWord = answerWords[hintIndex]
+
             hintProgress++
+
+            // Check if hint progress exceeds the number of words
+            if (hintProgress >= answerWords.size) {
+                hintProgress = 0
+            }
             updateHint(hintWord)
-        } else {
-            // Handle the case when no more hints are available
-            // You can show a message or disable the hint button
         }
     }
+
+    private fun resetHint() {
+        hintProgress = 0
+        updateHint("")
+    }
+
 
 
     fun onFreeChat(userInput: String) {
