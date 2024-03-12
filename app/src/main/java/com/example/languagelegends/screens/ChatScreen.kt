@@ -62,16 +62,13 @@ class ChatScreen {
 
 
     @Composable
-    fun Chats(userProfileViewModel: UserProfileViewModel) {
+    fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
         val context = LocalContext.current
         val application = context.applicationContext as Application
-        val viewModel = AiChatViewModel(application, userProfileViewModel)
-
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
-        var isFreeChat by remember { mutableStateOf(false) }
-
+        val isFreeChat by viewModel.isFreeChat.observeAsState(false)
 
         // Display the chat screen
         Surface {
@@ -80,7 +77,7 @@ class ChatScreen {
             } else {
                 if (menuVisibility) {
                     CardView(viewModel) {
-                        isFreeChat = true
+                        viewModel.isFreeChat.value = true
                     }
                 } else {
                     AiChat(
@@ -95,6 +92,7 @@ class ChatScreen {
                 }
             }
         }
+
     }
 
 
@@ -108,15 +106,13 @@ class ChatScreen {
         onCheckAnswer: () -> Unit,
         onRequestHint: () -> Unit
     ) {
+        viewModel.chatVisible.value = true
         val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
         val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
         val hintState by viewModel.hint.collectAsState()
         val keyboardController = LocalSoftwareKeyboardController.current
-
-
-
 
         Column(
             modifier = Modifier
@@ -141,6 +137,11 @@ class ChatScreen {
                 onClick = {
                     onAskMeAQuestion()
                 }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
                 Text(text = stringResource(id = R.string.ask_question))
             }
@@ -252,6 +253,7 @@ fun FreeChatScreen(
     viewModel: AiChatViewModel,
     onFreeChat: (String) -> Unit
 ) {
+    viewModel.chatVisible.value = true
     var userInput by remember { mutableStateOf("") }
     val messages by viewModel.messages.observeAsState(emptyList())
     val isGeneratingAnswer by viewModel.isGeneratingQuestion.observeAsState(false)
@@ -372,6 +374,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     val temperatureTopic = stringResource(id = R.string.weather)
     val schoolTopic = stringResource(id = R.string.school)
     val healthTopic = stringResource(id = R.string.health)
+    viewModel.chatVisible.value = false
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {

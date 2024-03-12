@@ -5,6 +5,7 @@
     <string name="profile">Profile</string>
     <string name="chat">Chat</string>
     <string name="path">Path</string>
+    <string name="backButton">Back</string>
 
     <!-- profile -->
     <string name="take_photo">Take Photo</string>
