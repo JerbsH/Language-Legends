@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -18,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
                 var isNameScreenActive by remember { mutableStateOf(false) }
                 val userProfileViewModel: UserProfileViewModel = viewModel()
+                val aiChatViewModel = AiChatViewModel(application, userProfileViewModel)
 
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
@@ -76,7 +80,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         if (!isNameScreenActive) {
-                            TopBar(userProfileViewModel)
+                            TopBar(userProfileViewModel, aiChatViewModel)
                         }
                     },
                     bottomBar = {
@@ -98,7 +102,7 @@ class MainActivity : ComponentActivity() {
                                 isNameScreenActive = !isVisible
                             },
                             startDestination = Screen.Profile.route,
-                            selectedLanguage = apiSelectedLanguage, userProfileViewModel
+                            selectedLanguage = apiSelectedLanguage, userProfileViewModel, aiChatViewModel
 
                         )
                     }
@@ -109,13 +113,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(userProfileViewModel: UserProfileViewModel) {
+fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatViewModel) {
     var showLanguageSelection by remember { mutableStateOf(false) }
+    val buttonVisible by AiChatViewModel.chatVisible.observeAsState(false)
+
+    fun toggle() {
+        AiChatViewModel.isFreeChat.value = false
+        AiChatViewModel.menuVisibility.value = true
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
+        if (buttonVisible){
+            Button(onClick = {
+                toggle()
+            }) {
+                Text(text = "back")
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -221,8 +239,8 @@ fun NavHost(
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     startDestination: String,
     selectedLanguage: String,
-    userProfileViewModel: UserProfileViewModel
-
+    userProfileViewModel: UserProfileViewModel,
+    aiChatViewModel: AiChatViewModel
 ) {
 
 
@@ -236,12 +254,13 @@ fun NavHost(
                 userProfileDao,
                 selectedLanguage,
                 onBottomBarVisibilityChanged,
-                userProfileViewModel
+                userProfileViewModel,
+                aiChatViewModel
             )
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats(userProfileViewModel)
+            ChatScreen().Chats(userProfileViewModel, aiChatViewModel)
         }
         composable(
             route = "exercises/{exerciseNumber}",
@@ -249,11 +268,11 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, selectedLanguage)
+            ExercisesScreen(navController, selectedLanguage, aiChatViewModel)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController, selectedLanguage)
+            PathScreen(navController = navController, selectedLanguage, aiChatViewModel)
         }
     }
 }

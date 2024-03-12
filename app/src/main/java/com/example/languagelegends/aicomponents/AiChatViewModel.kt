@@ -51,6 +51,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     var response = MutableLiveData<String?>()
     var questionLanguage = MutableLiveData<String>()
     var isFreeChat = MutableLiveData<Boolean>()
+    var chatVisible = MutableLiveData<Boolean>()
 
 
 

@@ -59,16 +59,13 @@ import com.example.languagelegends.features.UserProfileViewModel
 class ChatScreen {
 
     @Composable
-    fun Chats(userProfileViewModel: UserProfileViewModel) {
+    fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
         val context = LocalContext.current
         val application = context.applicationContext as Application
-        val viewModel = AiChatViewModel(application, userProfileViewModel)
-
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
         val isFreeChat by viewModel.isFreeChat.observeAsState(false)
-
 
         // Display the chat screen
         Surface {
@@ -104,6 +101,7 @@ class ChatScreen {
         onAskMeAQuestion: () -> Unit,
         onCheckAnswer: () -> Unit,
     ) {
+        viewModel.chatVisible.value = true
         val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
@@ -111,9 +109,6 @@ class ChatScreen {
 
 
         Column {
-            Button(onClick = { viewModel.menuVisibility.value = true }) {
-                Text(text = "back")
-            }
             Row(modifier = Modifier.fillMaxWidth()) {
                 // Display AI choice based on topic
 
@@ -191,25 +186,16 @@ fun FreeChatScreen(
     viewModel: AiChatViewModel,
     onFreeChat: (String) -> Unit
 ) {
+    viewModel.chatVisible.value = true
     var userInput by remember { mutableStateOf("") }
     val messages by viewModel.messages.observeAsState(emptyList())
     val isGeneratingAnswer by viewModel.isGeneratingQuestion.observeAsState(false)
     val keyboardController = LocalSoftwareKeyboardController.current
     val lazyListState = rememberLazyListState()
 
-    fun toggle() {
-        viewModel.isFreeChat.value = false
-        viewModel.menuVisibility.value = true
-    }
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Button(onClick = {
-            toggle()
-        }) {
-            Text(text = "back")
-        }
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -316,6 +302,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     val temperatureTopic = stringResource(id = R.string.weather)
     val schoolTopic = stringResource(id = R.string.school)
     val healthTopic = stringResource(id = R.string.health)
+    viewModel.chatVisible.value = false
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {

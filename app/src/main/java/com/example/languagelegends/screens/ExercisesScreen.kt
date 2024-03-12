@@ -53,6 +53,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.SensorHelper
@@ -67,8 +68,9 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
     var currentExercise by remember { mutableIntStateOf(1) }
+    aiChatViewModel.chatVisible.value = false
 
     // Define userProfileDao and exerciseTimestamp here
     val context = LocalContext.current
