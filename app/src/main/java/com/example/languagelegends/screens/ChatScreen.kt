@@ -1,6 +1,5 @@
 package com.example.languagelegends.screens
 
-import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -63,8 +61,6 @@ class ChatScreen {
 
     @Composable
     fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
-        val context = LocalContext.current
-        val application = context.applicationContext as Application
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
