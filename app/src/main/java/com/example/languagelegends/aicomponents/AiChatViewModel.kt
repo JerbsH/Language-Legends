@@ -23,6 +23,8 @@ import com.hexascribe.vertexai.VertexAI
 import com.hexascribe.vertexai.features.TextRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,6 +57,7 @@ class AiChatViewModel(private val application: Application, private val userProf
 
 
 
+
     private val userProfileDao: UserProfileDao =
         DatabaseProvider.getDatabase(application).userProfileDao()
     private val translateAPI = TranslateAPI(application)
@@ -71,7 +74,6 @@ class AiChatViewModel(private val application: Application, private val userProf
     private val correctAnswerString = application.getString(R.string.correct_answer)
     private val incorrectAnswerTryAgainString =
         application.getString(R.string.incorrect_answer_try_again)
-
 
     // SharedPreferences to store the access token and project ID
     private val sharedPreferences: SharedPreferences =
@@ -216,6 +218,7 @@ class AiChatViewModel(private val application: Application, private val userProf
     fun onAskMeAQuestion() {
         viewModelScope.launch {
             Log.d("DBG", "Asking question")
+            resetHint()
             questionLanguage.value = userProfileViewModel.selectedLanguageLiveData.value
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
@@ -299,12 +302,47 @@ class AiChatViewModel(private val application: Application, private val userProf
                 Log.d("DBG", correctAnswerString)
                 userAnswer.value = ""
                 response.value = null
+                resetHint()
             } else {
                 resultMessage.value = incorrectAnswerTryAgainString
                 Log.d("DBG", incorrectAnswerTryAgainString)
             }
         }
     }
+
+    private var hintProgress = 0
+    private val _hint = MutableStateFlow("")
+    val hint: StateFlow<String> get() = _hint
+
+    private fun updateHint(newHint: String) {
+        _hint.value = newHint
+    }
+
+    fun requestHint() {
+        val currentCorrectAnswer = correctAnswer.value.orEmpty()
+
+        if (currentCorrectAnswer.isNotBlank()) {
+            // Split the correct answer into words
+            val answerWords = currentCorrectAnswer.split(" ")
+            val hintIndex = hintProgress % answerWords.size
+            val hintWord = answerWords[hintIndex]
+
+            hintProgress++
+
+            // Check if hint progress exceeds the number of words
+            if (hintProgress >= answerWords.size) {
+                hintProgress = 0
+            }
+            updateHint(hintWord)
+        }
+    }
+
+    private fun resetHint() {
+        hintProgress = 0
+        updateHint("")
+    }
+
+
 
     fun onFreeChat(userInput: String) {
         if (userInput.isBlank()) {

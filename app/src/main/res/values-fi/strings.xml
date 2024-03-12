@@ -51,6 +51,8 @@
     <string name="AIchat_send">Lähetä</string>
     <string name="AIwelcometext">Hei, Mitä haluat kysyä?</string>
     <string name="AItextfield">Kysy…</string>
+    <string name="request_hint">Vihje</string>
+
 
 
 

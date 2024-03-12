@@ -52,7 +52,10 @@
     <string name="AIchat_send">Send</string>
     <string name="AIwelcometext">Hello, What would you like to ask?</string>
     <string name="AItextfield">Ask…</string>
+    <string name="request_hint">Hint</string>
 
+
+    request_hint
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>

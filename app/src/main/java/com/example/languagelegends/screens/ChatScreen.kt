@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -51,12 +52,14 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.Message
 import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
+
 
     @Composable
     fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
@@ -84,6 +87,7 @@ class ChatScreen {
                         response,
                         viewModel::onAskMeAQuestion,
                         viewModel::checkAnswer,
+                        viewModel::requestHint
                     )
                 }
             }
@@ -100,33 +104,38 @@ class ChatScreen {
         response: String?,
         onAskMeAQuestion: () -> Unit,
         onCheckAnswer: () -> Unit,
+        onRequestHint: () -> Unit
     ) {
         viewModel.chatVisible.value = true
         val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
         val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
+        val hintState by viewModel.hint.collectAsState()
+        val keyboardController = LocalSoftwareKeyboardController.current
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Display AI choice based on topic
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                text = stringResource(id = R.string.ai_choice, topic),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+            )
 
-        Column {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // Display AI choice based on topic
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(
-                        id = R.string.ai_choice,
-                        topic
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Button to ask a question
-                Button(onClick = {
+            // Button to ask a question
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                onClick = {
                     onAskMeAQuestion()
-                }) {
-                    Text(text = stringResource(id = R.string.ask_question))
                 }
             }
             Row(
@@ -134,49 +143,107 @@ class ChatScreen {
                     .fillMaxWidth()
                     .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
-                // Display AI response
+                Text(text = stringResource(id = R.string.ask_question))
+            }
 
+            // Display AI response or loading indicator
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 8)
+            ) {
                 if (isGeneratingQuestion) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 } else {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
-                        textAlign = TextAlign.Center
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Text field for user's answer
-                TextField(
-                    value = viewModel.userAnswer.value,
-                    onValueChange = { newValue ->
-                        viewModel.userAnswer.value = newValue
-                    },
-                    label = { Text(stringResource(id = R.string.AIanswer)) },
-                    enabled = isQuestionAsked,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            // Text field for user's answer
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                value = viewModel.userAnswer.value,
+                onValueChange = { newValue ->
+                    viewModel.userAnswer.value = newValue
+                },
+                label = { Text(stringResource(id = R.string.AIanswer)) },
+                enabled = isQuestionAsked,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onCheckAnswer()
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onCheckAnswer()
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
+            )
+
+
+            // Display result message
+            resultMessage?.let {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    text = it,
+                    textAlign = TextAlign.Center,
                 )
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Button to check the answer
-                Button(onClick = {
-                    onCheckAnswer()
-                }) {
-                    Text(text = stringResource(id = R.string.check_answer))
+            // Button to request a hint
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                onClick = {
+                    onRequestHint()
                 }
+            ) {
+                Text(text = stringResource(id = R.string.request_hint))
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                resultMessage?.let {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = it,
-                        textAlign = TextAlign.Center
-                    )
-                }
+
+            // Display hint
+            if (hintState.isNotEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    text = stringResource(id = R.string.request_hint) + ": " + hintState,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp,
+                )
             }
+
         }
     }
 }
@@ -219,39 +286,44 @@ fun FreeChatScreen(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
+            // Text field for user's answer
             TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 value = userInput,
                 onValueChange = { newValue ->
                     userInput = newValue
                 },
                 label = { Text(stringResource(id = R.string.AItextfield)) },
+                enabled = !isGeneratingAnswer,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Send
                 ),
-                singleLine = true,
-                enabled = !isGeneratingAnswer,
-                keyboardActions = KeyboardActions(onSend = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                })
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onFreeChat(userInput)
+                        userInput = ""
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onFreeChat(userInput)
+                            userInput = ""
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
             )
-
-            IconButton(
-                onClick = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(id = R.string.AIchat_send)
-                )
-            }
         }
 
         if (isGeneratingAnswer) {
