@@ -497,7 +497,8 @@ fun TiltExercise(
                             userProfileDao,
                             onExerciseCompleted,
                             points,
-                            userProfileViewModel
+                            userProfileViewModel,
+                            true
                         )
                         break
                     }
@@ -666,7 +667,8 @@ fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     onNextExercise: () -> Unit,
     points: Int,
-    viewModel: UserProfileViewModel
+    viewModel: UserProfileViewModel,
+    completeLevel: Boolean = false
 ) {
 
     // Launch a coroutine using viewModelScope
@@ -685,6 +687,7 @@ fun updatePointsAndProceed(
                 profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
                 profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
                 profile.pointsEarned += points // Increment pointsEarned
+                if (completeLevel) profile.completedLevels++ //Add to total completed levels
                 withContext(Dispatchers.IO) {
                     userProfileDao.updateUserProfile(profile)
                 }
