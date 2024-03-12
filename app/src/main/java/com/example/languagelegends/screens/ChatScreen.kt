@@ -1,6 +1,5 @@
 package com.example.languagelegends.screens
 
-import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,16 +57,13 @@ import com.example.languagelegends.features.Message
 import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
-
-
     @Composable
-    fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
-        val context = LocalContext.current
-        val application = context.applicationContext as Application
+    fun Chats(viewModel: AiChatViewModel, userProfileViewModel: UserProfileViewModel) {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
         val isFreeChat by viewModel.isFreeChat.observeAsState(false)
+        val selectedLanguage by remember { userProfileViewModel.selectedLanguageLiveData }.observeAsState("English")
 
         // Display the chat screen
         Surface {
@@ -82,7 +77,7 @@ class ChatScreen {
                 } else {
                     AiChat(
                         viewModel,
-                        userProfileViewModel,
+                        selectedLanguage,
                         topic,
                         response,
                         viewModel::onAskMeAQuestion,
@@ -99,15 +94,15 @@ class ChatScreen {
     @Composable
     fun AiChat(
         viewModel: AiChatViewModel,
-        userProfileViewModel: UserProfileViewModel,
+        selectedLanguage: String,
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,
         onCheckAnswer: () -> Unit,
         onRequestHint: () -> Unit
     ) {
+
         viewModel.chatVisible.value = true
-        val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
         val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
@@ -162,7 +157,7 @@ class ChatScreen {
                     ) {
                         Text(
                             modifier = Modifier.padding(8.dp),
-                            text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
+                            text = if (!response.isNullOrEmpty()) "Translate this to ${viewModel.questionAskedLanguage.value}: $response" else "",
                             textAlign = TextAlign.Center
                         )
                     }
@@ -253,6 +248,7 @@ fun FreeChatScreen(
     viewModel: AiChatViewModel,
     onFreeChat: (String) -> Unit
 ) {
+
     viewModel.chatVisible.value = true
     var userInput by remember { mutableStateOf("") }
     val messages by viewModel.messages.observeAsState(emptyList())
@@ -367,6 +363,7 @@ fun ChatMessage(message: Message) {
 
 @Composable
 fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
+
     // Resolve topic strings
     val coffeeTopic = stringResource(id = R.string.cafe)
     val transportTopic = stringResource(id = R.string.transport)

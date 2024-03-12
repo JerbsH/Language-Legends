@@ -1,6 +1,7 @@
 package com.example.languagelegends
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -29,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -66,16 +66,15 @@ class MainActivity : ComponentActivity() {
                 var buttonsTrue by remember { mutableStateOf(true) }
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
                 var isNameScreenActive by remember { mutableStateOf(false) }
-                val userProfileViewModel: UserProfileViewModel = viewModel()
-                val aiChatViewModel = AiChatViewModel(application, userProfileViewModel)
+                val userProfileViewModel = UserProfileViewModel(application)
+                val aiChatViewModel = AiChatViewModel(application,userProfileViewModel)
 
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
+                    Log.d("DBG", "MainActivity: Observed new language: $newLanguage")
                     apiSelectedLanguage = newLanguage
+
                 }
-
-
-                userProfileViewModel.loadSelectedLanguage()
 
                 Scaffold(
                     topBar = {
@@ -260,7 +259,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats(userProfileViewModel, aiChatViewModel)
+            ChatScreen().Chats(aiChatViewModel, userProfileViewModel)
         }
         composable(
             route = "exercises/{exerciseNumber}",
