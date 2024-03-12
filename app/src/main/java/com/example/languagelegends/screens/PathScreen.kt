@@ -22,10 +22,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.languagelegends.aicomponents.AiChatViewModel
 
 @Composable
 
-fun PathScreen(navController: NavController, apiSelectedLanguage: String) {
+fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+    aiChatViewModel.chatVisible.value = false
     val completedExercises by remember { mutableIntStateOf(0) }
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())

@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.Converters
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
@@ -78,8 +79,10 @@ fun ProfileScreen(
     userProfileDao: UserProfileDao,
     apiSelectedLanguage: String,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    aiChatViewModel: AiChatViewModel
 ) {
+    aiChatViewModel.chatVisible.value = false
     var username by remember { mutableStateOf("") }
     var isEditingUsername by remember { mutableStateOf(true) }
     var selectedUserProfile by remember { mutableStateOf<UserProfile?>(null) }

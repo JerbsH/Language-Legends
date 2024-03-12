@@ -59,16 +59,13 @@ import com.example.languagelegends.features.UserProfileViewModel
 class ChatScreen {
 
     @Composable
-    fun Chats(userProfileViewModel: UserProfileViewModel) {
+    fun Chats(userProfileViewModel: UserProfileViewModel, viewModel: AiChatViewModel) {
         val context = LocalContext.current
         val application = context.applicationContext as Application
-        val viewModel = AiChatViewModel(application, userProfileViewModel)
-
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
-        var isFreeChat by remember { mutableStateOf(false) }
-
+        val isFreeChat by viewModel.isFreeChat.observeAsState(false)
 
         // Display the chat screen
         Surface {
@@ -77,7 +74,7 @@ class ChatScreen {
             } else {
                 if (menuVisibility) {
                     CardView(viewModel) {
-                        isFreeChat = true
+                        viewModel.isFreeChat.value = true
                     }
                 } else {
                     AiChat(
@@ -91,6 +88,7 @@ class ChatScreen {
                 }
             }
         }
+
     }
 
 
@@ -101,8 +99,9 @@ class ChatScreen {
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,
-        onCheckAnswer: () -> Unit
+        onCheckAnswer: () -> Unit,
     ) {
+        viewModel.chatVisible.value = true
         val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
@@ -112,6 +111,7 @@ class ChatScreen {
         Column {
             Row(modifier = Modifier.fillMaxWidth()) {
                 // Display AI choice based on topic
+
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(
@@ -129,9 +129,10 @@ class ChatScreen {
                     Text(text = stringResource(id = R.string.ask_question))
                 }
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
                 // Display AI response
 
@@ -179,11 +180,13 @@ class ChatScreen {
         }
     }
 }
+
 @Composable
 fun FreeChatScreen(
     viewModel: AiChatViewModel,
     onFreeChat: (String) -> Unit
 ) {
+    viewModel.chatVisible.value = true
     var userInput by remember { mutableStateOf("") }
     val messages by viewModel.messages.observeAsState(emptyList())
     val isGeneratingAnswer by viewModel.isGeneratingQuestion.observeAsState(false)
@@ -290,7 +293,6 @@ fun ChatMessage(message: Message) {
 }
 
 
-
 @Composable
 fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     // Resolve topic strings
@@ -300,6 +302,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     val temperatureTopic = stringResource(id = R.string.weather)
     val schoolTopic = stringResource(id = R.string.school)
     val healthTopic = stringResource(id = R.string.health)
+    viewModel.chatVisible.value = false
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
