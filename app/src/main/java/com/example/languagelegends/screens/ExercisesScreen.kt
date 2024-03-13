@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
@@ -68,7 +69,7 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, onCompleteExercise: OnCompleteExercise) {
     var currentExercise by remember { mutableIntStateOf(1) }
     aiChatViewModel.chatVisible.value = false
 
@@ -115,6 +116,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
                         currentExercise++
+                        onCompleteExercise()
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
@@ -495,7 +497,8 @@ fun TiltExercise(
                             userProfileDao,
                             onExerciseCompleted,
                             points,
-                            userProfileViewModel
+                            userProfileViewModel,
+                            true
                         )
                         break
                     }
@@ -664,7 +667,8 @@ fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     onNextExercise: () -> Unit,
     points: Int,
-    viewModel: UserProfileViewModel
+    viewModel: UserProfileViewModel,
+    completeLevel: Boolean = false
 ) {
 
     // Launch a coroutine using viewModelScope
@@ -683,6 +687,7 @@ fun updatePointsAndProceed(
                 profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
                 profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
                 profile.pointsEarned += points // Increment pointsEarned
+                if (completeLevel) profile.completedLevels++ //Add to total completed levels
                 withContext(Dispatchers.IO) {
                     userProfileDao.updateUserProfile(profile)
                 }
