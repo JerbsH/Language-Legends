@@ -11,7 +11,7 @@ import androidx.room.TypeConverters
  * This is the main database class for the application.
  * You define all entities and DAOs associated with the database.
  */
-@Database(entities = [UserProfile::class], version = 2, exportSchema = false)
+@Database(entities = [UserProfile::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userProfileDao(): UserProfileDao
