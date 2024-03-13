@@ -163,6 +163,13 @@ fun LanguageExercise(
         }
     }
 
+/**
+ * This @Composable function displays a counter for the points earned by the user.
+ * The counter is displayed as a text inside a column with a semi-transparent black background.
+ *
+ * @param pointCount The total points earned by the user.
+ * @param modifier The modifier to be applied to the Column. It can be used to adjust the layout.
+ */
     @Composable
     fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
         Column(
