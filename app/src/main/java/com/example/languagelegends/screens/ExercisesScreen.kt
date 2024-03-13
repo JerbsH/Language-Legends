@@ -90,7 +90,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
     ) {
         // Display the appropriate exercise based on the currentExercise state
         when (viewState.getCurrentLevel()) {
-            1 -> {
+            1,4,7 -> {
                 WordScrambleExercise(
                     onNextExercise = {
                     },
@@ -101,7 +101,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     )
             }
 
-            2 -> {
+            2,5,8 -> {
                 SecondExercise(
                     onNextExercise = {
                     },
@@ -111,7 +111,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                 )
             }
 
-            3 -> {
+            3,6,9 -> {
                 TiltExercise(
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
