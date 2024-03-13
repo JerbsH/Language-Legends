@@ -51,11 +51,6 @@
     <string name="AIwelcometext">Hei, Mitä haluat kysyä?</string>
     <string name="AItextfield">Kysy…</string>
 
-
-
-
-
-
     <!-- path -->
     <string name="exercise_1">Sanat sekaisin peli</string>
     <string name="unscramble_word">Selvitä sana</string>
@@ -63,13 +58,18 @@
     <string name="ready">Jatka</string>
     <string name="correct">Oikein!</string>
     <string name="keep_trying">Jatka yrittämistä! Melkein valmista!</string>
-    <string name="exercise_2">Kielen ja maan yhdistämisharjoitus</string>
-    <string name="match_country">Yhdistä jokainen kieli sitä vastaavan maan kanssa</string>
-    <string name="country_name">Maan nimi</string>
+    <string name="exercise_2">Käännä sanat tehtävä</string>
+    <string name="match_country">Yhdistä jokainen juoma sitä vastaavan käännöksen kanssa</string>
+    <string name="country_name">Juoman nimi</string>
     <string name="all_exercises">Kaikki tehtävät on tehty!</string>
     <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
     <string name="exercise_3">Käännöstehtävä</string>
     <string name="exercise3_guide">Käännä puhelintasi vasemmalle tai oikealle valitaksesi oikean käännöksen sanasta.</string>
+    <string name="apple">Omena</string>
+    <string name="banana">Banaani</string>
+    <string name="orange">Appelsiini</string>
+    <string name="grape">Viinirypäle</string>
+    <string name="strawberry">Mansikka</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Valitse Kieli</string>
@@ -77,7 +77,5 @@
     <string name="incorrect_answer_try_again">Väärä vastaus. Yritä uudelleen!</string>
     <string name="language_selection">Kielen valinta</string>
     <string name="AIanswer">vastaa…</string>
-
-
 
 </resources>

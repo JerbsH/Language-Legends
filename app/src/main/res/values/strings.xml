@@ -60,13 +60,18 @@
     <string name="ready">Continue</string>
     <string name="correct">Correct!</string>
     <string name="keep_trying">Keep trying! Almost there</string>
-    <string name="exercise_2">Language and Country Matching Exercise</string>
-    <string name="match_country">Match each language with it\'s corresponding country</string>
-    <string name="country_name">Country name</string>
+    <string name="match_country">Match each drink with it\'s corresponding translation</string>
+    <string name="country_name">Drink name</string>
     <string name="all_exercises">All exercises completed!</string>
     <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
     <string name="exercise_3">Translation Exercise</string>
     <string name="exercise3_guide">Tilt your phone to the left or right to select the correct translation of the displayed word.</string>
+    <string name="exercise_2">Translate the words exercise</string>
+    <string name="apple">Apple</string>
+    <string name="banana">Banana</string>
+    <string name="orange">Orange</string>
+    <string name="grape">Grape</string>
+    <string name="strawberry">Strawberry</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Select Language</string>
@@ -74,10 +79,6 @@
     <string name="incorrect_answer_try_again">Incorrect answer. Try again!</string>
     <string name="language_selection">Language Selection</string>
     <string name="AIanswer">answer…</string>
-
-
-
-
 
 
 </resources>

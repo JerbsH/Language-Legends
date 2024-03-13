@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,7 +66,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -124,7 +124,8 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    //aiChatViewModel = aiChatViewModel // Pass the aiChatViewModel instance
+                    translateAPI = translateAPI,
+                    selectedLanguage = apiSelectedLanguage
                 )
             }
 
@@ -136,11 +137,10 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    //aiChatViewModel = aiChatViewModel // Pass the aiChatViewModel instance
+                    translateAPI = translateAPI,
+                    selectedLanguage = apiSelectedLanguage
                 )
-            }
-            // Add more exercises as needed
-            else -> {
+            } else -> {
                 Text(
                     text = stringResource(id = R.string.all_exercises),
                     style = MaterialTheme.typography.bodyMedium,
@@ -164,68 +164,26 @@ fun WordScrambleExercise(
     userProfileViewModel: UserProfileViewModel = viewModel(),
     aiChatViewModel: AiChatViewModel,
     translateAPI: TranslateAPI,
-    selectedLanguage: String // Add selectedLanguage parameter
+    selectedLanguage: String // Pass the selected language
 ) {
-    // Define wordList outside of LaunchedEffect
-    val wordList = listOf("apple", "banana", "orange", "grape", "strawberry")
+
+    val wordList = listOf("apple", "banana", "raspberry", "grape", "strawberry")
     var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
+    var isLoaded by remember { mutableStateOf(false) }
 
-    fun translateWords(
-        wordList: List<String>,
-        selectedLanguage: String,
-        translateAPI: TranslateAPI
-    ): List<String> {
-        val transWords = mutableListOf<String>()
 
-        val languages = LANGUAGES
-        val selectedLang = languages[selectedLanguage] ?: "EN"
-        Log.d("DBG", "Selected language: $selectedLang")
-        Log.d("DBG", "Selected language: $selectedLanguage")
-
-        Log.d("DBG", "Translation language: $selectedLang")
-        // Launch a coroutine to perform the translation asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
-            val translateJobs = wordList.map { word ->
-                async {
-                    suspendCoroutine { continuation ->
-                        translateAPI.translate(
-                            word,
-                            selectedLang,
-                            object : TranslationCallback {
-                                override fun onTranslationResult(result: String) {
-                                    continuation.resume(result)
-                                }
-
-                                override fun onTranslationError(error: String) {
-                                    continuation.resumeWithException(RuntimeException("Translation error: $error"))
-                                }
-                            })
-                    }
-                }
-            }
-
-            // Wait for all translation jobs to complete
-            val results = translateJobs.awaitAll()
-
-            // Add the results to the translatedWords list
-            transWords.addAll(results)
-
-            Log.d("DBG", "Translated words: $transWords")
-        }
-        return transWords
-    }
     // Call translateWords function inside LaunchedEffect
     LaunchedEffect(wordList, selectedLanguage, translateAPI) {
-        translatedWords = translateWords(wordList, selectedLanguage, translateAPI)
+        val translated = withContext(Dispatchers.IO) {
+            translateWords(wordList, selectedLanguage, translateAPI)
+        }
+        translatedWords = translated
+        isLoaded = true // Set isLoaded to true after translations are loaded
     }
-    if (translatedWords.isEmpty()) {
-        Column(Modifier.fillMaxWidth()) {
-            Text(
-                text = "Loading translations...",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 16.dp),
-                textAlign = TextAlign.Center
-            )
+
+    if (!isLoaded) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
         }
     } else {
         // Randomly select a word from the list
@@ -275,6 +233,7 @@ fun WordScrambleExercise(
         // State to track if the user's input is correct
         var isCorrect by remember { mutableStateOf(false) }
 
+        //points for the exercise
         val points = POINTS_PER_EXERCISE
 
         Column(
@@ -360,7 +319,6 @@ fun WordScrambleExercise(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-
                 // Continue button (enabled only if the answer is correct)
                 Button(
                     onClick = {
@@ -384,9 +342,7 @@ fun WordScrambleExercise(
             }
         }
     }
-
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -394,21 +350,31 @@ fun SecondExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Pass the selected language
 ) {
-    // List of languages and corresponding countries
-    val languageCountryPairs = remember {
+    val pairList = remember {
         listOf(
-            "Finnish" to "Finland",
-            "Spanish" to "Spain",
-            "French" to "France",
-            "German" to "Germany",
+            "Coffee",
+            "Tea",
+            "Milk",
+            "Water"
         )
+    }
+    var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
+
+    // Translate words when language or translateAPI changes
+    LaunchedEffect(pairList, selectedLanguage, translateAPI) {
+        val translated = withContext(Dispatchers.IO) {
+            translateWords(pairList, selectedLanguage, translateAPI)
+        }
+        translatedWords = translated
     }
 
     // State to track user input for the translations
     val userTranslations = remember {
-        mutableStateOf(List(languageCountryPairs.size) { "" })
+        mutableStateOf(List(pairList.size) { "" })
     }
 
     val points = POINTS_PER_EXERCISE
@@ -440,7 +406,7 @@ fun SecondExercise(
             )
 
             // Display the language-country pairs
-            languageCountryPairs.forEachIndexed { index, (language, _) ->
+            pairList.forEachIndexed { index, language ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -470,12 +436,11 @@ fun SecondExercise(
                 }
             }
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Check if user input matches the correct translations, ignoring case sensitivity
             val isCorrect =
-                userTranslations.value.map { it.lowercase() } == languageCountryPairs.map { it.second.lowercase() }
+                userTranslations.value.map { it.lowercase() } == translatedWords.map { it.lowercase() }
 
             // Display feedback based on user input
             if (userTranslations.value.any { it.isNotEmpty() }) {
@@ -520,17 +485,38 @@ fun TiltExercise(
     onExerciseCompleted: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Pass the selected language
+
 ) {
-    // Define the vocabulary pairs (English word, correct translation, wrong translation)
-    val vocabulary = remember {
-        listOf(
-            Triple("Apple", "Manzana", "Naranja"),
-            Triple("Banana", "Banana", "Uva"),
-            Triple("Orange", "Naranja", "Manzana"),
-            Triple("Grape", "Uva", "Banana"),
-            Triple("Strawberry", "Fresa", "Tomate")
-        )
+    var vocabulary by remember { mutableStateOf<List<Triple<String, String, String>>>(emptyList()) }
+    var isLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedLanguage, translateAPI) {
+        val originalWords = listOf("Pear", "Banana", "Raspberry", "Grape", "Strawberry")
+
+        // Translate all words at once
+        val translatedWords = withContext(Dispatchers.IO) {
+            translateWords(originalWords, selectedLanguage, translateAPI)
+        }
+
+        // Create the vocabulary list
+        vocabulary = originalWords.mapIndexed { index, word ->
+            val correctTranslation = translatedWords[index]
+            val randomIncorrectIndex = (index + 1) % originalWords.size // Choose a random incorrect word index
+            val randomIncorrectTranslation = translatedWords[randomIncorrectIndex]
+            Triple(word, correctTranslation, randomIncorrectTranslation)
+        }
+        isLoaded = true
+    }
+
+    if (!isLoaded) {
+        // Placeholder UI for when vocabulary is being loaded
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     // Track the current item being displayed
@@ -550,7 +536,6 @@ fun TiltExercise(
     val keepTryingString = stringResource(id = R.string.keep_trying)
 
     val points = POINTS_PER_EXERCISE
-
 
     LaunchedEffect(currentItemIndex) {
         while (true) {
@@ -769,4 +754,48 @@ fun updatePointsAndProceed(
         }
         onNextExercise()
     }
+}
+suspend fun translateWords(
+    wordList: List<String>,
+    selectedLanguage: String,
+    translateAPI: TranslateAPI
+): List<String> {
+    val transWords = mutableListOf<String>()
+
+    val languages = LANGUAGES
+    val selectedLang = languages[selectedLanguage] ?: "EN"
+    Log.d("DBG", "Selected language: $selectedLang")
+    Log.d("DBG", "Selected language: $selectedLanguage")
+
+    Log.d("DBG", "Translation language: $selectedLang")
+
+    // Launch a coroutine to perform the translation asynchronously
+    val translateJobs = wordList.map { word ->
+        CoroutineScope(Dispatchers.IO).async {
+            suspendCoroutine { continuation ->
+                translateAPI.translate(
+                    word,
+                    selectedLang,
+                    object : TranslationCallback {
+                        override fun onTranslationResult(result: String) {
+                            continuation.resume(result)
+                        }
+
+                        override fun onTranslationError(error: String) {
+                            continuation.resumeWithException(RuntimeException("Translation error: $error"))
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    // Wait for all translation jobs to complete
+    val results = translateJobs.awaitAll()
+
+    // Add the results to the translatedWords list
+    transWords.addAll(results)
+
+    Log.d("DBG", "Translated words: $transWords")
+    return transWords
 }

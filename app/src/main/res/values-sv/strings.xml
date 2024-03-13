@@ -33,7 +33,6 @@
     <string name="please_choose_language">Välj ett språk</string>
     <string name="start_adventure">Börja ditt äventyr!</string>
 
-
     <!-- chat -->
     <string name="ai_wizard">AI trollkarl</string>
     <string name="cafe">Café</string>
@@ -51,10 +50,6 @@
     <string name="AIwelcometext">Hej, Vad skulle du vilja fråga?</string>
     <string name="AItextfield">Fråga…</string>
 
-
-
-
-
     <!-- path -->
     <string name="exercise_1">Ordblandningsövning</string>
     <string name="unscramble_word">"Ångra blandning "</string>
@@ -62,13 +57,18 @@
     <string name="ready">Fortsätt</string>
     <string name="correct">Rätt!</string>
     <string name="keep_trying">Fortsätt försöka! Nästan där</string>
-    <string name="exercise_2">Passa ihop språk och land -övning</string>
-    <string name="match_country">Passa ihop varje land med motsvarande land</string>
-    <string name="country_name">Landets namn</string>
+    <string name="exercise_2">Översätt orden övning</string>
+    <string name="match_country">Matcha varje drink med dess motsvarande översättning</string>
+    <string name="country_name">Dryckens namn</string>
     <string name="all_exercises">Alla övningar färdiga!</string>
     <string name="shuffle_hint">Tips: Skaka telefonen för att blanda bokstäverna igen!</string>
     <string name="exercise_3">Översättningsövning</string>
     <string name="exercise3_guide">Luta telefonen åt vänster eller höger för att välja rätt översättning av det visade ordet.</string>
+    <string name="apple">Äpple</string>
+    <string name="banana">Banan</string>
+    <string name="orange">Orange</string>
+    <string name="grape">Druva</string>
+    <string name="strawberry">Jordgubbe</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Välj språk</string>
@@ -76,6 +76,5 @@
     <string name="incorrect_answer_try_again">Fel svar. Försök igen!</string>
     <string name="language_selection">Språkval</string>
     <string name="AIanswer">svara…</string>
-
 
 </resources>
