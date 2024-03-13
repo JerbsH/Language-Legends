@@ -3,6 +3,7 @@ package com.example.languagelegends
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +48,7 @@ import com.example.languagelegends.screens.ChatScreen
 import com.example.languagelegends.screens.ExercisesScreen
 import com.example.languagelegends.screens.PathScreen
 import com.example.languagelegends.screens.ProfileScreen
+import com.example.languagelegends.screens.ViewState
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 import com.murgupluoglu.flagkit.FlagKit
 
@@ -58,6 +61,7 @@ class MainActivity : ComponentActivity() {
     private val appDatabase: AppDatabase by lazy {
         DatabaseProvider.getDatabase(applicationContext)
     }
+    private val viewState: ViewState by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +106,9 @@ class MainActivity : ComponentActivity() {
                             startDestination = Screen.Profile.route,
                             selectedLanguage = apiSelectedLanguage,
                             userProfileViewModel,
-                            aiChatViewModel
+                            aiChatViewModel,
+                            viewState = viewState
+
                         )
                     }
                 }
@@ -252,8 +258,11 @@ fun NavHost(
     startDestination: String,
     selectedLanguage: String,
     userProfileViewModel: UserProfileViewModel,
-    aiChatViewModel: AiChatViewModel
+    aiChatViewModel: AiChatViewModel,
+    viewState: ViewState
 ) {
+    var completedExercises by remember { mutableIntStateOf(0) }
+    completedExercises = viewState.completedExercises
 
     androidx.navigation.compose.NavHost(
         navController = navController,
@@ -279,14 +288,18 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, selectedLanguage, aiChatViewModel)
+            ExercisesScreen(navController, selectedLanguage, aiChatViewModel, onCompleteExercise = {
+                viewState.completeExercise()
+            })
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController, selectedLanguage, aiChatViewModel)
+            PathScreen(navController = navController, selectedLanguage, aiChatViewModel, completedExercises, onCompleteExercise = {
+                viewState.completeExercise()
+            })
         }
     }
 }
 
-
+typealias OnCompleteExercise = () -> Unit
 

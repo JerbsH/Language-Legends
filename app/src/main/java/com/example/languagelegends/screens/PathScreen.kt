@@ -2,8 +2,11 @@ package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -12,9 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
 /**This function displays the path screen. It shows a list of exercises that the user can navigate to.
@@ -33,10 +34,11 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 fun PathScreen(
     navController: NavController,
     apiSelectedLanguage: String,
-    aiChatViewModel: AiChatViewModel
+    aiChatViewModel: AiChatViewModel,
+    totalCompletedExercises: Int,
+    onCompleteExercise: OnCompleteExercise
 ) {
     aiChatViewModel.chatVisible.value = false
-    val completedExercises by remember { mutableIntStateOf(0) }
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
@@ -52,12 +54,16 @@ fun PathScreen(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
         )
+        PointCounter(
+            pointCount = totalCompletedExercises,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
         exercisePositions.forEachIndexed { index, (x, y) ->
             LanguageExercise(
                 number = index + 1,
                 x = x,
                 y = y,
-                completedExercises = completedExercises,
+                completedExercises = totalCompletedExercises,
             ) {
                 // Navigate to the ExercisesScreen when exercise is clicked
                 navController.navigate("exercises/${it}")
@@ -98,17 +104,21 @@ fun LanguageExercise(
 ) {
     val isUnlocked = number <= completedExercises + 1
 
-    // Determine the circle color based on the unlocked status
-    val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
-    // Calculate the positions as a percentage of the smallest width
-    val smallestWidth =
-        minOf(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
-    val offsetX = x * smallestWidth
-    val offsetY = y * smallestWidth
+        // Determine the circle color based on the unlocked status
+        val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
 
-    // Render the circle as a clickable surface if the exercise is unlocked
-    if (isUnlocked) {
+        // Calculate the positions as a percentage of the smallest width
+        val smallestWidth =
+            minOf(
+                LocalConfiguration.current.screenWidthDp,
+                LocalConfiguration.current.screenHeightDp
+            )
+        val offsetX = x * smallestWidth
+        val offsetY = y * smallestWidth
+
+        // Render the circle as a clickable surface if the exercise is unlocked
+        if (isUnlocked) {
         Surface(
             modifier = Modifier
                 .size(40.dp)
@@ -119,36 +129,51 @@ fun LanguageExercise(
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                Text(
-                    text = number.toString(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
-                )
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        text = number.toString(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                }
             }
-        }
-    } else {
-        // Render the circle as a non-clickable surface if the exercise is locked
-        Surface(
-            modifier = Modifier
-                .size(40.dp)
-                .offset(offsetX.dp, offsetY.dp),
-            shape = CircleShape,
-            color = circleColor,
-            onClick = {}
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
+        } else {
+            // Render the circle as a non-clickable surface if the exercise is locked
+            Surface(
+                modifier = Modifier
+                    .size(40.dp)
+                    .offset(offsetX.dp, offsetY.dp),
+                shape = CircleShape,
+                color = circleColor,
+                onClick = {}
             ) {
-                Text(
-                    text = number.toString(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Text(
+                        text = number.toString(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
-}
+
+    @Composable
+    fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
+        Column(
+            modifier = modifier
+                .padding(16.dp)
+                .background(color = Color.Black.copy(alpha = 0.5f))
+        ) {
+            Text(
+                text = "Points: $pointCount",
+                color = Color.White,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }

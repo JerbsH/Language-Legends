@@ -109,8 +109,23 @@ class AiChatViewModel(
     }
 
     /**
-     * Builds the VertexAI instance with the access token and project ID.
-     */
+     *
+     * for testing purposes, need to change saveToken time also
+     * run this function on top of the initializeVertexAi function
+     * try/catch block
+     *
+     *  private fun invalidateCurrentToken() {
+     *      sharedPreferences.edit().apply {
+     *      remove(ACCESS_TOKEN)
+     *      remove(PROJECT_ID)
+     *      remove(TOKEN_EXPIRATION_TIME)
+     *      apply()
+     *      }
+     *  }
+     **/
+
+    /* This function builds the VertexAI instance with the access token and project ID. */
+
     private fun buildVertexAIInstance() {
         val vertexAI = VertexAI.Builder()
             .setAccessToken(

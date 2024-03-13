@@ -73,6 +73,8 @@
     <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
     <string name="exercise_3">Käännöstehtävä</string>
     <string name="exercise3_guide">Käännä puhelintasi vasemmalle tai oikealle valitaksesi oikean käännöksen sanasta.</string>
+    <string name="next_exercise">Seuraava harjoitus</string>
+
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Valitse Kieli</string>
@@ -80,7 +82,6 @@
     <string name="incorrect_answer_try_again">Väärä vastaus. Yritä uudelleen!</string>
     <string name="language_selection">Kielen valinta</string>
     <string name="AIanswer">vastaa…</string>
-
 
 
 </resources>
