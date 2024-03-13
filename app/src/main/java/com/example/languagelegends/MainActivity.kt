@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         setContent {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
@@ -248,7 +247,7 @@ fun NavHost(
     viewState: ViewState
 ) {
     var completedExercises by remember { mutableIntStateOf(0) }
-    completedExercises = viewState.completedExercises
+    completedExercises = viewState.getCompletedExercises()
 
     androidx.navigation.compose.NavHost(
         navController = navController,
@@ -261,7 +260,8 @@ fun NavHost(
                 selectedLanguage,
                 onBottomBarVisibilityChanged,
                 userProfileViewModel,
-                aiChatViewModel
+                aiChatViewModel,
+                viewState
             )
         }
         composable(Screen.Chat.route) {
@@ -274,18 +274,11 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, selectedLanguage, aiChatViewModel, onCompleteExercise = {
-                viewState.completeExercise()
-            })
+            ExercisesScreen(navController, selectedLanguage, aiChatViewModel, viewState)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController, selectedLanguage, aiChatViewModel, completedExercises, onCompleteExercise = {
-                viewState.completeExercise()
-            })
+            PathScreen(navController = navController, selectedLanguage, aiChatViewModel, viewState)
         }
     }
 }
-
-typealias OnCompleteExercise = () -> Unit
-

@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
@@ -72,8 +71,7 @@ private const val POINTS_PER_EXERCISE = 10
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, onCompleteExercise: OnCompleteExercise) {
-    var currentExercise by remember { mutableIntStateOf(1) }
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, viewState: ViewState) {
     aiChatViewModel.chatVisible.value = false
 
     // Define userProfileDao and exerciseTimestamp here
@@ -91,11 +89,12 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
 
     ) {
         // Display the appropriate exercise based on the currentExercise state
-        when (currentExercise) {
+        when (viewState.getCurrentLevel()) {
             1 -> {
                 WordScrambleExercise(
                     onNextExercise = {
-                        currentExercise++ // Move to the next exercise
+                        // Move to the next exercise if total completed is less than current exercise number
+                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise()
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
@@ -107,7 +106,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
             2 -> {
                 SecondExercise(
                     onNextExercise = {
-                        currentExercise++
+                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise() // Move to the next exercise
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
@@ -118,8 +117,7 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                 TiltExercise(
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
-                        currentExercise++
-                        onCompleteExercise()
+                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise() // Move to the next exercise
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,

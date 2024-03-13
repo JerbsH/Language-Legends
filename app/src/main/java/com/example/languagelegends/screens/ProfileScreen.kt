@@ -78,7 +78,8 @@ fun ProfileScreen(
     apiSelectedLanguage: String,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     userProfileViewModel: UserProfileViewModel,
-    aiChatViewModel: AiChatViewModel
+    aiChatViewModel: AiChatViewModel,
+    viewState: ViewState
 ) {
     aiChatViewModel.chatVisible.value = false
     var username by remember { mutableStateOf("") }
@@ -124,6 +125,7 @@ fun ProfileScreen(
             selectedUserProfile = userProfile
             image = userProfile?.image
             username = userProfile?.username ?: ""
+            viewState.setCompletedExercises(userProfile?.exercisesDone ?: 0)
 
             // Calculate weeklyPoints based on exercise timestamps
             val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
