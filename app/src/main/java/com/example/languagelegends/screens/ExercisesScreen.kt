@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -58,27 +59,36 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.SensorHelper
+import com.example.languagelegends.features.TranslateAPI
+import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.features.UserProfileViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
+
 
 // Move points to a constant value
 private const val POINTS_PER_EXERCISE = 10
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun ExercisesScreen(
     navController: NavController,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
+    translateAPI: TranslateAPI
     onCompleteExercise: OnCompleteExercise
 ) {
-
     var currentExercise by remember { mutableIntStateOf(1) }
     aiChatViewModel.chatVisible.value = false
 
@@ -106,8 +116,10 @@ fun ExercisesScreen(
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-
-                    )
+                    aiChatViewModel = aiChatViewModel,
+                    translateAPI = translateAPI,
+                    selectedLanguage = apiSelectedLanguage // Pass the selected language
+                )
             }
 
             2 -> {
@@ -117,6 +129,8 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    translateAPI = translateAPI,
+                    selectedLanguage = apiSelectedLanguage
                 )
             }
 
@@ -129,6 +143,8 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    translateAPI = translateAPI,
+                    selectedLanguage = apiSelectedLanguage
                 )
             }
             // Add more exercises as needed
@@ -171,18 +187,14 @@ fun WordScrambleExercise(
     sensorHelper: SensorHelper, // Pass the sensor helper instance
     userProfileDao: UserProfileDao,
     userProfileViewModel: UserProfileViewModel = viewModel(),
+    aiChatViewModel: AiChatViewModel,
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Pass the selected language
+) {
 
-    ) {
-    // List of words for the exercise
-    val wordList = remember {
-        listOf(
-            "apple",
-            "banana",
-            "orange",
-            "grape",
-            "strawberry"
-        )
-    }
+    val wordList = listOf("apple", "banana", "raspberry", "grape", "strawberry")
+    var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
+    var isLoaded by remember { mutableStateOf(false) }
 
     // State to control the visibility of the dialog
     var showDialog by remember { mutableStateOf(false) }
@@ -192,44 +204,69 @@ fun WordScrambleExercise(
         wordList.random()
     }
 
-    // State to hold the shuffled letters of the current word
-    var shuffledLetters by remember {
-        mutableStateOf(
-            currentWord.toCharArray().toList().shuffled()
-        )
+    // Call translateWords function inside LaunchedEffect
+    LaunchedEffect(wordList, selectedLanguage, translateAPI) {
+        val translated = withContext(Dispatchers.IO) {
+            translateWords(wordList, selectedLanguage, translateAPI)
+        }
+        translatedWords = translated
+        isLoaded = true // Set isLoaded to true after translations are loaded
     }
 
-    // Ensure the shuffled word is never the same as the original word
-    while (shuffledLetters.joinToString("") == currentWord) {
-        shuffledLetters = currentWord.toCharArray().toList().shuffled()
-    }
-
-    // Register shake detection when the composable is launched
-    LaunchedEffect(Unit) {
-        sensorHelper.setShakeListener {
-            // Shuffle the letters when the device is shaken
-            shuffledLetters = currentWord.toCharArray().toList().shuffled()
-            // Ensure the shuffled word is never the same as the original word
-            while (shuffledLetters.joinToString("") == currentWord) {
-                shuffledLetters = currentWord.toCharArray().toList().shuffled()
+    if (!isLoaded) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+        }
+    } else {
+        // Randomly select a word from the list
+        val currentWord = remember {
+            Log.d("DBG", "Translated words: $translatedWords")
+            if (translatedWords.isNotEmpty()) {
+                translatedWords.random()
+            } else {
+                wordList.random()
             }
         }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            // Unregister sensor listener when the composable is disposed
-            sensorHelper.unregisterSensorListener()
+
+        Log.d("DBG", "Current word: $currentWord")
+        // State to hold the shuffled letters of the current word
+        var shuffledLetters by remember {
+            mutableStateOf(
+                currentWord.toCharArray().toList().shuffled()
+            )
         }
-    }
 
-    // State to track user input for the unscrambled word
-    var userInput by remember { mutableStateOf("") }
+        // Ensure the shuffled word is never the same as the original word
+        while (shuffledLetters.joinToString("") == currentWord) {
+            shuffledLetters = currentWord.toCharArray().toList().shuffled()
+        }
 
-    // State to track if the user's input is correct
-    var isCorrect by remember { mutableStateOf(false) }
+        // Register shake detection when the composable is launched
+        LaunchedEffect(Unit) {
+            sensorHelper.setShakeListener {
+                // Shuffle the letters when the device is shaken
+                shuffledLetters = currentWord.toCharArray().toList().shuffled()
+                // Ensure the shuffled word is never the same as the original word
+                while (shuffledLetters.joinToString("") == currentWord) {
+                    shuffledLetters = currentWord.toCharArray().toList().shuffled()
+                }
+            }
+        }
+        DisposableEffect(Unit) {
+            onDispose {
+                // Unregister sensor listener when the composable is disposed
+                sensorHelper.unregisterSensorListener()
+            }
+        }
 
-    val points = POINTS_PER_EXERCISE
+        // State to track user input for the unscrambled word
+        var userInput by remember { mutableStateOf("") }
 
+        // State to track if the user's input is correct
+        var isCorrect by remember { mutableStateOf(false) }
+
+        //points for the exercise
+        val points = POINTS_PER_EXERCISE
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -245,74 +282,76 @@ fun WordScrambleExercise(
 
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display the hint
-            Text(
-                text = stringResource(id = R.string.shuffle_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            val image =
-                when (currentWord) {
-                    "apple" -> R.drawable.apple
-                    "banana" -> R.drawable.banana
-                    "orange" -> R.drawable.orange
-                    "grape" -> R.drawable.grape
-                    "strawberry" -> R.drawable.strawberry
-                    else -> R.drawable.fruit
+            TopAppBar(
+                title = { Text(text = stringResource(id = R.string.exercise_1)) },
+                navigationIcon = {
+                    IconButton(onClick = { onGoBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                    }
                 }
-            // Display the picture of fruits
-            Image(
-                painter = painterResource(id = image),
-                contentDescription = "Fruits",
+            )
+
+            Column(
                 modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 16.dp)
-            )
-            Text(
-                text = stringResource(id = R.string.unscramble_word),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Display the shuffled letters
-            Text(
-                text = shuffledLetters.joinToString(separator = " "),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Text field for user input
-            OutlinedTextField(
-                value = userInput,
-                onValueChange = { userInput = it },
-                label = { Text(text = stringResource(id = R.string.your_answer)) },
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Check if the user input matches the original word
-            isCorrect = userInput.equals(currentWord, ignoreCase = true)
-
-            // Display feedback based on user input
-            if (userInput.isNotEmpty()) {
+                // Display the hint
                 Text(
-                    text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
-                        id = R.string.keep_trying
-                    ),
-                    color = if (isCorrect) Color.Black else Color.Red,
+                    text = stringResource(id = R.string.shuffle_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+
+                val image =
+                    when (currentWord) {
+                        "apple" -> R.drawable.apple
+                        "banana" -> R.drawable.banana
+                        "orange" -> R.drawable.orange
+                        "grape" -> R.drawable.grape
+                        "strawberry" -> R.drawable.strawberry
+                        else -> R.drawable.fruit
+                    }
+                // Display the picture of fruits
+                Image(
+                    painter = painterResource(id = image),
+                    contentDescription = "Fruits",
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(bottom = 16.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.unscramble_word),
                     style = MaterialTheme.typography.bodyMedium
                 )
-            }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Display the shuffled letters
+                Text(
+                    text = shuffledLetters.joinToString(separator = " "),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Text field for user input
+                OutlinedTextField(
+                    value = userInput,
+                    onValueChange = { userInput = it },
+                    label = { Text(text = stringResource(id = R.string.your_answer)) },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Check if the user input matches the original word
+                isCorrect = userInput.equals(currentWord, ignoreCase = true)
 
             // Continue button (enabled only if the answer is correct)
             Button(
@@ -330,9 +369,36 @@ fun WordScrambleExercise(
                 enabled = isCorrect,
                 modifier = Modifier.padding(bottom = 16.dp)
 
-            ) {
-                Text(text = stringResource(id = R.string.ready))
-            }
+                // Display feedback based on user input
+                if (userInput.isNotEmpty()) {
+                    Text(
+                        text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
+                            id = R.string.keep_trying
+                        ),
+                        color = if (isCorrect) Color.Black else Color.Red,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                // Continue button (enabled only if the answer is correct)
+                Button(
+                    onClick = {
+                        if (isCorrect) {
+                            updatePointsAndProceed(
+                                userProfileDao,
+                                onNextExercise,
+                                points,
+                                userProfileViewModel
+                            )
+                        }
+                    },
+                    enabled = isCorrect,
+                    modifier = Modifier.padding(bottom = 16.dp)
+
+                ) {
+                    Text(text = stringResource(id = R.string.ready))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
             // Dialog to show when the exercise is completed correctly
             if (showDialog) {
@@ -358,29 +424,37 @@ fun WordScrambleExercise(
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Pass the selected language
 ) {
-    // List of languages and corresponding countries
-    val languageCountryPairs = remember {
+    val pairList = remember {
         listOf(
-            "Finnish" to "Finland",
-            "Spanish" to "Spain",
-            "French" to "France",
-            "German" to "Germany",
+            "Coffee",
+            "Tea",
+            "Milk",
+            "Water"
         )
+    }
+    var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
+
+    // Translate words when language or translateAPI changes
+    LaunchedEffect(pairList, selectedLanguage, translateAPI) {
+        val translated = withContext(Dispatchers.IO) {
+            translateWords(pairList, selectedLanguage, translateAPI)
+        }
+        translatedWords = translated
     }
 
     // State to track user input for the translations
     val userTranslations = remember {
-        mutableStateOf(List(languageCountryPairs.size) { "" })
+        mutableStateOf(List(pairList.size) { "" })
     }
 
     // State to control the visibility of the dialog
@@ -415,7 +489,7 @@ fun SecondExercise(
             )
 
             // Display the language-country pairs
-            languageCountryPairs.forEachIndexed { index, (language, _) ->
+            pairList.forEachIndexed { index, language ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -445,12 +519,11 @@ fun SecondExercise(
                 }
             }
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Check if user input matches the correct translations, ignoring case sensitivity
             val isCorrect =
-                userTranslations.value.map { it.lowercase() } == languageCountryPairs.map { it.second.lowercase() }
+                userTranslations.value.map { it.lowercase() } == translatedWords.map { it.lowercase() }
 
             // Display feedback based on user input
             if (userTranslations.value.any { it.isNotEmpty() }) {
@@ -513,17 +586,38 @@ fun TiltExercise(
     onExerciseCompleted: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Pass the selected language
+
 ) {
-    // Define the vocabulary pairs (English word, correct translation, wrong translation)
-    val vocabulary = remember {
-        listOf(
-            Triple("Apple", "Manzana", "Naranja"),
-            Triple("Banana", "Banana", "Uva"),
-            Triple("Orange", "Naranja", "Manzana"),
-            Triple("Grape", "Uva", "Banana"),
-            Triple("Strawberry", "Fresa", "Tomate")
-        )
+    var vocabulary by remember { mutableStateOf<List<Triple<String, String, String>>>(emptyList()) }
+    var isLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedLanguage, translateAPI) {
+        val originalWords = listOf("Pear", "Banana", "Raspberry", "Grape", "Strawberry")
+
+        // Translate all words at once
+        val translatedWords = withContext(Dispatchers.IO) {
+            translateWords(originalWords, selectedLanguage, translateAPI)
+        }
+
+        // Create the vocabulary list
+        vocabulary = originalWords.mapIndexed { index, word ->
+            val correctTranslation = translatedWords[index]
+            val randomIncorrectIndex = (index + 1) % originalWords.size // Choose a random incorrect word index
+            val randomIncorrectTranslation = translatedWords[randomIncorrectIndex]
+            Triple(word, correctTranslation, randomIncorrectTranslation)
+        }
+        isLoaded = true
+    }
+
+    if (!isLoaded) {
+        // Placeholder UI for when vocabulary is being loaded
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     // Track the current item being displayed
@@ -764,5 +858,50 @@ suspend fun updatePointsAndProceed(
             }
         }
     }
-    return userProfile
+        return userProfile
+}
+
+suspend fun translateWords(
+    wordList: List<String>,
+    selectedLanguage: String,
+    translateAPI: TranslateAPI
+): List<String> {
+    val transWords = mutableListOf<String>()
+
+    val languages = LANGUAGES
+    val selectedLang = languages[selectedLanguage] ?: "EN"
+    Log.d("DBG", "Selected language: $selectedLang")
+    Log.d("DBG", "Selected language: $selectedLanguage")
+
+    Log.d("DBG", "Translation language: $selectedLang")
+
+    // Launch a coroutine to perform the translation asynchronously
+    val translateJobs = wordList.map { word ->
+        CoroutineScope(Dispatchers.IO).async {
+            suspendCoroutine { continuation ->
+                translateAPI.translate(
+                    word,
+                    selectedLang,
+                    object : TranslationCallback {
+                        override fun onTranslationResult(result: String) {
+                            continuation.resume(result)
+                        }
+
+                        override fun onTranslationError(error: String) {
+                            continuation.resumeWithException(RuntimeException("Translation error: $error"))
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    // Wait for all translation jobs to complete
+    val results = translateJobs.awaitAll()
+
+    // Add the results to the translatedWords list
+    transWords.addAll(results)
+
+    Log.d("DBG", "Translated words: $transWords")
+    return transWords
 }

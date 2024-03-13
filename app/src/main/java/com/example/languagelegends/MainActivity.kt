@@ -1,6 +1,7 @@
 package com.example.languagelegends
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -42,6 +43,7 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
@@ -72,11 +74,14 @@ class MainActivity : ComponentActivity() {
                 var buttonsTrue by remember { mutableStateOf(true) }
                 var apiSelectedLanguage by remember { mutableStateOf("English") }
                 var isNameScreenActive by remember { mutableStateOf(false) }
-                val userProfileViewModel = UserProfileViewModel(application)
+                val userProfileViewModel: UserProfileViewModel = viewModel()
                 val aiChatViewModel = AiChatViewModel(application, userProfileViewModel)
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
                     apiSelectedLanguage = newLanguage
+                }
+
+                userProfileViewModel.loadSelectedLanguage()
 
                 }
                 Scaffold(
@@ -108,7 +113,6 @@ class MainActivity : ComponentActivity() {
                             userProfileViewModel,
                             aiChatViewModel,
                             viewState = viewState
-
                         )
                     }
                 }
@@ -259,6 +263,12 @@ fun NavHost(
     selectedLanguage: String,
     userProfileViewModel: UserProfileViewModel,
     aiChatViewModel: AiChatViewModel,
+    apiSelectedLanguage: String
+) {
+    val translateAPI = TranslateAPI(LocalContext.current)
+    val translatedWords by remember(selectedLanguage) {
+        mutableStateOf(mapOf<String, String>())
+    }
     viewState: ViewState
 ) {
     var completedExercises by remember { mutableIntStateOf(0) }
@@ -288,9 +298,12 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
+
+            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, translateAPI)
             ExercisesScreen(navController, selectedLanguage, aiChatViewModel, onCompleteExercise = {
-                viewState.completeExercise()
+                viewState.completeExercise(), translateAPI
             })
+
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
