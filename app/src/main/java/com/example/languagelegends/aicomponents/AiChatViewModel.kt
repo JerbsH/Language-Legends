@@ -30,15 +30,22 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.util.Locale
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
-/** This is the ViewModel for the AI Chat feature of the application.
- * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
+/**
+ * ViewModel for the AI Chat feature of the application.
+ * Handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
  * checking token expiration, and executing text requests.
- * **/
-class AiChatViewModel(private val application: Application, userProfileViewModel: UserProfileViewModel) : ViewModel() {
+ */
+class AiChatViewModel(
+    private val application: Application,
+    userProfileViewModel: UserProfileViewModel
+) : ViewModel() {
+
 
     var questionAskedLanguage = mutableStateOf(userProfileViewModel.selectedLanguage)
-
 
     // Constants used for SharedPreferences
     companion object {
@@ -55,18 +62,16 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
     var isFreeChat = MutableLiveData<Boolean>()
     var chatVisible = MutableLiveData<Boolean>()
 
-
     private val userProfileDao: UserProfileDao =
         DatabaseProvider.getDatabase(application).userProfileDao()
     private val translateAPI = TranslateAPI(application)
 
-    //deepl languages
     val languages = LANGUAGES
-
     var messages = MutableLiveData<List<Message>>()
     var isGeneratingQuestion = MutableLiveData<Boolean>()
     var isQuestionAsked = MutableLiveData<Boolean>()
     var userAnswer = mutableStateOf("")
+    private var lastFewPrompts: MutableList<String> = mutableListOf()
     private var correctAnswer = MutableLiveData<String?>()
     var resultMessage = MutableLiveData<String?>()
     private val correctAnswerString = application.getString(R.string.correct_answer)
@@ -78,7 +83,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     private var textRequest: TextRequest? = null
 
-    // Initialize the ViewModel
     init {
         viewModelScope.launch {
             initializeVertexAI()
@@ -87,9 +91,9 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
     }
 
     /**
-     *  This function initializes the VertexAI instance.
-     *It checks if the current access token is valid, and if not, generates a new one.
-     * **/
+     * Initializes the VertexAI instance.
+     * Checks if the current access token is valid, and if not, generates a new one.
+     */
     private suspend fun initializeVertexAI() {
         try {
             val currentTime = System.currentTimeMillis()
@@ -98,7 +102,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             val tokenExpirationTime = sharedPreferences.getLong(TOKEN_EXPIRATION_TIME, 0)
 
             if (currentProjectId == null || currentAccessToken == null || currentTime >= tokenExpirationTime) {
-                Log.d("DBG", "Generating new access token and project ID")
                 val (newAccessToken, newProjectId) = generateAccessToken()
                 saveTokenInfo(newAccessToken, newProjectId, currentTime)
             }
@@ -110,6 +113,7 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
     }
 
     /**
+     *
      * for testing purposes, need to change saveToken time also
      * run this function on top of the initializeVertexAi function
      * try/catch block
@@ -124,7 +128,8 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
      *  }
      **/
 
-    // This function builds the VertexAI instance with the access token and project ID.
+    /* This function builds the VertexAI instance with the access token and project ID. */
+
     private fun buildVertexAIInstance() {
         val vertexAI = VertexAI.Builder()
             .setAccessToken(
@@ -145,23 +150,23 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             .setTopP(0.8)
     }
 
-    // This function saves the access token, project ID, and token expiration time to SharedPreferences.
+    /**
+     * Saves the access token, project ID, and token expiration time to SharedPreferences.
+     */
     private fun saveTokenInfo(newAccessToken: String, newProjectId: String, currentTime: Long) {
-        Log.d("DBG", "Saving token info")
-        val tokenExpirationTime = currentTime + 60 * 60 * 1000 // +1 hour to the current time
+        val tokenExpirationTime = currentTime + 20 * 1000 // +1 hour to the current time
         sharedPreferences.edit().apply {
             putString(ACCESS_TOKEN, newAccessToken)
             putString(PROJECT_ID, newProjectId)
             putLong(TOKEN_EXPIRATION_TIME, tokenExpirationTime)
             apply()
         }
-        Log.d("DBG", "Token info saved")
-        Log.d("DBG", "Access token: $newAccessToken")
     }
 
-    // This function generates a new access token and project ID.
+    /**
+     * Generates a new access token and project ID.
+     */
     private suspend fun generateAccessToken(): Pair<String, String> = withContext(Dispatchers.IO) {
-        Log.d("DBG", "Generating access token")
         val targetScopes = listOf("https://www.googleapis.com/auth/cloud-platform")
 
         val inputStream = application.assets.open(SERVICE_ACCOUNT_KEY_PATH)
@@ -177,20 +182,18 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         val json = Gson().fromJson(jsonContent, JsonObject::class.java)
         val projectId = json.get("project_id").asString
 
-        Log.d("DBG", "Generated project id: $projectId")
-
         return@withContext Pair(credentials.accessToken.tokenValue, projectId)
     }
 
-    /** This function checks the token expiration periodically.
+    /**
+     * Checks the token expiration periodically.
      * If the token is expired, it generates a new one.
-     **/
+     */
     private suspend fun checkTokenExpirationPeriodically() {
         while (viewModelScope.isActive) {
             val currentTime = System.currentTimeMillis()
             val tokenExpirationTime = sharedPreferences.getLong(TOKEN_EXPIRATION_TIME, 0)
             if (currentTime >= tokenExpirationTime) {
-                Log.d("DBG", "Token expired, generating new one")
                 initializeVertexAI()
             } else {
                 logRemainingTime(tokenExpirationTime, currentTime)
@@ -199,49 +202,82 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         }
     }
 
-    // This function logs the remaining time for the token to expire.
+    /**
+     * Logs the remaining time for the token to expire.
+     */
     private fun logRemainingTime(tokenExpirationTime: Long, currentTime: Long) {
         val remainingTimeMillis = tokenExpirationTime - currentTime
         remainingTimeMillis / 1000
     }
 
+    /**
+     * Gets the selected language country code.
+     */
     private suspend fun getSelectedLanguageCountryCode(): String {
         val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
-        return userProfile?.currentLanguage?.countryCode ?: "EN-GB" // default
+        return userProfile?.currentLanguage?.countryCode ?: "EN-GB"
     }
 
-    /** This function is called when the user asks a question.
-     * It executes a text request to the VertexAI instance.
-     **/
+    /**
+     * list of different prompt templates for AI to ask about selected topic
+     */
+    private fun getPrompts(): List<String> {
+        val topicValue = topic.value ?: ""
+        return listOf(
+            "Give me a single word related to $topicValue",
+            "Give me a six word sentence related to $topicValue",
+            "I need a single word about $topicValue",
+            "Please generate a six word sentence related to $topicValue",
+            "Describe $topicValue in six words.",
+            "What's your take on $topicValue in six words.",
+            "Summarize $topicValue in six words.",
+            "What does $topicValue mean to you in six words.",
+            "Express your thoughts on $topicValue in six words.",
+            "What's interesting about $topicValue in six words."
+        )
+    }
+
+    /**
+     * Requests the AI to generate a question based on the selected topic.
+     */
     fun onAskMeAQuestion() {
         viewModelScope.launch {
-            Log.d("DBG", "Asking question")
             resetHint()
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
             resultMessage.value = ""
             if (textRequest == null) {
-                Log.e("DBG", "textRequest is not initialized")
                 return@launch
             }
-
             try {
                 withContext(Dispatchers.IO) {
-                    val randomNumber = (1..100).random()
 
-                    // Send the API call to the AI
-                    val aiResponse = textRequest?.execute(
-                        "Give me a short phrase related to ${topic.value} $randomNumber"
-                    )?.getOrThrow()
+                    val prompts = getPrompts()
+                    var prompt = prompts.shuffled().first()
+                    // Check if the prompt is in the list of last few prompts
+                    while (prompt in lastFewPrompts) {
+                        prompt = prompts.shuffled().first()
+                    }
+                    lastFewPrompts.add(prompt)
+
+                    // If the list of last few prompts is too long, remove the oldest prompt
+                    if (lastFewPrompts.size > 5) {
+                        lastFewPrompts.removeAt(0)
+                    }
+                    //check token, if expired, generate new token and initialize VertexAI
+                    val aiResponse: String? = try {
+                        textRequest?.execute(prompt)?.getOrThrow()
+                    } catch (e: Exception) {
+                        if (e.message?.contains("UNAUTHENTICATED") == true) {
+                            initializeVertexAI()
+                            textRequest?.execute(prompt)?.getOrThrow()
+                        } else {
+                            throw e
+                        }
+                    }
 
                     val modifiedAiResponse = aiResponse?.substringAfter(": ")
-
-                    Log.d("DBG", "AI response: $modifiedAiResponse")
-
-                    // Translate the AI response to the selected language
                     val targetLanguageCode = getSelectedLanguageCountryCode()
-                    Log.d("dbg", "Selected language code: $targetLanguageCode")
-
 
                     translateAPI.translate(
                         modifiedAiResponse,
@@ -251,19 +287,13 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
                                 // Store the translated text as the correct answer
                                 val modifiedResult = result.trimEnd('.').trim('"')
                                 correctAnswer.postValue(modifiedResult)
-                                Log.d("DBG", "Set correctAnswer value: $modifiedResult")
 
-                                // Translate the AI response to English and post it to the response LiveData
                                 translateAPI.translate(
                                     modifiedAiResponse,
                                     "EN-GB",
                                     object : TranslationCallback {
                                         override fun onTranslationResult(result: String) {
                                             response.postValue(result)
-                                            Log.d(
-                                                "DBG",
-                                                "Posted translated data to response: $result"
-                                            )
                                         }
 
                                         override fun onTranslationError(error: String) {
@@ -286,6 +316,9 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         }
     }
 
+    /**
+     * Checks the correct translation answer of the user
+     */
     fun checkAnswer() {
         viewModelScope.launch {
             val correctAnswer = correctAnswer.value?.replace("\\s".toRegex(), "")?.lowercase(
@@ -298,13 +331,11 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
 
             if (correctAnswer == userAnswerText) {
                 resultMessage.value = correctAnswerString
-                Log.d("DBG", correctAnswerString)
                 userAnswer.value = ""
                 response.value = null
                 resetHint()
             } else {
                 resultMessage.value = incorrectAnswerTryAgainString
-                Log.d("DBG", incorrectAnswerTryAgainString)
             }
         }
     }
@@ -317,6 +348,9 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         _hint.value = newHint
     }
 
+    /**
+     * Request a hint from correct answer 1 word at a time
+     */
     fun requestHint() {
         val currentCorrectAnswer = correctAnswer.value.orEmpty()
 
@@ -341,11 +375,11 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         updateHint("")
     }
 
-
-
+    /**
+     * Handles the user's input in free chat mode.
+     */
     fun onFreeChat(userInput: String) {
         if (userInput.isBlank()) {
-            Log.e("DBG", "User input is empty or contains only whitespace.")
             return
         }
 
@@ -363,7 +397,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
                     // Process user input and get AI response
                     val aiResponse = textRequest?.execute(userInput)?.getOrThrow()
                     val modifiedAiResponse = aiResponse?.substringAfter(": ")
-                    Log.d("DBG", "AI response: $modifiedAiResponse")
 
                     // Update UI with AI response
                     modifiedAiResponse?.let {
@@ -371,8 +404,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
 
                         // Add AI message to the list
                         val updatedMessages = currentMessages + Message(it, false)
-
-                        // Post the updated list of messages
                         messages.postValue(updatedMessages)
                     }
                 }
@@ -384,7 +415,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             }
         }
     }
-
 }
 
 

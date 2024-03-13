@@ -1,7 +1,6 @@
 package com.example.languagelegends
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -32,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -43,6 +43,7 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
@@ -53,7 +54,11 @@ import com.example.languagelegends.screens.ViewState
 import com.example.languagelegends.ui.theme.LanguageLegendsTheme
 import com.murgupluoglu.flagkit.FlagKit
 
-
+/**
+ * This is the main activity of the application. It sets up the navigation controller,
+ * the bottom navigation bar, and the top bar. It also observes the selected language
+ * from the UserProfileViewModel and updates the UI accordingly.
+ */
 class MainActivity : ComponentActivity() {
     private val appDatabase: AppDatabase by lazy {
         DatabaseProvider.getDatabase(applicationContext)
@@ -67,17 +72,17 @@ class MainActivity : ComponentActivity() {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
-                var apiSelectedLanguage by remember { mutableStateOf("English") }
                 var isNameScreenActive by remember { mutableStateOf(false) }
-                val userProfileViewModel = UserProfileViewModel(application)
-                val aiChatViewModel = AiChatViewModel(application,userProfileViewModel)
-
+                val userProfileViewModel: UserProfileViewModel = viewModel()
+                var apiSelectedLanguage by remember { mutableStateOf(userProfileViewModel.selectedLanguage) }
+                val aiChatViewModel = AiChatViewModel(application, userProfileViewModel)
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
-                    Log.d("DBG", "MainActivity: Observed new language: $newLanguage")
                     apiSelectedLanguage = newLanguage
-
                 }
+
+                userProfileViewModel.loadSelectedLanguage()
+
 
                 Scaffold(
                     topBar = {
@@ -104,181 +109,222 @@ class MainActivity : ComponentActivity() {
                                 isNameScreenActive = !isVisible
                             },
                             startDestination = Screen.Profile.route,
-                            selectedLanguage = apiSelectedLanguage, userProfileViewModel, aiChatViewModel,
-                            viewState = viewState
-
+                            selectedLanguage = apiSelectedLanguage,
+                            userProfileViewModel,
+                            aiChatViewModel,
+                            viewState = viewState,
+                            apiSelectedLanguage = apiSelectedLanguage
                         )
                     }
                 }
             }
         }
     }
-}
 
-@Composable
-fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatViewModel, viewState: ViewState) {
-    var showLanguageSelection by remember { mutableStateOf(false) }
-    val buttonVisible by AiChatViewModel.chatVisible.observeAsState(false)
 
-    fun toggle() {
-        AiChatViewModel.isFreeChat.value = false
-        AiChatViewModel.menuVisibility.value = true
-    }
+    /**
+     * This function displays the top bar of the application. It includes a button to toggle
+     * the language selection menu and an icon button to show the flag of the currently selected language.
+     */
+    @Composable
+    fun TopBar(userProfileViewModel: UserProfileViewModel, aiChatViewModel: AiChatViewModel, viewState: ViewState) {
+        var showLanguageSelection by remember { mutableStateOf(false) }
+        val buttonVisible by aiChatViewModel.chatVisible.observeAsState(false)
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        if (buttonVisible){
-            Button(onClick = {
-                toggle()
-            }) {
-                Text(text = stringResource(id = R.string.backButton))
-            }
+        fun toggle() {
+            aiChatViewModel.isFreeChat.value = false
+            aiChatViewModel.menuVisibility.value = true
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
-            IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
-                val selectedLanguageIcon = userProfileViewModel.selectedLanguageIcon
-                val flagResId = FlagKit.getResId(LocalContext.current, selectedLanguageIcon)
-                Image(
-                    painter = painterResource(flagResId),
-                    contentDescription = "Flag of selected language",
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-
-            if (showLanguageSelection) {
-                userProfileViewModel.LanguageSelection(
-                    userProfileViewModel = userProfileViewModel,
-                    onLanguageSelected = { apiSelectedLanguage ->
-                        // Close the language selection menu
-                        showLanguageSelection = false
-                        userProfileViewModel.updateLanguage(apiSelectedLanguage, viewState)
-                        userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
-                    }
-                )
-            }
-        }
-    }
-}
-
-
-sealed class Screen(
-    val route: String,
-    val title: Int? = null,
-    val icon: @Composable () -> Painter,
-
-    ) {
-    data object Profile : Screen(
-        "profile",
-        R.string.profile, // Resource ID for the title string
-        { painterResource(id = R.drawable.person) }
-    )
-
-    data object Chat : Screen(
-        "chat",
-        R.string.chat, // Resource ID for the title string
-        { painterResource(id = R.drawable.smart_toy) }
-    )
-
-    data object Path : Screen("path",
-        R.string.path, // Resource ID for the title string
-        { painterResource(id = R.drawable.map) }
-    )
-}
-
-@Composable
-fun BottomBar(
-    navController: NavHostController,
-    modifier: Modifier = Modifier
-) {
-    val screens = listOf(
-        Screen.Path,
-        Screen.Chat,
-        Screen.Profile,
-    )
-
-    NavigationBar(
-        modifier = modifier,
-
-        ) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-        screens.forEach { screen ->
-            NavigationBarItem(
-                label = {
-                    screen.title?.let { title ->
-                        Text(text = stringResource(id = title))
-                    }
-                },
-                icon = {
-                    val iconPainter = screen.icon()
-                    Icon(painter = iconPainter, contentDescription = null)
-                },
-                selected = currentRoute == screen.route,
-                onClick = {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+            if (buttonVisible) {
+                Button(onClick = {
+                    toggle()
+                }) {
+                    Text(text = stringResource(id = R.string.backButton))
                 }
-            )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+
+
+            ) {
+                IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
+                    val selectedLanguageIcon = userProfileViewModel.selectedLanguageIcon
+                    val flagResId = FlagKit.getResId(LocalContext.current, selectedLanguageIcon)
+                    Image(
+                        painter = painterResource(flagResId),
+                        contentDescription = "Flag of selected language",
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                if (showLanguageSelection) {
+                    userProfileViewModel.LanguageSelection(
+                        onLanguageSelected = { apiSelectedLanguage ->
+                            showLanguageSelection = false
+                            userProfileViewModel.updateLanguage(apiSelectedLanguage, viewState)
+                            userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
+                        }
+                    )
+                }
+            }
         }
     }
-}
 
-@Composable
-fun NavHost(
-    navController: NavHostController,
-    userProfileDao: UserProfileDao,
-    onBottomBarVisibilityChanged: (Boolean) -> Unit,
-    startDestination: String,
-    selectedLanguage: String,
-    userProfileViewModel: UserProfileViewModel,
-    aiChatViewModel: AiChatViewModel,
-    viewState: ViewState
-) {
-    var completedExercises by remember { mutableIntStateOf(0) }
-    completedExercises = viewState.getCompletedExercises()
+    /**
+     * This sealed class represents the different screens in the application.
+     * Each screen has a route,
+     * a title, and an icon.
+     */
+    sealed class Screen(
+        val route: String,
+        val title: Int? = null,
+        val icon: @Composable () -> Painter,
 
-    androidx.navigation.compose.NavHost(
-        navController = navController,
-        startDestination = startDestination
+        ) {
+        data object Profile : Screen(
+            "profile",
+            R.string.profile,
+            { painterResource(id = R.drawable.person) }
+        )
+
+        data object Chat : Screen(
+            "chat",
+            R.string.chat,
+            { painterResource(id = R.drawable.smart_toy) }
+        )
+
+        data object Path : Screen("path",
+            R.string.path,
+            { painterResource(id = R.drawable.map) }
+        )
+    }
+
+    /**
+     * This function displays the bottom navigation bar of the application. It includes navigation
+     * items for each screen in the application.
+     * When a navigation item is clicked, it navigates
+     * to the corresponding screen.
+     */
+    @Composable
+    fun BottomBar(
+        navController: NavHostController,
+        modifier: Modifier = Modifier
     ) {
-        composable(Screen.Profile.route) {
-            onBottomBarVisibilityChanged(true)
-            ProfileScreen(
-                userProfileDao,
-                selectedLanguage,
-                onBottomBarVisibilityChanged,
-                userProfileViewModel,
-                aiChatViewModel,
-                viewState
-            )
+        val screens = listOf(
+            Screen.Path,
+            Screen.Chat,
+            Screen.Profile,
+        )
+        NavigationBar(
+            modifier = modifier,
+        ) {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            screens.forEach { screen ->
+                NavigationBarItem(
+                    label = {
+                        screen.title?.let { title ->
+                            Text(text = stringResource(id = title))
+                        }
+                    },
+                    icon = {
+                        val iconPainter = screen.icon()
+                        Icon(painter = iconPainter, contentDescription = null)
+                    },
+                    selected = currentRoute == screen.route,
+                    onClick = {
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
         }
-        composable(Screen.Chat.route) {
-            onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats(aiChatViewModel, userProfileViewModel)
-        }
-        composable(
-            route = "exercises/{exerciseNumber}",
-            arguments = listOf(navArgument("exerciseNumber") { type = NavType.IntType })
-        ) { navBackStackEntry ->
-            navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
-            onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, selectedLanguage, aiChatViewModel, viewState)
-        }
-        composable(Screen.Path.route) {
-            onBottomBarVisibilityChanged(true)
-            PathScreen(navController = navController, selectedLanguage, aiChatViewModel, viewState)
+    }
+
+    /**
+     * This function sets up the navigation host for the application. It defines the composable
+     * functions for each screen in the application and handles navigation between screens.
+     */
+    @Composable
+    fun NavHost(
+        navController: NavHostController,
+        userProfileDao: UserProfileDao,
+        onBottomBarVisibilityChanged: (Boolean) -> Unit,
+        startDestination: String,
+        selectedLanguage: String,
+        userProfileViewModel: UserProfileViewModel,
+        aiChatViewModel: AiChatViewModel,
+        apiSelectedLanguage: String,
+        viewState: ViewState
+    ) {
+        val translateAPI = TranslateAPI(LocalContext.current)
+
+        var completedExercises by remember { mutableStateOf(viewState.completedExercises) }
+
+
+        androidx.navigation.compose.NavHost(
+            navController = navController,
+            startDestination = startDestination
+        ) {
+            composable(Screen.Profile.route) {
+                onBottomBarVisibilityChanged(true)
+                ProfileScreen(
+                    userProfileDao,
+                    selectedLanguage,
+                    onBottomBarVisibilityChanged,
+                    userProfileViewModel,
+                    aiChatViewModel
+                )
+            }
+            composable(Screen.Chat.route) {
+                onBottomBarVisibilityChanged(true)
+                ChatScreen().Chats(aiChatViewModel)
+            }
+            composable(
+                route = "exercises/{exerciseNumber}",
+                arguments = listOf(navArgument("exerciseNumber") { type = NavType.IntType })
+            ) { navBackStackEntry ->
+                navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
+                onBottomBarVisibilityChanged(false)
+
+                ExercisesScreen(
+                    navController,
+                    userProfileViewModel,
+                    selectedLanguage,
+                    aiChatViewModel,
+                    translateAPI = translateAPI,
+                    onCompleteExercise = {
+                        completedExercises++
+                        viewState.completeExercise()
+                    },
+                    viewState
+                )
+            }
+            composable(Screen.Path.route) {
+                onBottomBarVisibilityChanged(true)
+                PathScreen(
+                    navController = navController,
+                    userProfileViewModel,
+                    selectedLanguage,
+                    aiChatViewModel,
+                    completedExercises,
+                    onCompleteExercise = {
+                        viewState.completeExercise()
+                    },
+                    viewState
+                )
+            }
         }
     }
 }

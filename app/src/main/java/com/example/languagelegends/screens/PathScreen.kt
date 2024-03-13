@@ -23,15 +23,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.features.UserProfileViewModel
 
-
+/**This function displays the path screen. It shows a list of exercises that the user can navigate to.
+ *The exercises are represented as circles on a path.
+ *The circles are clickable if the exercise is unlocked.
+ *The path is scrollable and the background image is loaded from a resource.
+ */
 @Composable
-fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, viewState: ViewState) {
+fun PathScreen(
+    navController: NavController,
+    userProfileViewModel: UserProfileViewModel,
+    apiSelectedLanguage: String,
+    aiChatViewModel: AiChatViewModel,
+    totalCompletedExercises: Int,
+    onCompleteExercise: OnCompleteExercise,
+    viewState: ViewState
+) {
     aiChatViewModel.chatVisible.value = false
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
-    // Load the background image
     val backgroundImage = painterResource(id = com.example.languagelegends.R.drawable.path)
 
     Box(
@@ -59,29 +71,39 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
         }
     }
 }
-    val exercisePositions = listOf(
-        Pair(0.22f, 2.84f),//ball 1
-        Pair(0.63f, 2.545f),
-        Pair(0.34f, 2.26f),
-        Pair(0.57f, 2.038f),
-        Pair(0.41f, 1.82f),
-        Pair(0.19f, 1.38f),
-        Pair(0.64f, 1.05f),
-        Pair(0.35f, 0.77f),
-        Pair(0.55f, 0.444f),
-        Pair(0.444f, 0.15f),// Ball 10
-    )
 
-    @Composable
-    fun LanguageExercise(
-        number: Int,
-        x: Float,
-        y: Float,
-        completedExercises: Int,
-        onClick: (Int) -> Unit,
-    ) {
-        // Determine if the exercise is unlocked
-        val isUnlocked = number <= completedExercises + 1
+/** This list contains the positions of the exercises on the path.
+ *The positions are represented as pairs of floats,
+ *where the first float is the x-coordinate and the second float is the y-coordinate.
+ */
+val exercisePositions = listOf(
+    Pair(0.22f, 2.84f),//ball 1
+    Pair(0.63f, 2.545f),
+    Pair(0.34f, 2.26f),
+    Pair(0.57f, 2.038f),
+    Pair(0.41f, 1.82f),
+    Pair(0.19f, 1.38f),
+    Pair(0.64f, 1.05f),
+    Pair(0.35f, 0.77f),
+    Pair(0.55f, 0.444f),
+    Pair(0.444f, 0.15f),// Ball 10
+)
+
+/** This function displays a single exercise on the path.
+ *The exercise is represented as a circle.
+ *The circle is clickable if the exercise is unlocked.
+ *The color of the circle depends on whether the exercise is unlocked or not.
+ */
+@Composable
+fun LanguageExercise(
+    number: Int,
+    x: Float,
+    y: Float,
+    completedExercises: Int,
+    onClick: (Int) -> Unit,
+) {
+    val isUnlocked = number <= completedExercises + 1
+
 
         // Determine the circle color based on the unlocked status
         val circleColor = if (isUnlocked) Color(0xFF573C1A) else Color(0xFF996B2F)
@@ -97,16 +119,16 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
 
         // Render the circle as a clickable surface if the exercise is unlocked
         if (isUnlocked) {
-            Surface(
-                modifier = Modifier
-                    .size(40.dp)
-                    .offset(offsetX.dp, offsetY.dp),
-                shape = CircleShape,
-                color = circleColor,
-                onClick = { onClick(number) } // Call the lambda onClick with the exercise number
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
+        Surface(
+            modifier = Modifier
+                .size(40.dp)
+                .offset(offsetX.dp, offsetY.dp),
+            shape = CircleShape,
+            color = circleColor,
+            onClick = { onClick(number) }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
@@ -141,3 +163,25 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
         }
     }
 
+
+/**
+ * This @Composable function displays a counter for the points earned by the user.
+ * The counter is displayed as a text inside a column with a semi-transparent black background.
+ *
+ * @param pointCount The total points earned by the user.
+ * @param modifier The modifier to be applied to the Column. It can be used to adjust the layout.
+ */
+    @Composable
+    fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
+        Column(
+            modifier = modifier
+                .padding(16.dp)
+                .background(color = Color.Black.copy(alpha = 0.5f))
+        ) {
+            Text(
+                text = "Points: $pointCount",
+                color = Color.White,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
