@@ -45,7 +45,7 @@ private fun ValuesGraph(languageInfoList: List<Pair<String, Int>>) {
             BarChart(ctx).apply {
                 val uniqueLanguageInfoList =
                     languageInfoList.distinctBy { it.first } // Remove duplicate languages
-                val entries = uniqueLanguageInfoList.mapIndexed { index, (language, points) ->
+                val entries = uniqueLanguageInfoList.mapIndexed { index, (_, points) ->
                     BarEntry(
                         index.toFloat(),
                         points.toFloat(),

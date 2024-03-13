@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -356,24 +357,35 @@ fun ProfileScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = { graphVisible = true }
             ) {
-                Text(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp, top = 4.dp)
-                        .fillMaxWidth(),
-                    text = stringResource(id = R.string.weekly_points, weeklyPoints),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        .fillMaxWidth(),
-                    text = stringResource(
-                        id = R.string.total_points,
-                        selectedUserProfile?.languagePoints ?: 0
-                    ),
-                    textAlign = TextAlign.Center
-                )
+                Box {
+                    Column {
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 8.dp, end = 8.dp, top = 4.dp)
+                                .fillMaxWidth(),
+                            text = stringResource(id = R.string.weekly_points, weeklyPoints),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                                .fillMaxWidth(),
+                            text = stringResource(
+                                id = R.string.total_points,
+                                selectedUserProfile?.languagePoints ?: 0
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.expandicon),
+                        contentDescription = "Expand Icon",
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(36.dp)
+                    )
+                }
             }
             // Display the list of learned languages
             Text(

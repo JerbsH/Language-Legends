@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.Message
+
 /**
  * This class provides the UI for the chat screen.
  */
@@ -91,9 +92,11 @@ class ChatScreen {
         }
 
     }
+
     /**
      * This function displays the AI chat screen.
-     * It provides the user with options to ask a question, check an answer, and request a hint.
+     * It provides the user with options to ask a question,
+     * check an answer, and request a hint.
      */
     @Composable
     fun AiChat(
@@ -134,7 +137,7 @@ class ChatScreen {
                     .padding(bottom = 8.dp),
                 onClick = {
                     onAskMeAQuestion()
-                }){
+                }) {
                 Text(text = stringResource(id = R.string.ask_question))
             }
             Row(
@@ -143,28 +146,28 @@ class ChatScreen {
                     .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
 
-            // Display AI response or loading indicator
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                if (isGeneratingQuestion) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                } else {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = if (!response.isNullOrEmpty()) "Translate this to ${viewModel.questionAskedLanguage.value}: $response" else "",
-                            textAlign = TextAlign.Center
-                        )
+                // Display AI response or loading indicator
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    if (isGeneratingQuestion) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    } else {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(8.dp),
+                                text = if (!response.isNullOrEmpty()) "Translate this to ${viewModel.questionAskedLanguage.value}: $response" else "",
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
-            }
             }
 
             // Text field for user's answer
@@ -244,6 +247,7 @@ class ChatScreen {
         }
     }
 }
+
 /**
  * This function displays the free chat screen.
  * It allows the user to input text and displays the AI's responses.
@@ -464,10 +468,11 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
         }
     }
 }
+
 /** This function creates a single card for a given topic.
  *The card displays an icon and the topic text. When the card is clicked,
  *the corresponding topic is set in the viewModel and the menu visibility is set to false.
-*/
+ */
 @Composable
 fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
 
