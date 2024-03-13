@@ -271,7 +271,7 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(mapOf<String, String>())
         }
 
-        var completedExercises by remember { mutableStateOf(viewState.completedExercises) }
+        var completedExercises by remember { mutableIntStateOf(viewState.completedExercises) }
 
 
         androidx.navigation.compose.NavHost(

@@ -92,6 +92,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.6.2")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation ("com.google.accompanist:accompanist-insets:0.23.0")
 
     //FlagIcons
     implementation("com.github.murgupluoglu:flagkit-android:1.0.2")
