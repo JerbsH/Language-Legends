@@ -56,7 +56,6 @@ import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
-import com.example.languagelegends.features.Language
 import com.example.languagelegends.features.SensorHelper
 import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.TranslationCallback
@@ -71,13 +70,31 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, selectedLanguage: String) {
+fun ExercisesScreen(
+    navController: NavController,
+    apiSelectedLanguage: String,
+    aiChatViewModel: AiChatViewModel,
+    selectedLanguage: String,
+    translateAPI: TranslateAPI,
+
+) {
     var currentExercise by remember { mutableIntStateOf(1) }
 
     // Define userProfileDao and exerciseTimestamp here
     val context = LocalContext.current
     val userProfileDao = DatabaseProvider.getDatabase(context).userProfileDao()
-    val exerciseTimestamp = System.currentTimeMillis()
+
+    val translatedWords by remember(selectedLanguage) {
+        mutableStateOf(mapOf<String, String>())
+    }
+
+    // Translate the words for each exercise
+    LaunchedEffect(Unit) {
+        if (translatedWords.isEmpty()) {
+            translateWordsForExercises(selectedLanguage, translateAPI, translatedWords as MutableMap<String, String>)
+        }
+    }
+    // val exerciseTimestamp = System.currentTimeMillis()
 
     //Define the layout for the exercises
     Column(
@@ -86,8 +103,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
+
         // Display the appropriate exercise based on the currentExercise state
         when (currentExercise) {
             1 -> {
@@ -98,7 +115,9 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-                    selectedLanguage = selectedLanguage
+                    selectedLanguage = selectedLanguage,
+                    translateAPI = translateAPI,
+                    translatedWords = translatedWords
                 )
             }
 
@@ -109,6 +128,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    translateAPI = translateAPI,
+                    selectedLanguage = selectedLanguage
                 )
             }
 
@@ -120,6 +141,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    translateAPI = translateAPI,
+                    selectedLanguage = selectedLanguage
                 )
             }
             // Add more exercises as needed
@@ -140,68 +163,66 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordScrambleExercise(
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    //translationAPI: TranslateAPI = TranslateAPI(LocalContext.current)
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
-    sensorHelper: SensorHelper, // Pass the sensor helper instance
+    sensorHelper: SensorHelper,
     userProfileDao: UserProfileDao,
     selectedLanguage: String,
-    userProfileViewModel: UserProfileViewModel = viewModel(),
-    translationAPI: TranslateAPI = TranslateAPI(LocalContext.current)
+    translatedWords: Map<String, String>,
+    translateAPI: TranslateAPI
 
-    ) {
 
+) {
+
+    // Get a random translated word
+    val currentWord = remember(translatedWords) {
+        if (translatedWords.isNotEmpty()) {
+            translatedWords.values.random()
+        } else {
+            // Return a default value or null if the map is empty
+            null
+        }
+    }
+    // Only display the exercise if currentWord is not null
+    if (currentWord != null) {
+        // ...
+    } else {
+        // Display a loading indicator or a message to the user
+        Text("Loading translations...")
+    }
     // List of words for the exercise
-    val wordList = remember {
+    val wordList = remember(translatedWords) {
         listOf(
             "apple",
             "banana",
             "orange",
             "grape",
             "strawberry"
-        )
+        ).map { translatedWords[it] ?: it }
     }
-
-    // Randomly select a word from the list
-    var currentWord by remember {
-        mutableStateOf(wordList.random())
-    }
-
-    // Translate the current word
-    translationAPI.translate(
-        currentWord,
-        selectedLanguage,
-        object : TranslationCallback {
-            override fun onTranslationResult(result: String) {
-                // Use the translated word in your exercise
-                currentWord = result
-                Log.d("DBG", "Translation result: $result")
-            }
-
-            override fun onTranslationError(error: String) {
-                Log.e("DBG", "Translation error: $error")
-            }
-        })
 
     // State to hold the shuffled letters of the current word
     var shuffledLetters by remember {
         mutableStateOf(
-            currentWord.toCharArray().toList().shuffled()
+            currentWord?.toCharArray()?.toList()?.shuffled()
         )
     }
 
     // Ensure the shuffled word is never the same as the original word
-    while (shuffledLetters.joinToString("") == currentWord) {
-        shuffledLetters = currentWord.toCharArray().toList().shuffled()
+    while (shuffledLetters?.joinToString("") == currentWord) {
+        shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
     }
 
     // Register shake detection when the composable is launched
     LaunchedEffect(Unit) {
         sensorHelper.setShakeListener {
             // Shuffle the letters when the device is shaken
-            shuffledLetters = currentWord.toCharArray().toList().shuffled()
+            shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
             // Ensure the shuffled word is never the same as the original word
-            while (shuffledLetters.joinToString("") == currentWord) {
-                shuffledLetters = currentWord.toCharArray().toList().shuffled()
+            while (shuffledLetters?.joinToString("") == currentWord) {
+                shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
             }
         }
     }
@@ -275,7 +296,7 @@ fun WordScrambleExercise(
 
             // Display the shuffled letters
             Text(
-                text = shuffledLetters.joinToString(separator = " "),
+                text = shuffledLetters?.joinToString(separator = " ") ?: "",
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -336,7 +357,9 @@ fun SecondExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    selectedLanguage: String,
+    translateAPI: TranslateAPI
 ) {
     // List of languages and corresponding countries
     val languageCountryPairs = remember {
@@ -346,6 +369,23 @@ fun SecondExercise(
             "French" to "France",
             "German" to "Germany",
         )
+    }
+
+    // Translate the language names
+    languageCountryPairs.forEach { (language, _) ->
+        translateAPI.translate(
+            language,
+            selectedLanguage,
+            object : TranslationCallback {
+                override fun onTranslationResult(result: String) {
+                    // Use the translated language in your exercise
+                    Log.d("DBG", "Translation result: $result")
+                }
+
+                override fun onTranslationError(error: String) {
+                    Log.e("DBG", "Translation error: $error")
+                }
+            })
     }
 
     // State to track user input for the translations
@@ -462,8 +502,11 @@ fun TiltExercise(
     onExerciseCompleted: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
-) {
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    translateAPI: TranslateAPI,
+    selectedLanguage: String,
+
+    ) {
     // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
         listOf(
@@ -473,6 +516,23 @@ fun TiltExercise(
             Triple("Grape", "Uva", "Banana"),
             Triple("Strawberry", "Fresa", "Tomate")
         )
+    }
+
+    // Translate the words in the vocabulary
+    vocabulary.forEach { (word, _, _) ->
+        translateAPI.translate(
+            word,
+            selectedLanguage,
+            object : TranslationCallback {
+                override fun onTranslationResult(result: String) {
+                    // Use the translated word in your exercise
+                    Log.d("DBG", "Translation result: $result")
+                }
+
+                override fun onTranslationError(error: String) {
+                    Log.e("DBG", "Translation error: $error")
+                }
+            })
     }
 
     // Track the current item being displayed
@@ -677,6 +737,34 @@ fun TiltExercise(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+    }
+}
+
+// Helper function to translate words for all exercises
+// Helper function to translate words for all exercises
+fun translateWordsForExercises(
+    selectedLanguage: String,
+    translationAPI: TranslateAPI,
+    translatedWords: MutableMap<String, String>
+) {
+    // Collect all words from all exercises
+    val words = listOf(
+        listOf("apple", "banana", "orange", "grape", "strawberry"),
+        listOf("Finnish", "Spanish", "French", "German"),
+        listOf("Apple", "Banana", "Orange", "Grape", "Strawberry")
+    ).flatten()
+
+    // Translate words in bulk
+    words.forEach { word ->
+        translationAPI.translate(word, selectedLanguage, object : TranslationCallback {
+            override fun onTranslationResult(result: String) {
+                translatedWords[word] = result
+            }
+
+            override fun onTranslationError(error: String) {
+                Log.e("ExerciseTranslation", "Translation error: $error")
+            }
+        })
     }
 }
 

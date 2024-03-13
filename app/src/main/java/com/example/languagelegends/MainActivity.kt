@@ -39,6 +39,7 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.UserProfileViewModel
 import com.example.languagelegends.features.icon
 import com.example.languagelegends.screens.ChatScreen
@@ -226,7 +227,10 @@ fun NavHost(
     apiSelectedLanguage: String
 
 ) {
-
+    val translateAPI = TranslateAPI(LocalContext.current)
+    val translatedWords by remember(selectedLanguage) {
+        mutableStateOf(mapOf<String, String>())
+    }
 
     androidx.navigation.compose.NavHost(
         navController = navController,
@@ -251,7 +255,7 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, selectedLanguage)
+            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, selectedLanguage, translateAPI)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
