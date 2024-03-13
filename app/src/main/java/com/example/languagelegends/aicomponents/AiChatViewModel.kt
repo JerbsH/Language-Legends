@@ -28,13 +28,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.util.Locale
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /** This is the ViewModel for the AI Chat feature of the application.
  * It handles the lifecycle of the AI chat, including initialization of the VertexAI instance,
  * checking token expiration, and executing text requests.
  * **/
 class AiChatViewModel(private val application: Application, private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
-
 
 
     // Constants used for SharedPreferences
@@ -202,7 +204,7 @@ class AiChatViewModel(private val application: Application, private val userProf
         remainingTimeMillis / 1000
     }
 
-    private suspend fun getSelectedLanguageCountryCode(): String {
+    suspend fun getSelectedLanguageCountryCode(): String {
         val userProfile = userProfileDao.getAllUserProfiles().firstOrNull()
         return userProfile?.currentLanguage?.countryCode ?: "EN-GB" // default
     }
@@ -234,6 +236,7 @@ class AiChatViewModel(private val application: Application, private val userProf
                     val modifiedAiResponse = aiResponse?.substringAfter(": ")
 
                     Log.d("DBG", "AI response: $modifiedAiResponse")
+
 
                     // Translate the AI response to the selected language
                     val targetLanguageCode = getSelectedLanguageCountryCode()

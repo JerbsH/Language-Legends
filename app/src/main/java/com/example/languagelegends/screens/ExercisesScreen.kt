@@ -53,9 +53,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.Language
 import com.example.languagelegends.features.SensorHelper
+import com.example.languagelegends.features.TranslateAPI
+import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.features.UserProfileViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -67,7 +71,7 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
+fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, selectedLanguage: String) {
     var currentExercise by remember { mutableIntStateOf(1) }
 
     // Define userProfileDao and exerciseTimestamp here
@@ -94,8 +98,8 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String) {
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-
-                    )
+                    selectedLanguage = selectedLanguage
+                )
             }
 
             2 -> {
@@ -140,9 +144,12 @@ fun WordScrambleExercise(
     onGoBack: () -> Unit,
     sensorHelper: SensorHelper, // Pass the sensor helper instance
     userProfileDao: UserProfileDao,
+    selectedLanguage: String,
     userProfileViewModel: UserProfileViewModel = viewModel(),
+    translationAPI: TranslateAPI = TranslateAPI(LocalContext.current)
 
     ) {
+
     // List of words for the exercise
     val wordList = remember {
         listOf(
@@ -155,9 +162,25 @@ fun WordScrambleExercise(
     }
 
     // Randomly select a word from the list
-    val currentWord = remember {
-        wordList.random()
+    var currentWord by remember {
+        mutableStateOf(wordList.random())
     }
+
+    // Translate the current word
+    translationAPI.translate(
+        currentWord,
+        selectedLanguage,
+        object : TranslationCallback {
+            override fun onTranslationResult(result: String) {
+                // Use the translated word in your exercise
+                currentWord = result
+                Log.d("DBG", "Translation result: $result")
+            }
+
+            override fun onTranslationError(error: String) {
+                Log.e("DBG", "Translation error: $error")
+            }
+        })
 
     // State to hold the shuffled letters of the current word
     var shuffledLetters by remember {

@@ -13,6 +13,7 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 import java.nio.charset.Charset
+import kotlin.coroutines.suspendCoroutine
 
 interface TranslationCallback {
     fun onTranslationResult(result: String)
@@ -32,7 +33,7 @@ class TranslateAPI(context: Context) {
         text: String?,
         targetLanguage: String,
         callback: TranslationCallback
-    ) {
+    ){
         Log.d("DBG", "Translating text: $text to language: $targetLanguage")
 
         val mediaType = "application/x-www-form-urlencoded".toMediaType()

@@ -35,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.AppDatabase
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
@@ -98,8 +99,7 @@ class MainActivity : ComponentActivity() {
                                 isNameScreenActive = !isVisible
                             },
                             startDestination = Screen.Profile.route,
-                            selectedLanguage = apiSelectedLanguage, userProfileViewModel
-
+                            selectedLanguage = apiSelectedLanguage, userProfileViewModel, AiChatViewModel(application, userProfileViewModel), apiSelectedLanguage
                         )
                     }
                 }
@@ -221,7 +221,9 @@ fun NavHost(
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     startDestination: String,
     selectedLanguage: String,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    aiChatViewModel: AiChatViewModel,
+    apiSelectedLanguage: String
 
 ) {
 
@@ -249,7 +251,7 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, selectedLanguage)
+            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, selectedLanguage)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)
