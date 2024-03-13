@@ -23,7 +23,7 @@ Adventure through the forest and improve your language skills. On your adventure
 ### Point Tracking: 
 See how you have been progressing your learning from your profile view. Your profile lists all your learned languages and tracks your point progress.
 <p>
-  <img src="./readme-images/profile.jpg" title="AI Menu" width="200">
+  <img src="./readme-images/profile.jpg" title="Profile screen" width="200"> <img src="./readme-images/bargraph.jpg" title="Bar Graph" width="200">
 </p>
 
 ### Many languages to learn: 
