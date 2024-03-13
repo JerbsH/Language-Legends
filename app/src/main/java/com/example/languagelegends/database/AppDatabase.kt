@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
+
 /**
  * This is the main database class for the application.
  * You define all entities and DAOs associated with the database.

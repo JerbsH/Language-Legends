@@ -117,7 +117,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
     /**
      * Loads the selected language from SharedPreferences.
      */
-    private fun loadSelectedLanguage() {
+    fun loadSelectedLanguage() {
         selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
         selectedLanguageIcon = icon(selectedLanguage)
     }
