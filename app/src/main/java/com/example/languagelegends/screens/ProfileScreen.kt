@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -91,7 +92,8 @@ fun ProfileScreen(
     apiSelectedLanguage: String,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     userProfileViewModel: UserProfileViewModel,
-    aiChatViewModel: AiChatViewModel
+    aiChatViewModel: AiChatViewModel,
+    viewState: ViewState
 ) {
     aiChatViewModel.chatVisible.value = false
     var username by remember { mutableStateOf("") }
@@ -145,6 +147,14 @@ fun ProfileScreen(
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
             userProfile?.weeklyPoints = weeklyPoints
+
+            // Set available levels for current language
+            val currentLanguage =
+                userProfile?.languages?.find { it.name == userProfile.currentLanguage.name }
+            if (currentLanguage != null) {
+                viewState.setCompletedExercises(currentLanguage.exercisesDone)
+            } else viewState.setCompletedExercises(0)
+
 
             // Update the UserProfile in the database
             withContext(Dispatchers.IO) {
@@ -510,15 +520,7 @@ fun ProfileScreen(
                     })
                 }
             }
-            // Button to clear database at the bottom
-            Button(onClick = {
-                coroutineScope.launch {
-                    userProfileDao.clearDatabase()
-                    selectedUserProfile = null
-                }
-            }) {
-                Text("Clear Database")
-            }
+
 
         }
     }
@@ -565,7 +567,7 @@ fun ProfileScreen(
                     singleLine = true,
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.select_language_to_learn),
                 textAlign = TextAlign.Center,
@@ -575,7 +577,9 @@ fun ProfileScreen(
 
             Box(
                 modifier = Modifier
-                    .height(190.dp)
+                    .weight(0.5f)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 LazyColumn {
                     items(LANGUAGES.keys.toList()) { language ->
@@ -671,13 +675,14 @@ fun ProfileScreen(
                             // Update language in view model
                             userProfileViewModel.viewModelScope.launch {
                                 userProfileViewModel.updateLanguage(
-                                    selectedLanguage?.name ?: "English"
+                                    selectedLanguage?.name ?: "English",
+                                    viewState
                                 )
                             }
                         }
                     }
                 },
-                modifier = Modifier.size(114.dp)
+                modifier = Modifier.size(116.dp)
 
             ) {
                 Text(
@@ -685,6 +690,7 @@ fun ProfileScreen(
                     textAlign = TextAlign.Center,
                 )
             }
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
     if (created == 1) {
@@ -707,7 +713,7 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     val countryCode = LANGUAGES[selectedLanguage] ?: ""
     if (existingLanguage != null) {
         existingLanguage.exercisesDone = existingLanguage.exercisesDone
-        existingLanguage.pointsEarned =  existingLanguage.pointsEarned
+        existingLanguage.pointsEarned = existingLanguage.pointsEarned
     } else {
         userProfile.languages.add(Language(selectedLanguage, countryCode, 0, 0, 0))
     }

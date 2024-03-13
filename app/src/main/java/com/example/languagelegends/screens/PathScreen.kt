@@ -22,8 +22,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.features.UserProfileViewModel
+import com.example.languagelegends.OnCompleteExercise
 
 /**This function displays the path screen. It shows a list of exercises that the user can navigate to.
  *The exercises are represented as circles on a path.
@@ -33,10 +34,12 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 @Composable
 fun PathScreen(
     navController: NavController,
+    userProfileViewModel: UserProfileViewModel,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
     totalCompletedExercises: Int,
-    onCompleteExercise: OnCompleteExercise
+    onCompleteExercise: OnCompleteExercise,
+    viewState: ViewState
 ) {
     aiChatViewModel.chatVisible.value = false
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
@@ -54,19 +57,17 @@ fun PathScreen(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
         )
-        PointCounter(
-            pointCount = totalCompletedExercises,
-            modifier = Modifier.align(Alignment.TopStart)
-        )
         exercisePositions.forEachIndexed { index, (x, y) ->
             LanguageExercise(
                 number = index + 1,
                 x = x,
                 y = y,
-                completedExercises = totalCompletedExercises,
+                completedExercises = viewState.getCompletedExercises(),
             ) {
                 // Navigate to the ExercisesScreen when exercise is clicked
-                navController.navigate("exercises/${it}")
+                number ->
+                viewState.setCurrentLevel(number)
+                navController.navigate("exercises/${number}")
             }
         }
     }
@@ -163,17 +164,3 @@ fun LanguageExercise(
         }
     }
 
-    @Composable
-    fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
-        Column(
-            modifier = modifier
-                .padding(16.dp)
-                .background(color = Color.Black.copy(alpha = 0.5f))
-        ) {
-            Text(
-                text = "Points: $pointCount",
-                color = Color.White,
-                modifier = Modifier.padding(8.dp)
-            )
-        }
-    }
