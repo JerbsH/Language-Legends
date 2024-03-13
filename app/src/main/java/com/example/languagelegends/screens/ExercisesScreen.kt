@@ -90,11 +90,13 @@ private const val POINTS_PER_EXERCISE = 10
 @Composable
 fun ExercisesScreen(
     navController: NavController,
+    userProfileViewModel: UserProfileViewModel,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
     translateAPI: TranslateAPI,
     onCompleteExercise: OnCompleteExercise
 ) {
+    userProfileViewModel.selectedLanguage
     var currentExercise by remember { mutableIntStateOf(1) }
 
     // Define userProfileDao and exerciseTimestamp here

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.features.UserProfileViewModel
 
 /**This function displays the path screen. It shows a list of exercises that the user can navigate to.
  *The exercises are represented as circles on a path.
@@ -33,6 +34,7 @@ import com.example.languagelegends.aicomponents.AiChatViewModel
 @Composable
 fun PathScreen(
     navController: NavController,
+    userProfileViewModel: UserProfileViewModel,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
     totalCompletedExercises: Int,

@@ -72,9 +72,9 @@ class MainActivity : ComponentActivity() {
             LanguageLegendsTheme {
                 val navController: NavHostController = rememberNavController()
                 var buttonsTrue by remember { mutableStateOf(true) }
-                var apiSelectedLanguage by remember { mutableStateOf("English") }
                 var isNameScreenActive by remember { mutableStateOf(false) }
                 val userProfileViewModel: UserProfileViewModel = viewModel()
+                var apiSelectedLanguage by remember { mutableStateOf(userProfileViewModel.selectedLanguage) }
                 val aiChatViewModel = AiChatViewModel(application, userProfileViewModel)
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
@@ -267,9 +267,6 @@ class MainActivity : ComponentActivity() {
         viewState: ViewState
     ) {
         val translateAPI = TranslateAPI(LocalContext.current)
-        val translatedWords by remember(selectedLanguage) {
-            mutableStateOf(mapOf<String, String>())
-        }
 
         var completedExercises by remember { mutableStateOf(viewState.completedExercises) }
 
@@ -301,6 +298,7 @@ class MainActivity : ComponentActivity() {
 
                 ExercisesScreen(
                     navController,
+                    userProfileViewModel,
                     selectedLanguage,
                     aiChatViewModel,
                     translateAPI = translateAPI,
@@ -314,6 +312,7 @@ class MainActivity : ComponentActivity() {
                 onBottomBarVisibilityChanged(true)
                 PathScreen(
                     navController = navController,
+                    userProfileViewModel,
                     selectedLanguage,
                     aiChatViewModel,
                     completedExercises,
