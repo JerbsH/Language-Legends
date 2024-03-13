@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -315,7 +314,7 @@ fun WordScrambleExercise(
                     if (isCorrect) {
                         // Update points and show dialog
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile = updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            val userProfile = updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -465,7 +464,7 @@ fun SecondExercise(
                 onClick = {
                     if (isCorrect) {
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile = updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            val userProfile = updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -561,7 +560,7 @@ fun TiltExercise(
                     } else {
                         userProfileViewModel.viewModelScope.launch {
                             val userProfile =
-                                updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                                updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -593,7 +592,7 @@ fun TiltExercise(
                     } else {
                         userProfileViewModel.viewModelScope.launch {
                             val userProfile =
-                                updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                                updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -755,7 +754,6 @@ fun TiltExercise(
 suspend fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     points: Int,
-    viewModel: UserProfileViewModel
 ): UserProfile? {
     // Perform database operations within a coroutine
     val userProfile = withContext(Dispatchers.IO) {

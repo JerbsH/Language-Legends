@@ -35,6 +35,7 @@ class ImagePickerActivity : ComponentActivity() {
                 Log.d("DBG", "Image picked from gallery")
                 val returnIntent = Intent()
                 uri.let {
+                    @Suppress("DEPRECATION")
                     val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
                     val converters = Converters()
                     returnIntent.putExtra("image", converters.fromBitmap(bitmap))

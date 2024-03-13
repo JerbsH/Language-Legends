@@ -49,7 +49,6 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
             pointCount = totalCompletedExercises,
             modifier = Modifier.align(Alignment.TopStart)
         )
-
         exercisePositions.forEachIndexed { index, (x, y) ->
             LanguageExercise(
                 number = index + 1,
@@ -64,7 +63,6 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
     }
 }
     val exercisePositions = listOf(
-
         Pair(0.22f, 2.84f),//ball 1
         Pair(0.63f, 2.545f),
         Pair(0.34f, 2.26f),
@@ -148,7 +146,6 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
 
     @Composable
     fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
-
         Column(
             modifier = modifier
                 .padding(16.dp)
