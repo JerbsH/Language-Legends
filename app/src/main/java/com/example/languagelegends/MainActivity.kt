@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         if (!isNameScreenActive) {
-                            TopBar(userProfileViewModel, aiChatViewModel)
+                            TopBar(userProfileViewModel, aiChatViewModel, viewState)
                         }
                     },
                     bottomBar = {
@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatViewModel) {
+fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatViewModel, viewState: ViewState) {
     var showLanguageSelection by remember { mutableStateOf(false) }
     val buttonVisible by AiChatViewModel.chatVisible.observeAsState(false)
 
@@ -158,7 +158,7 @@ fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatVi
                     onLanguageSelected = { apiSelectedLanguage ->
                         // Close the language selection menu
                         showLanguageSelection = false
-                        userProfileViewModel.updateLanguage(apiSelectedLanguage)
+                        userProfileViewModel.updateLanguage(apiSelectedLanguage, viewState)
                         userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
                     }
                 )

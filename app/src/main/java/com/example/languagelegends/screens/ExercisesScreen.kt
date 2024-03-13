@@ -93,23 +93,21 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
             1 -> {
                 WordScrambleExercise(
                     onNextExercise = {
-                        // Move to the next exercise if total completed is less than current exercise number
-                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise()
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-
+                    viewState = viewState
                     )
             }
 
             2 -> {
                 SecondExercise(
                     onNextExercise = {
-                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise() // Move to the next exercise
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    viewState = viewState
                 )
             }
 
@@ -117,10 +115,10 @@ fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, a
                 TiltExercise(
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
-                        if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) viewState.completeExercise() // Move to the next exercise
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
+                    viewState = viewState
                 )
             }
             // Add more exercises as needed
@@ -163,7 +161,7 @@ fun WordScrambleExercise(
     sensorHelper: SensorHelper, // Pass the sensor helper instance
     userProfileDao: UserProfileDao,
     userProfileViewModel: UserProfileViewModel = viewModel(),
-
+    viewState: ViewState
     ) {
     // List of words for the exercise
     val wordList = remember {
@@ -312,7 +310,10 @@ fun WordScrambleExercise(
                     if (isCorrect) {
                         // Update points and show dialog
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile = updatePointsAndProceed(userProfileDao, points)
+                            val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
+                                viewState.completeExercise()
+                                updatePointsAndProceed(userProfileDao, points, true)
+                            } else updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -358,7 +359,8 @@ fun SecondExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    viewState: ViewState
 ) {
     // List of languages and corresponding countries
     val languageCountryPairs = remember {
@@ -462,7 +464,10 @@ fun SecondExercise(
                 onClick = {
                     if (isCorrect) {
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile = updatePointsAndProceed(userProfileDao, points)
+                            val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
+                                viewState.completeExercise()
+                                updatePointsAndProceed(userProfileDao, points, true)
+                            } else updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -505,7 +510,8 @@ fun TiltExercise(
     onExerciseCompleted: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    viewState: ViewState
 ) {
     // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
@@ -557,8 +563,10 @@ fun TiltExercise(
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile =
-                                updatePointsAndProceed(userProfileDao, points)
+                            val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
+                                viewState.completeExercise()
+                                updatePointsAndProceed(userProfileDao, points, true)
+                            } else updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -589,8 +597,10 @@ fun TiltExercise(
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
                         userProfileViewModel.viewModelScope.launch {
-                            val userProfile =
-                                updatePointsAndProceed(userProfileDao, points)
+                            val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
+                                viewState.completeExercise()
+                                updatePointsAndProceed(userProfileDao, points, true)
+                            } else updatePointsAndProceed(userProfileDao, points)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -752,6 +762,7 @@ fun TiltExercise(
 suspend fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     points: Int,
+    completedExercise: Boolean = false
 ): UserProfile? {
     // Perform database operations within a coroutine
     val userProfile = withContext(Dispatchers.IO) {
@@ -762,11 +773,16 @@ suspend fun updatePointsAndProceed(
         val currentLanguage = profile.languages.find { it.name == profile.currentLanguage.name }
         currentLanguage?.let { language ->
             language.pointsEarned += points
-            language.exercisesDone++ // Increment exercisesDone
+            // Increment exercisesDone if completed for first time
+            if (completedExercise) {
+                language.exercisesDone++
+                profile.currentLanguage.exercisesDone++
+            }
             language.exerciseTimestamp = System.currentTimeMillis()
             profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
             profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
             profile.pointsEarned += points // Increment pointsEarned
+            profile.currentLanguage.pointsEarned += points
             withContext(Dispatchers.IO) {
                 userProfileDao.updateUserProfile(profile)
             }

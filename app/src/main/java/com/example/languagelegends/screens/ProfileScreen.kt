@@ -125,7 +125,6 @@ fun ProfileScreen(
             selectedUserProfile = userProfile
             image = userProfile?.image
             username = userProfile?.username ?: ""
-            viewState.setCompletedExercises(userProfile?.exercisesDone ?: 0)
 
             // Calculate weeklyPoints based on exercise timestamps
             val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
@@ -136,6 +135,14 @@ fun ProfileScreen(
 
             // Set the weeklyPoints value of the UserProfile object
             userProfile?.weeklyPoints = weeklyPoints
+
+            // Set available levels for current language
+            val currentLanguage = userProfile?.languages?.find { it.name == userProfile.currentLanguage.name }
+            if (currentLanguage != null) {
+                viewState.setCompletedExercises(currentLanguage.exercisesDone)
+            }
+            else viewState.setCompletedExercises(0)
+
 
             // Update the UserProfile in the database
             withContext(Dispatchers.IO) {
