@@ -1,6 +1,5 @@
 package com.example.languagelegends.screens
 
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -72,7 +71,14 @@ private const val POINTS_PER_EXERCISE = 10
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, onCompleteExercise: OnCompleteExercise) {
+
+fun ExercisesScreen(
+    navController: NavController,
+    apiSelectedLanguage: String,
+    aiChatViewModel: AiChatViewModel,
+    onCompleteExercise: OnCompleteExercise
+) {
+
     var currentExercise by remember { mutableIntStateOf(1) }
     aiChatViewModel.chatVisible.value = false
 
@@ -548,10 +554,6 @@ fun TiltExercise(
             if (sensorHelper.isTiltedRight.value) { // Check for right tilt instead of left
                 if (isCorrectOnLeft.value) {
                     feedbackText = correctString // Provide feedback for correct tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted left1, selected answer: ${currentItem.second}"
-                    ) // Log the selected answer
                     delay(3000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
@@ -570,20 +572,12 @@ fun TiltExercise(
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted right, selected answer: ${currentItem.third}"
-                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
             } else if (sensorHelper.isTiltedLeft.value) { // Check for left tilt instead of right
                 if (!isCorrectOnLeft.value) {
                     feedbackText = correctString // Provide feedback for correct tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted right3, selected answer: ${currentItem.second}"
-                    ) // Log the selected answer
                     delay(3000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
@@ -601,10 +595,6 @@ fun TiltExercise(
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted left, selected answer: ${currentItem.third}"
-                    ) // Log the selected answer
                     delay(2000) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }

@@ -54,18 +54,21 @@ import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.Message
-import com.example.languagelegends.features.UserProfileViewModel
-
+/**
+ * This class provides the UI for the chat screen.
+ */
 class ChatScreen {
+    /**
+     * This function displays the chat screen based on the current state of the chat.
+     * It switches between free chat and AI chat based on the value of `isFreeChat`.
+     */
     @Composable
-    fun Chats(viewModel: AiChatViewModel, userProfileViewModel: UserProfileViewModel) {
+    fun Chats(viewModel: AiChatViewModel) {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
         val isFreeChat by viewModel.isFreeChat.observeAsState(false)
-        val selectedLanguage by remember { userProfileViewModel.selectedLanguageLiveData }.observeAsState("English")
 
-        // Display the chat screen
         Surface {
             if (isFreeChat) {
                 FreeChatScreen(viewModel, viewModel::onFreeChat)
@@ -77,7 +80,6 @@ class ChatScreen {
                 } else {
                     AiChat(
                         viewModel,
-                        selectedLanguage,
                         topic,
                         response,
                         viewModel::onAskMeAQuestion,
@@ -89,12 +91,13 @@ class ChatScreen {
         }
 
     }
-
-
+    /**
+     * This function displays the AI chat screen.
+     * It provides the user with options to ask a question, check an answer, and request a hint.
+     */
     @Composable
     fun AiChat(
         viewModel: AiChatViewModel,
-        selectedLanguage: String,
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,
@@ -144,7 +147,6 @@ class ChatScreen {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 8)
             ) {
                 if (isGeneratingQuestion) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -242,7 +244,10 @@ class ChatScreen {
         }
     }
 }
-
+/**
+ * This function displays the free chat screen.
+ * It allows the user to input text and displays the AI's responses.
+ */
 @Composable
 fun FreeChatScreen(
     viewModel: AiChatViewModel,
@@ -329,15 +334,15 @@ fun FreeChatScreen(
                     .padding(top = 8.dp)
             )
         }
-
-        // Use LaunchedEffect to scroll to the last item when the LazyColumn recomposes
         LaunchedEffect(messages.size) {
             lazyListState.scrollToItem(messages.size)
         }
     }
 }
 
-
+/** This function displays a single chat message in a Card.
+ *The message is aligned to the start or end of the row depending on whether it's from the user or not.
+ */
 @Composable
 fun ChatMessage(message: Message) {
 
@@ -360,7 +365,11 @@ fun ChatMessage(message: Message) {
     }
 }
 
-
+/** This function displays a view with several cards, each representing a topic for the AI chat.
+ *When a card is clicked, the corresponding topic is set in the viewModel and the menu visibility is set to false.
+ *It also provides a button for free chat. When this button is clicked,
+ * the topic in the viewModel is cleared and the menu visibility is set to false.
+ */
 @Composable
 fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
 
@@ -406,7 +415,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
                     viewModel.menuVisibility.value = false
                     onFreeChatClicked()
                 },
-                modifier = Modifier.widthIn(150.dp) // Set a max width
+                modifier = Modifier.widthIn(150.dp)
             ) {
                 Text(text = stringResource(id = R.string.free_chat))
             }
@@ -455,9 +464,11 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
         }
     }
 }
-
+/** This function creates a single card for a given topic.
+ *The card displays an icon and the topic text. When the card is clicked,
+ *the corresponding topic is set in the viewModel and the menu visibility is set to false.
+*/
 @Composable
-
 fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
 
     Card(

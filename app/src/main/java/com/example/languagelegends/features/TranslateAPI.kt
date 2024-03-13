@@ -1,7 +1,6 @@
 package com.example.languagelegends.features
 
 import android.content.Context
-import android.util.Log
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -14,27 +13,34 @@ import org.json.JSONObject
 import java.io.IOException
 import java.nio.charset.Charset
 
+/**
+ * This interface defines the callback methods for translation results and errors.
+ */
 interface TranslationCallback {
     fun onTranslationResult(result: String)
     fun onTranslationError(error: String)
 }
 
+/**
+ * This class provides functionalities to translate text using the DeepL API.
+ * It uses the OkHttp library to make network requests.
+ */
 class TranslateAPI(context: Context) {
 
     private val client = OkHttpClient()
     private val apiKey = getDeepLAPIKey(context)
 
-    init {
-        Log.d("DBG", "API Key: $apiKey")
-    }
-
+    /**
+     * Translates the given text to the target language.
+     * @param text The text to be translated.
+     * @param targetLanguage The target language for the translation.
+     * @param callback The callback to be invoked when the translation result is received or when an error occurs.
+     */
     fun translate(
         text: String?,
         targetLanguage: String,
         callback: TranslationCallback
     ) {
-        Log.d("DBG", "Translating text: $text to language: $targetLanguage")
-
         val mediaType = "application/x-www-form-urlencoded".toMediaType()
         val body: RequestBody = "text=$text&target_lang=$targetLanguage".toRequestBody(mediaType)
         val request = Request.Builder()
@@ -45,15 +51,11 @@ class TranslateAPI(context: Context) {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e("DBG", "Translation request failed", e)
                 callback.onTranslationError("Translation request failed")
             }
 
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
-                    Log.e("DBG", "Unexpected code ${response.code}")
-                    Log.e("DBG", "Response message: ${response.message}")
-                    Log.e("DBG", "Response body: ${response.body?.string()}")
                     callback.onTranslationError("Unexpected code ${response.code}")
                     return
                 }
@@ -64,12 +66,16 @@ class TranslateAPI(context: Context) {
                 val firstTranslationObject = translationsArray.getJSONObject(0)
                 val translatedText = firstTranslationObject.getString("text")
 
-                Log.d("DBG", "Translation result: $translatedText")
                 callback.onTranslationResult(translatedText)
             }
         })
     }
 
+    /**
+     * Retrieves the DeepL API key from a JSON file in the assets folder.
+     * @param context The application context.
+     * @return The DeepL API key, or null if an error occurs.
+     */
     private fun getDeepLAPIKey(context: Context): String? {
         val jsonString: String
         try {
@@ -81,13 +87,10 @@ class TranslateAPI(context: Context) {
             jsonString = String(buffer, Charset.defaultCharset())
         } catch (e: IOException) {
             e.printStackTrace()
-            Log.e("DBG", "Error reading API key from assets", e)
             return null
         }
 
         val jsonObject = JSONObject(jsonString)
-        val apiKey = jsonObject.getString("deepl_API_KEY")
-        Log.d("DBG", "Retrieved API key: $apiKey")
-        return apiKey
+        return jsonObject.getString("deepl_API_KEY")
     }
 }
