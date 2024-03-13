@@ -67,7 +67,11 @@ import kotlin.random.Random
 private const val POINTS_PER_EXERCISE = 10
 
 @Composable
-fun ExercisesScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun ExercisesScreen(
+    navController: NavController,
+    apiSelectedLanguage: String,
+    aiChatViewModel: AiChatViewModel
+) {
     var currentExercise by remember { mutableIntStateOf(1) }
     aiChatViewModel.chatVisible.value = false
 

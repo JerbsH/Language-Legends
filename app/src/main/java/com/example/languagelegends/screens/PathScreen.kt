@@ -24,15 +24,22 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
+/**This function displays the path screen. It shows a list of exercises that the user can navigate to.
+ *The exercises are represented as circles on a path.
+ *The circles are clickable if the exercise is unlocked.
+ *The path is scrollable and the background image is loaded from a resource.
+ */
 @Composable
-
-fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun PathScreen(
+    navController: NavController,
+    apiSelectedLanguage: String,
+    aiChatViewModel: AiChatViewModel
+) {
     aiChatViewModel.chatVisible.value = false
     val completedExercises by remember { mutableIntStateOf(0) }
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
-    // Load the background image
     val backgroundImage = painterResource(id = com.example.languagelegends.R.drawable.path)
 
     Box(
@@ -59,8 +66,11 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
     }
 }
 
+/** This list contains the positions of the exercises on the path.
+ *The positions are represented as pairs of floats,
+ *where the first float is the x-coordinate and the second float is the y-coordinate.
+ */
 val exercisePositions = listOf(
-
     Pair(0.22f, 2.84f),//ball 1
     Pair(0.63f, 2.545f),
     Pair(0.34f, 2.26f),
@@ -73,6 +83,11 @@ val exercisePositions = listOf(
     Pair(0.444f, 0.15f),// Ball 10
 )
 
+/** This function displays a single exercise on the path.
+ *The exercise is represented as a circle.
+ *The circle is clickable if the exercise is unlocked.
+ *The color of the circle depends on whether the exercise is unlocked or not.
+ */
 @Composable
 fun LanguageExercise(
     number: Int,
@@ -81,7 +96,6 @@ fun LanguageExercise(
     completedExercises: Int,
     onClick: (Int) -> Unit,
 ) {
-    // Determine if the exercise is unlocked
     val isUnlocked = number <= completedExercises + 1
 
     // Determine the circle color based on the unlocked status
@@ -101,7 +115,7 @@ fun LanguageExercise(
                 .offset(offsetX.dp, offsetY.dp),
             shape = CircleShape,
             color = circleColor,
-            onClick = { onClick(number) } // Call the lambda onClick with the exercise number
+            onClick = { onClick(number) }
         ) {
             Box(
                 contentAlignment = Alignment.Center,

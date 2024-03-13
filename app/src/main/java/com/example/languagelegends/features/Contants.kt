@@ -1,5 +1,9 @@
 package com.example.languagelegends.features
 
+/**
+ * This is a map of languages to their respective country codes.
+ * It is used throughout the application to represent the languages supported by the application.
+ */
 val LANGUAGES = mapOf(
     "Bulgarian" to "BG",
     "Czech" to "CS",

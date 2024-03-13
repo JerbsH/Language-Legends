@@ -72,6 +72,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * This is the main screen for the user profile. It displays the user's profile picture, username,
+ * weekly points, total points, and the languages they are learning. The user can also edit their
+ * username, select a new profile picture, and clear the database from this screen.
+ *
+ * @param userProfileDao The DAO for accessing the UserProfile in the database.
+ * @param apiSelectedLanguage The language selected by the user.
+ * @param onBottomBarVisibilityChanged A function to change the visibility of the bottom bar.
+ * @param userProfileViewModel The ViewModel for the UserProfile.
+ * @param aiChatViewModel The ViewModel for the AI chat.
+ */
 @Composable
 fun ProfileScreen(
     userProfileDao: UserProfileDao,
@@ -117,8 +128,6 @@ fun ProfileScreen(
                 ?.sumOf { it.pointsEarned } ?: 0
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
-
-            // Set the weeklyPoints value of the UserProfile object
             userProfile?.weeklyPoints = weeklyPoints
 
             // Update the UserProfile in the database
@@ -130,13 +139,11 @@ fun ProfileScreen(
         }
     }
 
-    // Function to handle image selection
     val pickImageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val newImage = result.data?.getByteArrayExtra("image")
 
-                // Check if selectedUserProfile is null
                 if (selectedUserProfile == null) {
                     //create a new UserProfile with the current username
                     selectedUserProfile = UserProfile(
@@ -149,12 +156,10 @@ fun ProfileScreen(
                 }
                 // Update the image of selectedUserProfile
                 selectedUserProfile?.image = newImage
-
                 // Update the user profile in the database
                 coroutineScope.launch {
                     selectedUserProfile?.let { userProfileDao.updateUserProfile(it) }
                 }
-                // Update the image variable
                 image = newImage
             }
         }
@@ -176,7 +181,6 @@ fun ProfileScreen(
                 selectedLanguage ?: Language("Default", countryCode, 0, 0, 0)
             }
             userProfile.currentLanguage = newLanguage
-            // Update the currentLanguage when apiSelectedLanguage changes
             if (apiSelectedLanguage != userProfile.currentLanguage.name) {
                 userProfile.currentLanguage = Language(apiSelectedLanguage, countryCode, 0, 0, 0)
 
@@ -187,21 +191,23 @@ fun ProfileScreen(
                     existingLanguage.exercisesDone = 0
                     existingLanguage.pointsEarned = 0
                 } else {
-                    // Add the new language to the list of languages
                     userProfile.languages.add(Language(apiSelectedLanguage, countryCode, 0, 0, 0))
                 }
-                // Update the UserProfile in the database
                 coroutineScope.launch {
                     userProfileDao.updateUserProfile(userProfile)
                     updateUserLanguages(
                         userProfile,
                         apiSelectedLanguage
-                    ) // Call updateUserLanguages here
+                    )
                 }
             }
         }
     }
-
+    /**
+     * This function is responsible for displaying the user's profile.
+     * It shows the user's profile picture, username, and the list of languages they are learning.
+     * It also provides options to take a new profile picture, edit the username, and clear the database.
+     */
     @Composable
     fun showProfile() {
         onBottomBarVisibilityChanged(true)
@@ -211,7 +217,6 @@ fun ProfileScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Display user image
             val imageBitmap = remember { mutableStateOf<ImageBitmap?>(null) }
             val converters = Converters()
 
@@ -245,17 +250,14 @@ fun ProfileScreen(
                     )
                 }
             }
-            // Buttons for selecting picture
             val takePictureIntent = Intent(context, ImagePickerActivity::class.java).apply {
                 putExtra("requestType", "camera")
                 putExtra("username", username)
             }
-
             val cameraPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
                 if (isGranted) {
-                    // Permission is granted. Continue with your action
                     pickImageLauncher.launch(takePictureIntent)
                 } else {
                     Log.d("DBG", "Camera permission is denied.")
@@ -318,12 +320,9 @@ fun ProfileScreen(
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
-
                             Button(
                                 onClick = {
-                                    // Update UI
                                     isEditingUsername = !isEditingUsername
-
                                 },
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
@@ -368,19 +367,14 @@ fun ProfileScreen(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-
-            // Fetch user profile from the database using a coroutine
             LaunchedEffect(isEditingUsername, username) {
-
                 try {
                     if (!isEditingUsername) {
-                        // User not found, check if the database is empty
                         val allUsers = withContext(Dispatchers.IO) {
                             userProfileDao.getAllUserProfiles()
                         }
 
                         if (allUsers.size == 1) {
-                            // If there is exactly one user, update its username
                             val firstUser = allUsers.first()
                             firstUser.username = username
                             updateUserLanguages(
@@ -388,12 +382,10 @@ fun ProfileScreen(
                                 selectedLanguage?.name ?: "Default Language"
                             )
                             userProfileDao.updateUserProfile(firstUser)
-                            // Fetch the updated user profile from the database
                             val updatedUserProfile = withContext(Dispatchers.IO) {
                                 userProfileDao.getAllUserProfiles()
                                     .firstOrNull { it.username == firstUser.username }
                             }
-                            // Update selectedUserProfile
                             selectedUserProfile = updatedUserProfile
 
                         } else {
@@ -418,7 +410,6 @@ fun ProfileScreen(
                                 selectedLanguage?.name ?: "Default Language"
                             )
                             userProfileDao.insertUserProfile(newUserProfile)
-
                             // Fetch the updated user profile from the database
                             val updatedUserProfile = withContext(Dispatchers.IO) {
                                 userProfileDao.getAllUserProfiles()
@@ -438,7 +429,6 @@ fun ProfileScreen(
                     Log.e("DBG", "Error updating user profile: ${e.message}", e)
                 }
             }
-
             LaunchedEffect(apiSelectedLanguage) {
                 coroutineScope.launch {
                     val updatedUserProfile = withContext(Dispatchers.IO) {
@@ -447,9 +437,7 @@ fun ProfileScreen(
                     selectedUserProfile = updatedUserProfile
                 }
             }
-
             // Display the list of languages from the updated user profile
-            // Set a fixed height for the list
             Box(modifier = Modifier.height(100.dp)) {
                 // Use LazyColumn to display the list of languages
                 LazyColumn {
@@ -508,6 +496,11 @@ fun ProfileScreen(
         }
     }
 
+    /**
+     * This function is responsible for displaying the initial screen where the user can enter their name and select a language to learn.
+     * It validates the user's input and creates a new user profile in the database.
+     * It also updates the selected language in the view model.
+     */
     @Composable
     fun showNameScreen(userProfileViewModel: UserProfileViewModel) {
         onBottomBarVisibilityChanged(false)
@@ -555,7 +548,7 @@ fun ProfileScreen(
 
             Box(
                 modifier = Modifier
-                    .height(190.dp) // Set the height of the list
+                    .height(190.dp)
             ) {
                 LazyColumn {
                     items(LANGUAGES.keys.toList()) { language ->
@@ -631,7 +624,6 @@ fun ProfileScreen(
                         created = 1
 
                         coroutineScope.launch {
-                            // Create a new UserProfile
                             val newUserProfile = UserProfile(
                                 username = username,
                                 currentLanguage = selectedLanguage ?: Language(
@@ -651,7 +643,9 @@ fun ProfileScreen(
                             selectedUserProfile = newUserProfile
                             // Update language in view model
                             userProfileViewModel.viewModelScope.launch {
-                                userProfileViewModel.updateLanguage(selectedLanguage?.name ?: "English")
+                                userProfileViewModel.updateLanguage(
+                                    selectedLanguage?.name ?: "English"
+                                )
                             }
                         }
                     }
@@ -666,7 +660,6 @@ fun ProfileScreen(
             }
         }
     }
-
     if (created == 1) {
         showProfile()
     } else if (username.isEmpty() || isEditingUsername) {
@@ -675,7 +668,13 @@ fun ProfileScreen(
 
 }
 
-
+/**
+ * This function updates the languages of a user profile. If the selected language already exists in the
+ * user's languages, it resets the exercises done and points earned for that language. If the selected
+ * language does not exist in the user's languages, it adds the language to the list.
+ * @param userProfile The UserProfile to update.
+ * @param selectedLanguage The selected language.
+ */
 fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     val existingLanguage = userProfile.languages.find { it.name == selectedLanguage }
     val countryCode = LANGUAGES[selectedLanguage] ?: ""
@@ -691,6 +690,12 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
 
 }
 
+/**
+ * This is a composable function that displays a language item. It is a row with the name of the language.
+ * When the row is clicked, it calls the onClick function.
+ * @param language The Language to display.
+ * @param onClick The function to call when the row is clicked.
+ */
 @Composable
 fun LanguageItem(language: Language, onClick: () -> Unit) {
     Row(

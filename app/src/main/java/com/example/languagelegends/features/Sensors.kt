@@ -8,10 +8,13 @@ import android.hardware.SensorManager
 import androidx.compose.runtime.mutableStateOf
 import kotlin.math.sqrt
 
+/**
+ * This class helps in handling sensor events, specifically for accelerometer sensor.
+ * It provides functionalities to detect device tilt and shake.
+ */
 class SensorHelper(private val context: Context) : SensorEventListener {
     private val shakeTreshold = 15.0f
 
-    //get the sensor manager from the system services
     private val sensorManager: SensorManager by lazy {
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
@@ -24,7 +27,6 @@ class SensorHelper(private val context: Context) : SensorEventListener {
     // Define a listener for shake events
     private var shakeListener: (() -> Unit)? = null
 
-    // Initialize the accelerometer sensor and register the listener
     init {
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         accelerometer?.let { sensor ->
@@ -46,7 +48,6 @@ class SensorHelper(private val context: Context) : SensorEventListener {
                 val acceleration = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
 
 
-                // If the acceleration is greater than the threshold, invoke the shake listener
                 if (acceleration > shakeTreshold) {
                     shakeListener?.invoke()
                 }
@@ -54,7 +55,6 @@ class SensorHelper(private val context: Context) : SensorEventListener {
         }
     }
 
-    // Handle accuracy changes (currently does nothing)
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // Do nothing for now
     }
