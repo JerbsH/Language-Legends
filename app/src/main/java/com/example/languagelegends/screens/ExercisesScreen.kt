@@ -78,7 +78,11 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
-
+/**
+ * This is the main screen for the exercises. It displays different exercises based on the currentExercise state.
+ * The exercises include WordScrambleExercise, SecondExercise, and TiltExercise.
+ * Each exercise updates the user's points and shows a dialog when completed.
+ */
 // Move points to a constant value
 private const val POINTS_PER_EXERCISE = 10
 
@@ -177,7 +181,11 @@ fun ExercisesScreen(
     }
 }
 
-
+/**
+ * This exercise displays a scrambled word and the user has to unscramble it.
+ * The word is scrambled again when the device is shaken.
+ * The user's input is checked against the original word and feedback is provided.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordScrambleExercise(
@@ -403,6 +411,10 @@ fun WordScrambleExercise(
     }
 }
 
+/**
+ * This exercise displays a list of words and the user has to input the correct translations.
+ * The user's input is checked against the correct translations and feedback is provided.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondExercise(
@@ -557,7 +569,11 @@ fun SecondExercise(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-
+/**
+ * This exercise displays a word and two possible translations.
+ * The user has to tilt the device to select the correct translation.
+ * The device's tilt is checked and feedback is provided.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TiltExercise(
@@ -830,7 +846,9 @@ fun TiltExercise(
     }
 }
 
-// Helper function to update points and move to the next exercise
+/**
+ * Helper function to update the user's points and move to the next exercise.
+ */
 suspend fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     points: Int,
@@ -857,6 +875,10 @@ suspend fun updatePointsAndProceed(
     }
     return userProfile
 }
+
+/**
+ * Helper function to translate a list of words using the provided TranslateAPI.
+ */
 suspend fun translateWords(
     wordList: List<String>,
     selectedLanguage: String,
