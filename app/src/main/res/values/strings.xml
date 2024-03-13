@@ -71,6 +71,7 @@
     <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
     <string name="exercise_3">Translation Exercise</string>
     <string name="exercise3_guide">Tilt your phone to the left or right to select the correct translation of the displayed word.</string>
+    <string name="next_exercise">Next exercise</string>
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Select Language</string>
@@ -78,10 +79,6 @@
     <string name="incorrect_answer_try_again">Incorrect answer. Try again!</string>
     <string name="language_selection">Language Selection</string>
     <string name="AIanswer">answer…</string>
-
-
-
-
 
 
 </resources>
