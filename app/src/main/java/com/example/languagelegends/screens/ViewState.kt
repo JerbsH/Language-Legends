@@ -3,7 +3,8 @@ package com.example.languagelegends.screens
 import androidx.lifecycle.ViewModel
 
 class ViewState: ViewModel() {
-    private var completedExercises: Int = 0
+
+    internal var completedExercises: Int = 0
     private var currentLevel: Int = 1
 
     fun getCompletedExercises(): Int {

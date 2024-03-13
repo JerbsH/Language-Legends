@@ -76,6 +76,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
+import com.example.languagelegends.OnCompleteExercise
 
 /**
  * This is the main screen for the exercises. It displays different exercises based on the currentExercise state.
@@ -115,15 +116,16 @@ fun ExercisesScreen(
 
     ) {
         // Display the appropriate exercise based on the currentExercise state
-        when (viewState.getCurrentLevel()) {
+        when (currentExercise) {
             1,4,7 -> {
                 WordScrambleExercise(
                     onNextExercise = {
+                        currentExercise++
                     },
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-                    viewState = viewState
+                    viewState = viewState,
                     aiChatViewModel = aiChatViewModel,
                     translateAPI = translateAPI,
                     selectedLanguage = apiSelectedLanguage // Pass the selected language
@@ -133,10 +135,11 @@ fun ExercisesScreen(
             2,5,8 -> {
                 SecondExercise(
                     onNextExercise = {
+                        currentExercise++
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    viewState = viewState
+                    viewState = viewState,
                     translateAPI = translateAPI,
                     selectedLanguage = apiSelectedLanguage
                 )
@@ -203,15 +206,6 @@ fun WordScrambleExercise(
     selectedLanguage: String, 
     viewState: ViewState
 ) {
-  val wordList = remember {
-        listOf(
-            "apple",
-            "banana",
-            "orange",
-            "grape",
-            "strawberry"
-        )
-    }
 
     // State to control the visibility of the dialog
     var showDialog by remember { mutableStateOf(false) }
@@ -374,10 +368,8 @@ fun WordScrambleExercise(
                 // Display feedback based on user input
                 if (userInput.isNotEmpty()) {
                     Text(
-                        text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
-                            id = R.string.keep_trying
-                        ),
-                        color = if (isCorrect) Color.Black else Color.Red,
+                        text = if (!isCorrect) stringResource(id = R.string.keep_trying) else "",
+                        color = Color.Red,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -389,8 +381,8 @@ fun WordScrambleExercise(
                         userProfileViewModel.viewModelScope.launch {
                             val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
                                 viewState.completeExercise()
-                                updatePointsAndProceed(userProfileDao, points, true)
-                            } else updatePointsAndProceed(userProfileDao, points)
+                                updatePointsAndProceed(userProfileDao, points, true, userProfileViewModel)
+                            } else updatePointsAndProceed(userProfileDao, points, false, userProfileViewModel)
                             userProfile?.let {
                                 showDialog = true
                                 }
@@ -555,7 +547,7 @@ fun SecondExercise(
                             val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
                                 viewState.completeExercise()
                                 updatePointsAndProceed(userProfileDao, points, true, userProfileViewModel)
-                            } else updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            } else updatePointsAndProceed(userProfileDao, points, true, userProfileViewModel)
                             
                             userProfile?.let {
                                 showDialog = true
@@ -605,7 +597,7 @@ fun TiltExercise(
     userProfileDao: UserProfileDao,
     userProfileViewModel: UserProfileViewModel = viewModel(),
     translateAPI: TranslateAPI,
-    selectedLanguage: String // Pass the selected language
+    selectedLanguage: String,
     viewState: ViewState
 
 ) {
@@ -681,7 +673,7 @@ fun TiltExercise(
                             val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
                                 viewState.completeExercise()
                                 updatePointsAndProceed(userProfileDao, points, true, userProfileViewModel)
-                            } else updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            } else updatePointsAndProceed(userProfileDao, points, false, userProfileViewModel)
 
                             userProfile?.let {
                                 showDialog = true
@@ -716,7 +708,7 @@ fun TiltExercise(
                             val userProfile = if (viewState.getCompletedExercises() < viewState.getCurrentLevel()) {
                                 viewState.completeExercise()
                                 updatePointsAndProceed(userProfileDao, points, true, userProfileViewModel)
-                            } else updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            } else updatePointsAndProceed(userProfileDao, points, false, userProfileViewModel)
                             userProfile?.let {
                                 showDialog = true
                             }
@@ -880,7 +872,7 @@ fun TiltExercise(
 suspend fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
     points: Int,
-    completedExercise: Boolean = false
+    completedExercise: Boolean = false,
     viewModel: UserProfileViewModel
 ): UserProfile? {
     // Perform database operations within a coroutine

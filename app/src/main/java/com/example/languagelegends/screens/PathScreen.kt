@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.UserProfileViewModel
+import com.example.languagelegends.OnCompleteExercise
 
 /**This function displays the path screen. It shows a list of exercises that the user can navigate to.
  *The exercises are represented as circles on a path.
@@ -163,25 +164,3 @@ fun LanguageExercise(
         }
     }
 
-
-/**
- * This @Composable function displays a counter for the points earned by the user.
- * The counter is displayed as a text inside a column with a semi-transparent black background.
- *
- * @param pointCount The total points earned by the user.
- * @param modifier The modifier to be applied to the Column. It can be used to adjust the layout.
- */
-    @Composable
-    fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
-        Column(
-            modifier = modifier
-                .padding(16.dp)
-                .background(color = Color.Black.copy(alpha = 0.5f))
-        ) {
-            Text(
-                text = "Points: $pointCount",
-                color = Color.White,
-                modifier = Modifier.padding(8.dp)
-            )
-        }
-    }

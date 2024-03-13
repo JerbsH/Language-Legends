@@ -284,7 +284,8 @@ class MainActivity : ComponentActivity() {
                     selectedLanguage,
                     onBottomBarVisibilityChanged,
                     userProfileViewModel,
-                    aiChatViewModel
+                    aiChatViewModel,
+                    viewState,
                 )
             }
             composable(Screen.Chat.route) {
@@ -328,3 +329,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+typealias OnCompleteExercise = () -> Unit

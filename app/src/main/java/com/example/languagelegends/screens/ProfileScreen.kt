@@ -148,11 +148,11 @@ fun ProfileScreen(
             userProfile?.weeklyPoints = weeklyPoints
 
             // Set available levels for current language
-            val currentLanguage = userProfile?.languages?.find { it.name == userProfile.currentLanguage.name }
+            val currentLanguage =
+                userProfile?.languages?.find { it.name == userProfile.currentLanguage.name }
             if (currentLanguage != null) {
                 viewState.setCompletedExercises(currentLanguage.exercisesDone)
-            }
-            else viewState.setCompletedExercises(0)
+            } else viewState.setCompletedExercises(0)
 
 
             // Update the UserProfile in the database
@@ -519,15 +519,6 @@ fun ProfileScreen(
                     })
                 }
             }
-            // Button to clear database at the bottom
-            Button(onClick = {
-                coroutineScope.launch {
-                    userProfileDao.clearDatabase()
-                    selectedUserProfile = null
-                }
-            }) {
-                Text("Clear Database")
-            }
 
         }
     }
@@ -680,7 +671,8 @@ fun ProfileScreen(
                             // Update language in view model
                             userProfileViewModel.viewModelScope.launch {
                                 userProfileViewModel.updateLanguage(
-                                    selectedLanguage?.name ?: "English"
+                                    selectedLanguage?.name ?: "English",
+                                    viewState
                                 )
                             }
                         }
@@ -716,7 +708,7 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     val countryCode = LANGUAGES[selectedLanguage] ?: ""
     if (existingLanguage != null) {
         existingLanguage.exercisesDone = existingLanguage.exercisesDone
-        existingLanguage.pointsEarned =  existingLanguage.pointsEarned
+        existingLanguage.pointsEarned = existingLanguage.pointsEarned
     } else {
         userProfile.languages.add(Language(selectedLanguage, countryCode, 0, 0, 0))
     }
