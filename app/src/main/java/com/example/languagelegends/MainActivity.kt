@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         if (!isNameScreenActive) {
-                            TopBar(userProfileViewModel, aiChatViewModel)
+                            TopBar(userProfileViewModel, aiChatViewModel, viewState)
                         }
                     },
                     bottomBar = {
@@ -121,12 +121,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     /**
      * This function displays the top bar of the application. It includes a button to toggle
      * the language selection menu and an icon button to show the flag of the currently selected language.
      */
     @Composable
-    fun TopBar(userProfileViewModel: UserProfileViewModel, aiChatViewModel: AiChatViewModel) {
+    fun TopBar(userProfileViewModel: UserProfileViewModel, aiChatViewModel: AiChatViewModel, viewState: ViewState) {
         var showLanguageSelection by remember { mutableStateOf(false) }
         val buttonVisible by aiChatViewModel.chatVisible.observeAsState(false)
 
@@ -150,6 +151,7 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
 
+
             ) {
                 IconButton(onClick = { showLanguageSelection = !showLanguageSelection }) {
                     val selectedLanguageIcon = userProfileViewModel.selectedLanguageIcon
@@ -165,7 +167,7 @@ class MainActivity : ComponentActivity() {
                     userProfileViewModel.LanguageSelection(
                         onLanguageSelected = { apiSelectedLanguage ->
                             showLanguageSelection = false
-                            userProfileViewModel.updateLanguage(apiSelectedLanguage)
+                            userProfileViewModel.updateLanguage(apiSelectedLanguage, viewState)
                             userProfileViewModel.selectedLanguageIcon = icon(apiSelectedLanguage)
                         }
                     )
@@ -305,7 +307,8 @@ class MainActivity : ComponentActivity() {
                     onCompleteExercise = {
                         completedExercises++
                         viewState.completeExercise()
-                    }
+                    },
+                    viewState
                 )
             }
             composable(Screen.Path.route) {
@@ -318,11 +321,10 @@ class MainActivity : ComponentActivity() {
                     completedExercises,
                     onCompleteExercise = {
                         viewState.completeExercise()
-                    })
+                    },
+                    viewState
+                )
             }
         }
     }
 }
-
-typealias OnCompleteExercise = () -> Unit
-

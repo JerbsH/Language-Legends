@@ -42,6 +42,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.screens.ViewState
 import com.example.languagelegends.screens.updateUserLanguages
 import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +71,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
      * Updates the language of the user profile.
      * @param newLanguage The new language to be set.
      */
-    fun updateLanguage(newLanguage: String) {
+    fun updateLanguage(newLanguage: String, viewState: ViewState) {
         viewModelScope.launch {
 
             try {
@@ -90,7 +91,13 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                     it.exercisesDone = it.exercisesDone
                 }
 
-                val selectedLanguage =
+                // Find the language from 'languages', if it's present save on top of it
+                val indexSelected = userProfile.languages.indexOfFirst { it.name == userProfile.currentLanguage.name }
+                if (indexSelected != -1) {
+                    userProfile.languages[indexSelected] = currentLanguage
+                }
+
+                var selectedLanguage =
                     Language(
                         name = newLanguage,
                         exercisesDone = 0,
@@ -99,7 +106,16 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                         countryCode = ""
                     )
 
+                val languagesSelected = userProfile.languages.find { it.name == newLanguage }
+                if (languagesSelected != null) {
+                    selectedLanguage = languagesSelected
+                } else {
+                    userProfile.languages.add(selectedLanguage)
+                }
+                viewState.setCompletedExercises(selectedLanguage.exercisesDone)
+
                 userProfile.currentLanguage = selectedLanguage
+
                 updateUserLanguages(userProfile, newLanguage)
                 userProfileDao.updateUserProfile(userProfile)
                 sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()

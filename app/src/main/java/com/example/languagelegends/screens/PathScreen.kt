@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.UserProfileViewModel
 
@@ -38,7 +37,8 @@ fun PathScreen(
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
     totalCompletedExercises: Int,
-    onCompleteExercise: OnCompleteExercise
+    onCompleteExercise: OnCompleteExercise,
+    viewState: ViewState
 ) {
     aiChatViewModel.chatVisible.value = false
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
@@ -56,19 +56,17 @@ fun PathScreen(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
         )
-        PointCounter(
-            pointCount = totalCompletedExercises,
-            modifier = Modifier.align(Alignment.TopStart)
-        )
         exercisePositions.forEachIndexed { index, (x, y) ->
             LanguageExercise(
                 number = index + 1,
                 x = x,
                 y = y,
-                completedExercises = totalCompletedExercises,
+                completedExercises = viewState.getCompletedExercises(),
             ) {
                 // Navigate to the ExercisesScreen when exercise is clicked
-                navController.navigate("exercises/${it}")
+                number ->
+                viewState.setCurrentLevel(number)
+                navController.navigate("exercises/${number}")
             }
         }
     }
@@ -164,6 +162,7 @@ fun LanguageExercise(
             }
         }
     }
+
 
 /**
  * This @Composable function displays a counter for the points earned by the user.

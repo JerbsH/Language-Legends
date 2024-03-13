@@ -91,7 +91,8 @@ fun ProfileScreen(
     apiSelectedLanguage: String,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
     userProfileViewModel: UserProfileViewModel,
-    aiChatViewModel: AiChatViewModel
+    aiChatViewModel: AiChatViewModel,
+    viewState: ViewState
 ) {
     aiChatViewModel.chatVisible.value = false
     var username by remember { mutableStateOf("") }
@@ -145,6 +146,14 @@ fun ProfileScreen(
             created = userProfile?.created ?: 0
             selectedLanguage = userProfile?.currentLanguage
             userProfile?.weeklyPoints = weeklyPoints
+
+            // Set available levels for current language
+            val currentLanguage = userProfile?.languages?.find { it.name == userProfile.currentLanguage.name }
+            if (currentLanguage != null) {
+                viewState.setCompletedExercises(currentLanguage.exercisesDone)
+            }
+            else viewState.setCompletedExercises(0)
+
 
             // Update the UserProfile in the database
             withContext(Dispatchers.IO) {
