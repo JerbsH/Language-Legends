@@ -1,16 +1,26 @@
 package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -20,10 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
 fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
@@ -35,29 +49,29 @@ fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChat
     // Load the background image
     val backgroundImage = painterResource(id = com.example.languagelegends.R.drawable.path)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-    ) {
-        Image(
-            painter = backgroundImage,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-        )
-        exercisePositions.forEachIndexed { index, (x, y) ->
-            LanguageExercise(
-                number = index + 1,
-                x = x,
-                y = y,
-                completedExercises = completedExercises,
-            ) {
-                // Navigate to the ExercisesScreen when exercise is clicked
-                navController.navigate("exercises/${it}")
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+        ) {
+            Image(
+                painter = backgroundImage,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+            )
+            exercisePositions.forEachIndexed { index, (x, y) ->
+                LanguageExercise(
+                    number = index + 1,
+                    x = x,
+                    y = y,
+                    completedExercises = completedExercises,
+                ) {
+                    // Navigate to the ExercisesScreen when exercise is clicked
+                    navController.navigate("exercises/${it}")
+                }
             }
         }
     }
-}
 
 val exercisePositions = listOf(
 
