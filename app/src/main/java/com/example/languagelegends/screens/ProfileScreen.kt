@@ -70,6 +70,7 @@ import com.murgupluoglu.flagkit.FlagKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.languagelegends.features.ShowGraph
 
 @Composable
 fun ProfileScreen(
@@ -99,6 +100,20 @@ fun ProfileScreen(
     val imageUri by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
+
+    // Graph functions
+    var graphVisible by remember { mutableStateOf(false) }
+    val points = mutableListOf<Pair<String, Int>>()
+    selectedUserProfile?.languages?.forEach {
+        points.add(Pair(it.name, it.pointsEarned))
+    }
+
+    if (graphVisible) {
+        Log.d("languages", "$points")
+        ShowGraph(points, onDismissRequest = { graphVisible = false })
+    } else {
+        // Show the profile screen
+    }
 
     // Fetch the user profile from the database when the ProfileScreen is shown
     LaunchedEffect(Unit) {
@@ -339,7 +354,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Card(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                onClick = {}
+                onClick = { graphVisible = true }
             ) {
                 Text(
                     modifier = Modifier
@@ -367,10 +382,8 @@ fun ProfileScreen(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-
             // Fetch user profile from the database using a coroutine
             LaunchedEffect(isEditingUsername, username) {
-
                 try {
                     if (!isEditingUsername) {
                         // User not found, check if the database is empty
@@ -407,7 +420,6 @@ fun ProfileScreen(
                                     0,
                                     0
                                 ),
-
                                 languagePoints = 0,
                                 created = 1,
                                 pointsEarned = 0
@@ -432,7 +444,6 @@ fun ProfileScreen(
                             selectedUserProfile?.languages?.filter { it.exerciseTimestamp >= oneWeekAgo }
                                 ?.sumOf { it.pointsEarned } ?: 0
                     }
-
                 } catch (e: Exception) {
                     Log.e("DBG", "Error updating user profile: ${e.message}", e)
                 }
@@ -507,6 +518,8 @@ fun ProfileScreen(
         }
     }
 
+    // Show the first screen when the user profile is not created
+    // Makes the
     @Composable
     fun showNameScreen(userProfileViewModel: UserProfileViewModel) {
         onBottomBarVisibilityChanged(false)
@@ -658,7 +671,6 @@ fun ProfileScreen(
     }
 
 }
-
 
 fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     val existingLanguage = userProfile.languages.find { it.name == selectedLanguage }
