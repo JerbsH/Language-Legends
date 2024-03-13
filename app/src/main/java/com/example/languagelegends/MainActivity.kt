@@ -1,7 +1,6 @@
 package com.example.languagelegends
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -272,8 +271,8 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(mapOf<String, String>())
         }
 
-        var completedExercises by remember { mutableIntStateOf(0) }
-        completedExercises = viewState.completedExercises
+        var completedExercises by remember { mutableStateOf(viewState.completedExercises) }
+
 
         androidx.navigation.compose.NavHost(
             navController = navController,
@@ -305,6 +304,10 @@ class MainActivity : ComponentActivity() {
                     selectedLanguage,
                     aiChatViewModel,
                     translateAPI = translateAPI,
+                    onCompleteExercise = {
+                        completedExercises++
+                        viewState.completeExercise()
+                    }
                 )
             }
             composable(Screen.Path.route) {
