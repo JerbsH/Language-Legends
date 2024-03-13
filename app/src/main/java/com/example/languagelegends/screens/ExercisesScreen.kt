@@ -117,7 +117,7 @@ fun ExercisesScreen(
     ) {
         // Display the appropriate exercise based on the currentExercise state
         when (currentExercise) {
-            1,4,7 -> {
+            1 -> {
                 WordScrambleExercise(
                     onNextExercise = {
                         currentExercise++
@@ -132,7 +132,7 @@ fun ExercisesScreen(
                 )
             }
 
-            2,5,8 -> {
+            2 -> {
                 SecondExercise(
                     onNextExercise = {
                         currentExercise++
@@ -145,7 +145,7 @@ fun ExercisesScreen(
                 )
             }
 
-            3,6,9 -> {
+            3 -> {
                 TiltExercise(
                     sensorHelper = SensorHelper(LocalContext.current),
                     onExerciseCompleted = {
