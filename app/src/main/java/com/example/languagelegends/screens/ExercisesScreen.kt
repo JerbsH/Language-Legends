@@ -298,6 +298,9 @@ fun WordScrambleExercise(
                         "orange" -> R.drawable.orange
                         "grape" -> R.drawable.grape
                         "strawberry" -> R.drawable.strawberry
+                        "Pear" -> R.drawable.pear
+                        "Raspberry" -> R.drawable.raspberry
+
                         else -> R.drawable.fruit
                     }
                 // Display the picture of fruits
@@ -714,6 +717,8 @@ fun TiltExercise(
                 "Orange" -> R.drawable.orange
                 "Grape" -> R.drawable.grape
                 "Strawberry" -> R.drawable.strawberry
+                "Pear" -> R.drawable.pear
+                "Raspberry" -> R.drawable.raspberry
                 else -> R.drawable.fruit
             }
         Image(
