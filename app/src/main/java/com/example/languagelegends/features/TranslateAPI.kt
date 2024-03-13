@@ -13,7 +13,6 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 import java.nio.charset.Charset
-import kotlin.coroutines.suspendCoroutine
 
 interface TranslationCallback {
     fun onTranslationResult(result: String)

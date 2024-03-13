@@ -56,15 +56,24 @@ import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
 import com.example.languagelegends.database.UserProfileDao
+import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.SensorHelper
 import com.example.languagelegends.features.TranslateAPI
 import com.example.languagelegends.features.TranslationCallback
 import com.example.languagelegends.features.UserProfileViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
+
 
 // Move points to a constant value
 private const val POINTS_PER_EXERCISE = 10
@@ -74,27 +83,14 @@ fun ExercisesScreen(
     navController: NavController,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
-    selectedLanguage: String,
-    translateAPI: TranslateAPI,
-
+    translateAPI: TranslateAPI
 ) {
     var currentExercise by remember { mutableIntStateOf(1) }
 
     // Define userProfileDao and exerciseTimestamp here
     val context = LocalContext.current
     val userProfileDao = DatabaseProvider.getDatabase(context).userProfileDao()
-
-    val translatedWords by remember(selectedLanguage) {
-        mutableStateOf(mapOf<String, String>())
-    }
-
-    // Translate the words for each exercise
-    LaunchedEffect(Unit) {
-        if (translatedWords.isEmpty()) {
-            translateWordsForExercises(selectedLanguage, translateAPI, translatedWords as MutableMap<String, String>)
-        }
-    }
-    // val exerciseTimestamp = System.currentTimeMillis()
+    val exerciseTimestamp = System.currentTimeMillis()
 
     //Define the layout for the exercises
     Column(
@@ -103,8 +99,8 @@ fun ExercisesScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
 
+    ) {
         // Display the appropriate exercise based on the currentExercise state
         when (currentExercise) {
             1 -> {
@@ -115,9 +111,9 @@ fun ExercisesScreen(
                     onGoBack = { navController.navigate("path") },
                     sensorHelper = SensorHelper(LocalContext.current),
                     userProfileDao = userProfileDao,
-                    selectedLanguage = selectedLanguage,
+                    aiChatViewModel = aiChatViewModel,
                     translateAPI = translateAPI,
-                    translatedWords = translatedWords
+                    selectedLanguage = apiSelectedLanguage // Pass the selected language
                 )
             }
 
@@ -128,8 +124,7 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    translateAPI = translateAPI,
-                    selectedLanguage = selectedLanguage
+                    //aiChatViewModel = aiChatViewModel // Pass the aiChatViewModel instance
                 )
             }
 
@@ -141,8 +136,7 @@ fun ExercisesScreen(
                     },
                     onGoBack = { navController.navigate("path") },
                     userProfileDao = userProfileDao,
-                    translateAPI = translateAPI,
-                    selectedLanguage = selectedLanguage
+                    //aiChatViewModel = aiChatViewModel // Pass the aiChatViewModel instance
                 )
             }
             // Add more exercises as needed
@@ -163,191 +157,234 @@ fun ExercisesScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordScrambleExercise(
-    userProfileViewModel: UserProfileViewModel = viewModel(),
-    //translationAPI: TranslateAPI = TranslateAPI(LocalContext.current)
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
-    sensorHelper: SensorHelper,
+    sensorHelper: SensorHelper, // Pass the sensor helper instance
     userProfileDao: UserProfileDao,
-    selectedLanguage: String,
-    translatedWords: Map<String, String>,
-    translateAPI: TranslateAPI
-
-
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    aiChatViewModel: AiChatViewModel,
+    translateAPI: TranslateAPI,
+    selectedLanguage: String // Add selectedLanguage parameter
 ) {
+    // Define wordList outside of LaunchedEffect
+    val wordList = listOf("apple", "banana", "orange", "grape", "strawberry")
+    var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
 
-    // Get a random translated word
-    val currentWord = remember(translatedWords) {
-        if (translatedWords.isNotEmpty()) {
-            translatedWords.values.random()
-        } else {
-            // Return a default value or null if the map is empty
-            null
-        }
-    }
-    // Only display the exercise if currentWord is not null
-    if (currentWord != null) {
-        // ...
-    } else {
-        // Display a loading indicator or a message to the user
-        Text("Loading translations...")
-    }
-    // List of words for the exercise
-    val wordList = remember(translatedWords) {
-        listOf(
-            "apple",
-            "banana",
-            "orange",
-            "grape",
-            "strawberry"
-        ).map { translatedWords[it] ?: it }
-    }
+    fun translateWords(
+        wordList: List<String>,
+        selectedLanguage: String,
+        translateAPI: TranslateAPI
+    ): List<String> {
+        val transWords = mutableListOf<String>()
 
-    // State to hold the shuffled letters of the current word
-    var shuffledLetters by remember {
-        mutableStateOf(
-            currentWord?.toCharArray()?.toList()?.shuffled()
-        )
-    }
+        val languages = LANGUAGES
+        val selectedLang = languages[selectedLanguage] ?: "EN"
+        Log.d("DBG", "Selected language: $selectedLang")
+        Log.d("DBG", "Selected language: $selectedLanguage")
 
-    // Ensure the shuffled word is never the same as the original word
-    while (shuffledLetters?.joinToString("") == currentWord) {
-        shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
-    }
+        Log.d("DBG", "Translation language: $selectedLang")
+        // Launch a coroutine to perform the translation asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            val translateJobs = wordList.map { word ->
+                async {
+                    suspendCoroutine { continuation ->
+                        translateAPI.translate(
+                            word,
+                            selectedLang,
+                            object : TranslationCallback {
+                                override fun onTranslationResult(result: String) {
+                                    continuation.resume(result)
+                                }
 
-    // Register shake detection when the composable is launched
-    LaunchedEffect(Unit) {
-        sensorHelper.setShakeListener {
-            // Shuffle the letters when the device is shaken
-            shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
-            // Ensure the shuffled word is never the same as the original word
-            while (shuffledLetters?.joinToString("") == currentWord) {
-                shuffledLetters = currentWord?.toCharArray()?.toList()?.shuffled()
-            }
-        }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            // Unregister sensor listener when the composable is disposed
-            sensorHelper.unregisterSensorListener()
-        }
-    }
-
-    // State to track user input for the unscrambled word
-    var userInput by remember { mutableStateOf("") }
-
-    // State to track if the user's input is correct
-    var isCorrect by remember { mutableStateOf(false) }
-
-    val points = POINTS_PER_EXERCISE
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { Text(text = stringResource(id = R.string.exercise_1)) },
-            navigationIcon = {
-                IconButton(onClick = { onGoBack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                                override fun onTranslationError(error: String) {
+                                    continuation.resumeWithException(RuntimeException("Translation error: $error"))
+                                }
+                            })
+                    }
                 }
             }
-        )
+
+            // Wait for all translation jobs to complete
+            val results = translateJobs.awaitAll()
+
+            // Add the results to the translatedWords list
+            transWords.addAll(results)
+
+            Log.d("DBG", "Translated words: $transWords")
+        }
+        return transWords
+    }
+    // Call translateWords function inside LaunchedEffect
+    LaunchedEffect(wordList, selectedLanguage, translateAPI) {
+        translatedWords = translateWords(wordList, selectedLanguage, translateAPI)
+    }
+    if (translatedWords.isEmpty()) {
+        Column(Modifier.fillMaxWidth()) {
+            Text(
+                text = "Loading translations...",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 16.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+    } else {
+        // Randomly select a word from the list
+        val currentWord = remember {
+            Log.d("DBG", "Translated words: $translatedWords")
+            if (translatedWords.isNotEmpty()) {
+                translatedWords.random()
+            } else {
+                wordList.random()
+            }
+        }
+
+        Log.d("DBG", "Current word: $currentWord")
+        // State to hold the shuffled letters of the current word
+        var shuffledLetters by remember {
+            mutableStateOf(
+                currentWord.toCharArray().toList().shuffled()
+            )
+        }
+
+        // Ensure the shuffled word is never the same as the original word
+        while (shuffledLetters.joinToString("") == currentWord) {
+            shuffledLetters = currentWord.toCharArray().toList().shuffled()
+        }
+
+        // Register shake detection when the composable is launched
+        LaunchedEffect(Unit) {
+            sensorHelper.setShakeListener {
+                // Shuffle the letters when the device is shaken
+                shuffledLetters = currentWord.toCharArray().toList().shuffled()
+                // Ensure the shuffled word is never the same as the original word
+                while (shuffledLetters.joinToString("") == currentWord) {
+                    shuffledLetters = currentWord.toCharArray().toList().shuffled()
+                }
+            }
+        }
+        DisposableEffect(Unit) {
+            onDispose {
+                // Unregister sensor listener when the composable is disposed
+                sensorHelper.unregisterSensorListener()
+            }
+        }
+
+        // State to track user input for the unscrambled word
+        var userInput by remember { mutableStateOf("") }
+
+        // State to track if the user's input is correct
+        var isCorrect by remember { mutableStateOf(false) }
+
+        val points = POINTS_PER_EXERCISE
 
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display the hint
-            Text(
-                text = stringResource(id = R.string.shuffle_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            val image =
-                when (currentWord) {
-                    "apple" -> R.drawable.apple
-                    "banana" -> R.drawable.banana
-                    "orange" -> R.drawable.orange
-                    "grape" -> R.drawable.grape
-                    "strawberry" -> R.drawable.strawberry
-                    else -> R.drawable.fruit
+            TopAppBar(
+                title = { Text(text = stringResource(id = R.string.exercise_1)) },
+                navigationIcon = {
+                    IconButton(onClick = { onGoBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                    }
                 }
-            // Display the picture of fruits
-            Image(
-                painter = painterResource(id = image),
-                contentDescription = "Fruits",
+            )
+
+            Column(
                 modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 16.dp)
-            )
-            Text(
-                text = stringResource(id = R.string.unscramble_word),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Display the shuffled letters
-            Text(
-                text = shuffledLetters?.joinToString(separator = " ") ?: "",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Text field for user input
-            OutlinedTextField(
-                value = userInput,
-                onValueChange = { userInput = it },
-                label = { Text(text = stringResource(id = R.string.your_answer)) },
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Check if the user input matches the original word
-            isCorrect = userInput.equals(currentWord, ignoreCase = true)
-
-            // Display feedback based on user input
-            if (userInput.isNotEmpty()) {
+                // Display the hint
                 Text(
-                    text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
-                        id = R.string.keep_trying
-                    ),
-                    color = if (isCorrect) Color.Black else Color.Red,
+                    text = stringResource(id = R.string.shuffle_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+
+                val image =
+                    when (currentWord) {
+                        "apple" -> R.drawable.apple
+                        "banana" -> R.drawable.banana
+                        "orange" -> R.drawable.orange
+                        "grape" -> R.drawable.grape
+                        "strawberry" -> R.drawable.strawberry
+                        else -> R.drawable.fruit
+                    }
+                // Display the picture of fruits
+                Image(
+                    painter = painterResource(id = image),
+                    contentDescription = "Fruits",
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(bottom = 16.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.unscramble_word),
                     style = MaterialTheme.typography.bodyMedium
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Display the shuffled letters
+                Text(
+                    text = shuffledLetters.joinToString(separator = " "),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Text field for user input
+                OutlinedTextField(
+                    value = userInput,
+                    onValueChange = { userInput = it },
+                    label = { Text(text = stringResource(id = R.string.your_answer)) },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Check if the user input matches the original word
+                isCorrect = userInput.equals(currentWord, ignoreCase = true)
+
+                // Display feedback based on user input
+                if (userInput.isNotEmpty()) {
+                    Text(
+                        text = if (isCorrect) stringResource(id = R.string.correct) else stringResource(
+                            id = R.string.keep_trying
+                        ),
+                        color = if (isCorrect) Color.Black else Color.Red,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // Continue button (enabled only if the answer is correct)
+                Button(
+                    onClick = {
+                        if (isCorrect) {
+                            updatePointsAndProceed(
+                                userProfileDao,
+                                onNextExercise,
+                                points,
+                                userProfileViewModel
+                            )
+                        }
+                    },
+                    enabled = isCorrect,
+                    modifier = Modifier.padding(bottom = 16.dp)
+
+                ) {
+                    Text(text = stringResource(id = R.string.ready))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            // Continue button (enabled only if the answer is correct)
-            Button(
-                onClick = {
-                    if (isCorrect) {
-                        updatePointsAndProceed(
-                            userProfileDao,
-                            onNextExercise,
-                            points,
-                            userProfileViewModel
-                        )
-                    }
-                },
-                enabled = isCorrect,
-                modifier = Modifier.padding(bottom = 16.dp)
-
-            ) {
-                Text(text = stringResource(id = R.string.ready))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
+
 }
 
 
@@ -357,9 +394,7 @@ fun SecondExercise(
     onNextExercise: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel(),
-    selectedLanguage: String,
-    translateAPI: TranslateAPI
+    userProfileViewModel: UserProfileViewModel = viewModel()
 ) {
     // List of languages and corresponding countries
     val languageCountryPairs = remember {
@@ -369,23 +404,6 @@ fun SecondExercise(
             "French" to "France",
             "German" to "Germany",
         )
-    }
-
-    // Translate the language names
-    languageCountryPairs.forEach { (language, _) ->
-        translateAPI.translate(
-            language,
-            selectedLanguage,
-            object : TranslationCallback {
-                override fun onTranslationResult(result: String) {
-                    // Use the translated language in your exercise
-                    Log.d("DBG", "Translation result: $result")
-                }
-
-                override fun onTranslationError(error: String) {
-                    Log.e("DBG", "Translation error: $error")
-                }
-            })
     }
 
     // State to track user input for the translations
@@ -502,11 +520,8 @@ fun TiltExercise(
     onExerciseCompleted: () -> Unit,
     onGoBack: () -> Unit,
     userProfileDao: UserProfileDao,
-    userProfileViewModel: UserProfileViewModel = viewModel(),
-    translateAPI: TranslateAPI,
-    selectedLanguage: String,
-
-    ) {
+    userProfileViewModel: UserProfileViewModel = viewModel()
+) {
     // Define the vocabulary pairs (English word, correct translation, wrong translation)
     val vocabulary = remember {
         listOf(
@@ -516,23 +531,6 @@ fun TiltExercise(
             Triple("Grape", "Uva", "Banana"),
             Triple("Strawberry", "Fresa", "Tomate")
         )
-    }
-
-    // Translate the words in the vocabulary
-    vocabulary.forEach { (word, _, _) ->
-        translateAPI.translate(
-            word,
-            selectedLanguage,
-            object : TranslationCallback {
-                override fun onTranslationResult(result: String) {
-                    // Use the translated word in your exercise
-                    Log.d("DBG", "Translation result: $result")
-                }
-
-                override fun onTranslationError(error: String) {
-                    Log.e("DBG", "Translation error: $error")
-                }
-            })
     }
 
     // Track the current item being displayed
@@ -737,34 +735,6 @@ fun TiltExercise(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
-    }
-}
-
-// Helper function to translate words for all exercises
-// Helper function to translate words for all exercises
-fun translateWordsForExercises(
-    selectedLanguage: String,
-    translationAPI: TranslateAPI,
-    translatedWords: MutableMap<String, String>
-) {
-    // Collect all words from all exercises
-    val words = listOf(
-        listOf("apple", "banana", "orange", "grape", "strawberry"),
-        listOf("Finnish", "Spanish", "French", "German"),
-        listOf("Apple", "Banana", "Orange", "Grape", "Strawberry")
-    ).flatten()
-
-    // Translate words in bulk
-    words.forEach { word ->
-        translationAPI.translate(word, selectedLanguage, object : TranslationCallback {
-            override fun onTranslationResult(result: String) {
-                translatedWords[word] = result
-            }
-
-            override fun onTranslationError(error: String) {
-                Log.e("ExerciseTranslation", "Translation error: $error")
-            }
-        })
     }
 }
 

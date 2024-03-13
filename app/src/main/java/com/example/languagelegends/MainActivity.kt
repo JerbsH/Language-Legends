@@ -1,6 +1,7 @@
 package com.example.languagelegends
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -67,11 +68,9 @@ class MainActivity : ComponentActivity() {
                 var isNameScreenActive by remember { mutableStateOf(false) }
                 val userProfileViewModel: UserProfileViewModel = viewModel()
 
-
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
                     apiSelectedLanguage = newLanguage
                 }
-
 
                 userProfileViewModel.loadSelectedLanguage()
 
@@ -255,7 +254,7 @@ fun NavHost(
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.getInt("exerciseNumber") ?: 1
             onBottomBarVisibilityChanged(false)
-            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, selectedLanguage, translateAPI)
+            ExercisesScreen(navController, apiSelectedLanguage, aiChatViewModel, translateAPI)
         }
         composable(Screen.Path.route) {
             onBottomBarVisibilityChanged(true)

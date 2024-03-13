@@ -387,7 +387,6 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
 @Composable
 
 fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
-
     Card(
         modifier = Modifier
             .size(150.dp)
