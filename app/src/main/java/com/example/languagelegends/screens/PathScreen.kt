@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,53 +26,56 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.languagelegends.R
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
+import com.example.languagelegends.database.DatabaseProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
-fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel) {
+fun PathScreen(navController: NavController, apiSelectedLanguage: String, aiChatViewModel: AiChatViewModel, totalCompletedExercises: Int, onCompleteExercise: OnCompleteExercise) {
     aiChatViewModel.chatVisible.value = false
-    val completedExercises by remember { mutableIntStateOf(0) }
     val deviceHeight = LocalConfiguration.current.screenHeightDp.dp * 3
     val scrollState = rememberScrollState(initial = deviceHeight.value.toInt())
 
     // Load the background image
     val backgroundImage = painterResource(id = com.example.languagelegends.R.drawable.path)
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-            Image(
-                painter = backgroundImage,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-            )
-            exercisePositions.forEachIndexed { index, (x, y) ->
-                LanguageExercise(
-                    number = index + 1,
-                    x = x,
-                    y = y,
-                    completedExercises = completedExercises,
-                ) {
-                    // Navigate to the ExercisesScreen when exercise is clicked
-                    navController.navigate("exercises/${it}")
-                }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
+        Image(
+            painter = backgroundImage,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+        )
+        PointCounter(pointCount = totalCompletedExercises, modifier = Modifier.align(Alignment.TopStart))
+
+        exercisePositions.forEachIndexed { index, (x, y) ->
+            LanguageExercise(
+                number = index + 1,
+                x = x,
+                y = y,
+                completedExercises = totalCompletedExercises,
+            ) {
+                // Navigate to the ExercisesScreen when exercise is clicked
+                navController.navigate("exercises/${it}")
             }
         }
     }
@@ -150,5 +157,21 @@ fun LanguageExercise(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun PointCounter(pointCount: Int, modifier: Modifier = Modifier) {
+
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .background(color = Color.Black.copy(alpha = 0.5f))
+    ) {
+        Text(
+            text = "Points: $pointCount",
+            color = Color.White,
+            modifier = Modifier.padding(8.dp)
+        )
     }
 }

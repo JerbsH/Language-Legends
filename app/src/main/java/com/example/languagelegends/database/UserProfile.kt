@@ -16,6 +16,7 @@ data class UserProfile(
     var currentLanguage: Language,
     var languagePoints: Int = 0,
     var exercisesDone: Int? = 0,
+    var completedLevels: Int = 0,
     var image: ByteArray? = null,
     var created: Int?,
 

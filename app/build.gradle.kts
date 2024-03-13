@@ -95,5 +95,6 @@ dependencies {
 
     //FlagIcons
     implementation("com.github.murgupluoglu:flagkit-android:1.0.2")
+    implementation("com.github.PhilJay:MPAndroidChart:3.1.0")
 
 }
