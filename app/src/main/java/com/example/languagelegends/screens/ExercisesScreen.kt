@@ -70,6 +70,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -193,16 +194,27 @@ fun WordScrambleExercise(
     // State to control the visibility of the dialog
     var showDialog by remember { mutableStateOf(false) }
 
-    val wordList = listOf("apple", "banana", "raspberry", "grape", "strawberry")
+    val wordList = listOf("apple", "banana", "raspberry", "grape", "strawberry", "pear")
     var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
     var isLoaded by remember { mutableStateOf(false) }
+
+
+    val toTranslate = listOf(wordList.random())
+    Log.d("DBG", "Word to translate 1: $toTranslate")
+    var word = toTranslate
+    Log.d("DBG", "Word to translate 2: $word")
+    var currentWordEnglish: List<String> by remember { mutableStateOf(emptyList()) }
 
 
     // Call translateWords function inside LaunchedEffect
     LaunchedEffect(wordList, selectedLanguage, translateAPI) {
         val translated = withContext(Dispatchers.IO) {
-            translateWords(wordList, selectedLanguage, translateAPI)
+            translateWords(toTranslate, selectedLanguage, translateAPI)
         }
+        withContext(Dispatchers.IO) {
+            currentWordEnglish = translateWords(word, "EN", translateAPI)
+        }
+        joinAll()
         translatedWords = translated
         isLoaded = true // Set isLoaded to true after translations are loaded
     }
@@ -292,15 +304,14 @@ fun WordScrambleExercise(
                 )
 
                 val image =
-                    when (currentWord) {
+                    when (currentWordEnglish.first()) {
                         "apple" -> R.drawable.apple
                         "banana" -> R.drawable.banana
                         "orange" -> R.drawable.orange
                         "grape" -> R.drawable.grape
                         "strawberry" -> R.drawable.strawberry
-                        "Pear" -> R.drawable.pear
-                        "Raspberry" -> R.drawable.raspberry
-
+                        "pear" -> R.drawable.pear
+                        "raspberry" -> R.drawable.raspberry
                         else -> R.drawable.fruit
                     }
                 // Display the picture of fruits
