@@ -5,6 +5,7 @@
     <string name="profile">Profile</string>
     <string name="chat">Chat</string>
     <string name="path">Path</string>
+    <string name="backButton">Back</string>
 
     <!-- profile -->
     <string name="take_photo">Take Photo</string>
@@ -51,7 +52,10 @@
     <string name="AIchat_send">Send</string>
     <string name="AIwelcometext">Hello, What would you like to ask?</string>
     <string name="AItextfield">Ask…</string>
+    <string name="request_hint">Hint</string>
 
+
+    request_hint
 
     <!-- path -->
     <string name="exercise_1">Word Scramble Exercise</string>
@@ -66,12 +70,16 @@
     <string name="shuffle_hint">Hint: Shake your phone to shuffle the letters again!</string>
     <string name="exercise_3">Translation Exercise</string>
     <string name="exercise3_guide">Tilt your phone to the left or right to select the correct translation of the displayed word.</string>
+
     <string name="exercise_2">Translate the words exercise</string>
     <string name="apple">Apple</string>
     <string name="banana">Banana</string>
     <string name="orange">Orange</string>
     <string name="grape">Grape</string>
     <string name="strawberry">Strawberry</string>
+
+    <string name="next_exercise">Next exercise</string>
+
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Select Language</string>

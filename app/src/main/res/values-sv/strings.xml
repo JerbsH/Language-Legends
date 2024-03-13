@@ -5,6 +5,7 @@
     <string name="profile">Profil</string>
     <string name="chat">Chat</string>
     <string name="path">Väg</string>
+    <string name="backButton">Tillbaka</string>
 
     <!-- profile -->
     <string name="take_photo">Ta bild</string>
@@ -50,6 +51,9 @@
     <string name="AIwelcometext">Hej, Vad skulle du vilja fråga?</string>
     <string name="AItextfield">Fråga…</string>
 
+    <string name="request_hint">Antydan</string>
+
+
     <!-- path -->
     <string name="exercise_1">Ordblandningsövning</string>
     <string name="unscramble_word">"Ångra blandning "</string>
@@ -64,11 +68,15 @@
     <string name="shuffle_hint">Tips: Skaka telefonen för att blanda bokstäverna igen!</string>
     <string name="exercise_3">Översättningsövning</string>
     <string name="exercise3_guide">Luta telefonen åt vänster eller höger för att välja rätt översättning av det visade ordet.</string>
+
     <string name="apple">Äpple</string>
     <string name="banana">Banan</string>
     <string name="orange">Orange</string>
     <string name="grape">Druva</string>
     <string name="strawberry">Jordgubbe</string>
+
+    <string name="next_exercise">Nästa övning</string>
+
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Välj språk</string>

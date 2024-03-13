@@ -1,6 +1,5 @@
 package com.example.languagelegends.screens
 
-import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,139 +50,211 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.Message
-import com.example.languagelegends.features.UserProfileViewModel
-
+/**
+ * This class provides the UI for the chat screen.
+ */
 class ChatScreen {
-
+    /**
+     * This function displays the chat screen based on the current state of the chat.
+     * It switches between free chat and AI chat based on the value of `isFreeChat`.
+     */
     @Composable
-    fun Chats(userProfileViewModel: UserProfileViewModel) {
-        val context = LocalContext.current
-        val application = context.applicationContext as Application
-        val viewModel = AiChatViewModel(application, userProfileViewModel)
-
+    fun Chats(viewModel: AiChatViewModel) {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
-        var isFreeChat by remember { mutableStateOf(false) }
+        val isFreeChat by viewModel.isFreeChat.observeAsState(false)
 
-
-        // Display the chat screen
         Surface {
             if (isFreeChat) {
                 FreeChatScreen(viewModel, viewModel::onFreeChat)
             } else {
                 if (menuVisibility) {
                     CardView(viewModel) {
-                        isFreeChat = true
+                        viewModel.isFreeChat.value = true
                     }
                 } else {
                     AiChat(
                         viewModel,
-                        userProfileViewModel,
                         topic,
                         response,
                         viewModel::onAskMeAQuestion,
                         viewModel::checkAnswer,
+                        viewModel::requestHint
                     )
                 }
             }
         }
+
     }
-
-
+    /**
+     * This function displays the AI chat screen.
+     * It provides the user with options to ask a question, check an answer, and request a hint.
+     */
     @Composable
     fun AiChat(
         viewModel: AiChatViewModel,
-        userProfileViewModel: UserProfileViewModel,
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,
-        onCheckAnswer: () -> Unit
+        onCheckAnswer: () -> Unit,
+        onRequestHint: () -> Unit
     ) {
-        val questionLanguage by viewModel.questionLanguage.observeAsState(initial = "English")
+
+        viewModel.chatVisible.value = true
         val isGeneratingQuestion by viewModel.isGeneratingQuestion.observeAsState(false)
         val resultMessage by viewModel.resultMessage.observeAsState("")
         val isQuestionAsked by viewModel.isQuestionAsked.observeAsState(false)
+        val hintState by viewModel.hint.collectAsState()
+        val keyboardController = LocalSoftwareKeyboardController.current
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Display AI choice based on topic
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                text = stringResource(id = R.string.ai_choice, topic),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+            )
 
-        Column {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // Display AI choice based on topic
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(
-                        id = R.string.ai_choice,
-                        topic
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Button to ask a question
-                Button(onClick = {
+            // Button to ask a question
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                onClick = {
                     onAskMeAQuestion()
-                }) {
-                    Text(text = stringResource(id = R.string.ask_question))
-                }
+                }){
+                Text(text = stringResource(id = R.string.ask_question))
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LocalConfiguration.current.screenHeightDp.dp * 1 / 6),
             ) {
-                // Display AI response
 
+            // Display AI response or loading indicator
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
                 if (isGeneratingQuestion) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 } else {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = if (!response.isNullOrEmpty()) "Translate this to $questionLanguage: $response" else "",
-                        textAlign = TextAlign.Center
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = if (!response.isNullOrEmpty()) "Translate this to ${viewModel.questionAskedLanguage.value}: $response" else "",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
+            }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Text field for user's answer
-                TextField(
-                    value = viewModel.userAnswer.value,
-                    onValueChange = { newValue ->
-                        viewModel.userAnswer.value = newValue
-                    },
-                    label = { Text(stringResource(id = R.string.AIanswer)) },
-                    enabled = isQuestionAsked,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            // Text field for user's answer
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                value = viewModel.userAnswer.value,
+                onValueChange = { newValue ->
+                    viewModel.userAnswer.value = newValue
+                },
+                label = { Text(stringResource(id = R.string.AIanswer)) },
+                enabled = isQuestionAsked,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onCheckAnswer()
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onCheckAnswer()
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
+            )
+
+
+            // Display result message
+            resultMessage?.let {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    text = it,
+                    textAlign = TextAlign.Center,
                 )
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                // Button to check the answer
-                Button(onClick = {
-                    onCheckAnswer()
-                }) {
-                    Text(text = stringResource(id = R.string.check_answer))
+            // Button to request a hint
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                onClick = {
+                    onRequestHint()
                 }
+            ) {
+                Text(text = stringResource(id = R.string.request_hint))
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                resultMessage?.let {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = it,
-                        textAlign = TextAlign.Center
-                    )
-                }
+
+            // Display hint
+            if (hintState.isNotEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    text = stringResource(id = R.string.request_hint) + ": " + hintState,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp,
+                )
             }
+
         }
     }
 }
+/**
+ * This function displays the free chat screen.
+ * It allows the user to input text and displays the AI's responses.
+ */
 @Composable
 fun FreeChatScreen(
     viewModel: AiChatViewModel,
     onFreeChat: (String) -> Unit
 ) {
+
+    viewModel.chatVisible.value = true
     var userInput by remember { mutableStateOf("") }
     val messages by viewModel.messages.observeAsState(emptyList())
     val isGeneratingAnswer by viewModel.isGeneratingQuestion.observeAsState(false)
@@ -216,39 +287,44 @@ fun FreeChatScreen(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
+            // Text field for user's answer
             TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 value = userInput,
                 onValueChange = { newValue ->
                     userInput = newValue
                 },
                 label = { Text(stringResource(id = R.string.AItextfield)) },
+                enabled = !isGeneratingAnswer,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Send
                 ),
-                singleLine = true,
-                enabled = !isGeneratingAnswer,
-                keyboardActions = KeyboardActions(onSend = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                })
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onFreeChat(userInput)
+                        userInput = ""
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            onFreeChat(userInput)
+                            userInput = ""
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(id = R.string.AIchat_send)
+                        )
+                    }
+                }
             )
-
-            IconButton(
-                onClick = {
-                    onFreeChat(userInput)
-                    userInput = ""
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(id = R.string.AIchat_send)
-                )
-            }
         }
 
         if (isGeneratingAnswer) {
@@ -258,15 +334,15 @@ fun FreeChatScreen(
                     .padding(top = 8.dp)
             )
         }
-
-        // Use LaunchedEffect to scroll to the last item when the LazyColumn recomposes
         LaunchedEffect(messages.size) {
             lazyListState.scrollToItem(messages.size)
         }
     }
 }
 
-
+/** This function displays a single chat message in a Card.
+ *The message is aligned to the start or end of the row depending on whether it's from the user or not.
+ */
 @Composable
 fun ChatMessage(message: Message) {
 
@@ -289,10 +365,14 @@ fun ChatMessage(message: Message) {
     }
 }
 
-
-
+/** This function displays a view with several cards, each representing a topic for the AI chat.
+ *When a card is clicked, the corresponding topic is set in the viewModel and the menu visibility is set to false.
+ *It also provides a button for free chat. When this button is clicked,
+ * the topic in the viewModel is cleared and the menu visibility is set to false.
+ */
 @Composable
 fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
+
     // Resolve topic strings
     val coffeeTopic = stringResource(id = R.string.cafe)
     val transportTopic = stringResource(id = R.string.transport)
@@ -300,6 +380,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
     val temperatureTopic = stringResource(id = R.string.weather)
     val schoolTopic = stringResource(id = R.string.school)
     val healthTopic = stringResource(id = R.string.health)
+    viewModel.chatVisible.value = false
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -334,7 +415,7 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
                     viewModel.menuVisibility.value = false
                     onFreeChatClicked()
                 },
-                modifier = Modifier.widthIn(150.dp) // Set a max width
+                modifier = Modifier.widthIn(150.dp)
             ) {
                 Text(text = stringResource(id = R.string.free_chat))
             }
@@ -383,9 +464,11 @@ fun CardView(viewModel: AiChatViewModel, onFreeChatClicked: () -> Unit) {
         }
     }
 }
-
+/** This function creates a single card for a given topic.
+ *The card displays an icon and the topic text. When the card is clicked,
+ *the corresponding topic is set in the viewModel and the menu visibility is set to false.
+*/
 @Composable
-
 fun MakeCard(viewModel: AiChatViewModel, topic: String, iconId: Int) {
     Card(
         modifier = Modifier

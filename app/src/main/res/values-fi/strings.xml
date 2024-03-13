@@ -5,6 +5,7 @@
     <string name="profile">Profiili</string>
     <string name="chat">Keskustelu</string>
     <string name="path">Polku</string>
+    <string name="backButton">Takaisin</string>
 
     <!-- profile -->
     <string name="take_photo">Ota kuva</string>
@@ -50,6 +51,8 @@
     <string name="AIchat_send">Lähetä</string>
     <string name="AIwelcometext">Hei, Mitä haluat kysyä?</string>
     <string name="AItextfield">Kysy…</string>
+    <string name="request_hint">Vihje</string>
+
 
     <!-- path -->
     <string name="exercise_1">Sanat sekaisin peli</string>
@@ -65,11 +68,15 @@
     <string name="shuffle_hint">Vihje: Ravista puhelintasi sekoittaaksesi kirjaimet uudelleen!</string>
     <string name="exercise_3">Käännöstehtävä</string>
     <string name="exercise3_guide">Käännä puhelintasi vasemmalle tai oikealle valitaksesi oikean käännöksen sanasta.</string>
+
     <string name="apple">Omena</string>
     <string name="banana">Banaani</string>
     <string name="orange">Appelsiini</string>
     <string name="grape">Viinirypäle</string>
     <string name="strawberry">Mansikka</string>
+
+    <string name="next_exercise">Seuraava harjoitus</string>
+
 
     <!-- alertdialog, languageselection -->
     <string name="select_language">Valitse Kieli</string>

@@ -48,91 +48,99 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
+/**
+ * This class represents a ViewModel for the UserProfile.
+ * It handles the business logic related to the UserProfile, such as updating the language and loading the selected language.
+ */
 class UserProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val userProfileDao: UserProfileDao =
         DatabaseProvider.getDatabase(application).userProfileDao()
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences("LanguageLegends", Context.MODE_PRIVATE)
 
-    var selectedLanguage by mutableStateOf(
-        sharedPreferences.getString(
-            "selectedLanguage",
-            "English"
-        ) ?: "English"
-    ) // Default language
-    var selectedLanguageIcon by mutableStateOf(icon(selectedLanguage)) // Default language icon
+    var selectedLanguage by mutableStateOf("")
+    var selectedLanguageIcon by mutableStateOf("")
     val selectedLanguageLiveData = MutableLiveData<String>()
 
+    init {
+        loadSelectedLanguage()
+    }
+
+    /**
+     * Updates the language of the user profile.
+     * @param newLanguage The new language to be set.
+     */
     fun updateLanguage(newLanguage: String) {
         viewModelScope.launch {
 
             try {
-
                 val userProfile = withContext(Dispatchers.IO) {
                     userProfileDao.getAllUserProfiles().firstOrNull()
                 }
-                userProfile?.let { profile ->
-                    // Save the current points and exercises done
-                    val currentLanguage = profile.currentLanguage
-                    currentLanguage.let {
-                        it.pointsEarned = it.pointsEarned
-                        it.exercisesDone = it.exercisesDone
-                    }
-                    // Update language icon
-                    selectedLanguageIcon = icon(newLanguage)
-
-                    val selectedLanguage =
-                        Language(
-                            name = newLanguage,
-                            exercisesDone = 0,
-                            pointsEarned = 0,
-                            exerciseTimestamp = System.currentTimeMillis(),
-                            countryCode = ""
-                        )
-
-                    userProfile.currentLanguage = selectedLanguage
-                    updateUserLanguages(userProfile, newLanguage) // Update languages
-                    userProfileDao.updateUserProfile(userProfile)
-                    this@UserProfileViewModel.selectedLanguage = newLanguage
-                    selectedLanguageIcon = icon(newLanguage) // Update language icon
-                    // Save the selected language to SharedPreferences
+                if (userProfile == null) {
+                    Log.e("DBG", "No user profile found")
+                    return@launch
                 }
-                // Save the selected language to SharedPreferences and livedata
+
+                val currentLanguage = userProfile.currentLanguage
+
+                // Save the current points and exercises done
+                currentLanguage.let {
+                    it.pointsEarned = it.pointsEarned
+                    it.exercisesDone = it.exercisesDone
+                }
+
+                val selectedLanguage =
+                    Language(
+                        name = newLanguage,
+                        exercisesDone = 0,
+                        pointsEarned = 0,
+                        exerciseTimestamp = System.currentTimeMillis(),
+                        countryCode = ""
+                    )
+
+                userProfile.currentLanguage = selectedLanguage
+                updateUserLanguages(userProfile, newLanguage)
+                userProfileDao.updateUserProfile(userProfile)
                 sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
-                selectedLanguageLiveData.value = newLanguage
 
                 // Update the ViewModel's selectedLanguage and selectedLanguageIcon
-                selectedLanguage = newLanguage
+                this@UserProfileViewModel.selectedLanguage = newLanguage
                 selectedLanguageIcon = icon(newLanguage)
+                selectedLanguageLiveData.value = newLanguage
             } catch (e: Exception) {
                 Log.e("DBG", "Error updating language: ${e.message}")
             }
         }
     }
 
-    fun loadSelectedLanguage() {
+    /**
+     * Loads the selected language from SharedPreferences.
+     */
+    private fun loadSelectedLanguage() {
         selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
         selectedLanguageIcon = icon(selectedLanguage)
-
     }
 
+    /**
+     * Composable function to display a language selection dialog.
+     * @param onLanguageSelected Callback function to be invoked when a language is selected.
+     */
     @Composable
     fun LanguageSelection(
-        userProfileViewModel: UserProfileViewModel,
         onLanguageSelected: (String) -> Unit
     ) {
         val context = LocalContext.current
         val languages = LANGUAGES
 
         var selectedOption by remember { mutableStateOf(languages.keys.first()) }
-        var isDialogOpen by remember { mutableStateOf(true) } // Add this state to control the dialog visibility
+        var isDialogOpen by remember { mutableStateOf(true) }
 
-        if (isDialogOpen) { // Show the dialog only if isDialogOpen is true
+        if (isDialogOpen) {
             AlertDialog(
                 onDismissRequest = {
                     isDialogOpen = false
-                }, // Dismiss the dialog when outside is clicked
+                },
                 title = { Text(text = stringResource(id = R.string.select_language)) },
                 text = {
                     Box {
@@ -146,12 +154,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                                         .clickable {
                                             if (language != selectedOption) {
                                                 selectedOption = language
-                                                onLanguageSelected(language) // Pass the full language name
-
-                                                // Update language in view model
-                                                userProfileViewModel.viewModelScope.launch {
-                                                    userProfileViewModel.updateLanguage(language)
-                                                }
+                                                onLanguageSelected(language)
                                             }
                                         }) {
                                     Text(
@@ -177,7 +180,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                     TextButton(
                         onClick = {
                             isDialogOpen = false
-                        }, // Dismiss the dialog when the button is clicked
+                        },
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(Color.LightGray)
@@ -190,8 +193,8 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                     }
                 },
                 modifier = Modifier
-                    .fillMaxHeight(0.7f) // 70% of screen height
-                    .fillMaxWidth(0.95f) // 70% of screen width
+                    .fillMaxHeight(0.7f)
+                    .fillMaxWidth(0.95f)
             )
         }
     }
