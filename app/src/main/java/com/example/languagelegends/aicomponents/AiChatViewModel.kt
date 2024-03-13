@@ -98,7 +98,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             val tokenExpirationTime = sharedPreferences.getLong(TOKEN_EXPIRATION_TIME, 0)
 
             if (currentProjectId == null || currentAccessToken == null || currentTime >= tokenExpirationTime) {
-                Log.d("DBG", "Generating new access token and project ID")
                 val (newAccessToken, newProjectId) = generateAccessToken()
                 saveTokenInfo(newAccessToken, newProjectId, currentTime)
             }
@@ -147,7 +146,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
 
     // This function saves the access token, project ID, and token expiration time to SharedPreferences.
     private fun saveTokenInfo(newAccessToken: String, newProjectId: String, currentTime: Long) {
-        Log.d("DBG", "Saving token info")
         val tokenExpirationTime = currentTime + 60 * 60 * 1000 // +1 hour to the current time
         sharedPreferences.edit().apply {
             putString(ACCESS_TOKEN, newAccessToken)
@@ -155,13 +153,10 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             putLong(TOKEN_EXPIRATION_TIME, tokenExpirationTime)
             apply()
         }
-        Log.d("DBG", "Token info saved")
-        Log.d("DBG", "Access token: $newAccessToken")
     }
 
     // This function generates a new access token and project ID.
     private suspend fun generateAccessToken(): Pair<String, String> = withContext(Dispatchers.IO) {
-        Log.d("DBG", "Generating access token")
         val targetScopes = listOf("https://www.googleapis.com/auth/cloud-platform")
 
         val inputStream = application.assets.open(SERVICE_ACCOUNT_KEY_PATH)
@@ -177,8 +172,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         val json = Gson().fromJson(jsonContent, JsonObject::class.java)
         val projectId = json.get("project_id").asString
 
-        Log.d("DBG", "Generated project id: $projectId")
-
         return@withContext Pair(credentials.accessToken.tokenValue, projectId)
     }
 
@@ -190,7 +183,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
             val currentTime = System.currentTimeMillis()
             val tokenExpirationTime = sharedPreferences.getLong(TOKEN_EXPIRATION_TIME, 0)
             if (currentTime >= tokenExpirationTime) {
-                Log.d("DBG", "Token expired, generating new one")
                 initializeVertexAI()
             } else {
                 logRemainingTime(tokenExpirationTime, currentTime)
@@ -210,38 +202,49 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
         return userProfile?.currentLanguage?.countryCode ?: "EN-GB" // default
     }
 
+
+    /**
+     * list of different prompt templates for AI to ask about selected topic
+    **/
+    private fun getPrompts(): List<String> {
+        val topicValue = topic.value ?: ""
+        return listOf(
+            "Give me a short phrase related to $topicValue",
+            "Can you provide a brief statement about $topicValue",
+            "I need a concise sentence about $topicValue",
+            "Please generate a brief expression related to $topicValue"
+        )
+    }
+
+
     /** This function is called when the user asks a question.
      * It executes a text request to the VertexAI instance.
      **/
     fun onAskMeAQuestion() {
         viewModelScope.launch {
-            Log.d("DBG", "Asking question")
             resetHint()
             isQuestionAsked.value = true
             isGeneratingQuestion.postValue(true)
             resultMessage.value = ""
             if (textRequest == null) {
-                Log.e("DBG", "textRequest is not initialized")
                 return@launch
             }
 
             try {
                 withContext(Dispatchers.IO) {
-                    val randomNumber = (1..100).random()
+
+                    val prompts = getPrompts()
+                    // Shuffle the array and select the first prompt
+                    val prompt = prompts.shuffled().first()
 
                     // Send the API call to the AI
-                    val aiResponse = textRequest?.execute(
-                        "Give me a short phrase related to ${topic.value} $randomNumber"
-                    )?.getOrThrow()
+                    val aiResponse = textRequest?.execute(prompt)?.getOrThrow()
+
 
                     val modifiedAiResponse = aiResponse?.substringAfter(": ")
 
-                    Log.d("DBG", "AI response: $modifiedAiResponse")
-
                     // Translate the AI response to the selected language
                     val targetLanguageCode = getSelectedLanguageCountryCode()
-                    Log.d("dbg", "Selected language code: $targetLanguageCode")
-
 
                     translateAPI.translate(
                         modifiedAiResponse,
@@ -298,13 +301,11 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
 
             if (correctAnswer == userAnswerText) {
                 resultMessage.value = correctAnswerString
-                Log.d("DBG", correctAnswerString)
                 userAnswer.value = ""
                 response.value = null
                 resetHint()
             } else {
                 resultMessage.value = incorrectAnswerTryAgainString
-                Log.d("DBG", incorrectAnswerTryAgainString)
             }
         }
     }
@@ -345,7 +346,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
 
     fun onFreeChat(userInput: String) {
         if (userInput.isBlank()) {
-            Log.e("DBG", "User input is empty or contains only whitespace.")
             return
         }
 
@@ -363,7 +363,6 @@ class AiChatViewModel(private val application: Application, userProfileViewModel
                     // Process user input and get AI response
                     val aiResponse = textRequest?.execute(userInput)?.getOrThrow()
                     val modifiedAiResponse = aiResponse?.substringAfter(": ")
-                    Log.d("DBG", "AI response: $modifiedAiResponse")
 
                     // Update UI with AI response
                     modifiedAiResponse?.let {

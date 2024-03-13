@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewModelScope
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.Converters
@@ -630,14 +631,29 @@ fun ProfileScreen(
                         created = 1
 
                         coroutineScope.launch {
-                            selectedUserProfile?.let { userProfile ->
-                                userProfile.created = created
-                                userProfile.currentLanguage =
-                                    selectedLanguage ?: Language("English", countryCode, 0, 0, 0)
-                                userProfileDao.updateUserProfile(userProfile)
+                            // Create a new UserProfile
+                            val newUserProfile = UserProfile(
+                                username = username,
+                                currentLanguage = selectedLanguage ?: Language(
+                                    "English",
+                                    countryCode,
+                                    0,
+                                    0,
+                                    0
+                                ),
+                                weeklyPoints = 0,
+                                created = created,
+                                pointsEarned = 0
+                            )
+                            // Insert the new UserProfile into the database
+                            userProfileDao.insertUserProfile(newUserProfile)
+                            // Update selectedUserProfile
+                            selectedUserProfile = newUserProfile
+                            // Update language in view model
+                            userProfileViewModel.viewModelScope.launch {
+                                userProfileViewModel.updateLanguage(selectedLanguage?.name ?: "English")
                             }
                         }
-
                     }
                 },
                 modifier = Modifier.size(114.dp)

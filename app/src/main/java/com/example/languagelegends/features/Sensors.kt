@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import kotlin.math.sqrt
 
 class SensorHelper(private val context: Context) : SensorEventListener {
-    private val SHAKE_THRESHOLD = 15.0f
+    private val shakeTreshold = 15.0f
 
     //get the sensor manager from the system services
     private val sensorManager: SensorManager by lazy {
@@ -47,7 +47,7 @@ class SensorHelper(private val context: Context) : SensorEventListener {
 
 
                 // If the acceleration is greater than the threshold, invoke the shake listener
-                if (acceleration > SHAKE_THRESHOLD) {
+                if (acceleration > shakeTreshold) {
                     shakeListener?.invoke()
                 }
             }
@@ -60,12 +60,12 @@ class SensorHelper(private val context: Context) : SensorEventListener {
     }
 
     // Check if the device is tilted to the left
-    fun isDeviceTiltedLeft(values: FloatArray): Boolean {
+    private fun isDeviceTiltedLeft(values: FloatArray): Boolean {
         return values[0] < -5.0f
     }
 
     // Check if the device is tilted to the right
-    fun isDeviceTiltedRight(values: FloatArray): Boolean {
+    private fun isDeviceTiltedRight(values: FloatArray): Boolean {
         return values[0] > 5.0f
     }
 

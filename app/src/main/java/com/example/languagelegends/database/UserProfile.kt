@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey
 
 import com.example.languagelegends.features.Language
 
-
 @Entity(tableName = "user_profile")
 data class UserProfile(
     @PrimaryKey(autoGenerate = true)

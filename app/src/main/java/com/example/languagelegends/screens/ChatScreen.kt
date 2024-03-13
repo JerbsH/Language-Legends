@@ -54,16 +54,14 @@ import androidx.compose.ui.unit.sp
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.Message
-import com.example.languagelegends.features.UserProfileViewModel
 
 class ChatScreen {
     @Composable
-    fun Chats(viewModel: AiChatViewModel, userProfileViewModel: UserProfileViewModel) {
+    fun Chats(viewModel: AiChatViewModel) {
         val topic by viewModel.topic.observeAsState("")
         val menuVisibility by viewModel.menuVisibility.observeAsState(true)
         val response by viewModel.response.observeAsState("")
         val isFreeChat by viewModel.isFreeChat.observeAsState(false)
-        val selectedLanguage by remember { userProfileViewModel.selectedLanguageLiveData }.observeAsState("English")
 
         // Display the chat screen
         Surface {
@@ -77,7 +75,6 @@ class ChatScreen {
                 } else {
                     AiChat(
                         viewModel,
-                        selectedLanguage,
                         topic,
                         response,
                         viewModel::onAskMeAQuestion,
@@ -94,7 +91,6 @@ class ChatScreen {
     @Composable
     fun AiChat(
         viewModel: AiChatViewModel,
-        selectedLanguage: String,
         topic: String,
         response: String?,
         onAskMeAQuestion: () -> Unit,

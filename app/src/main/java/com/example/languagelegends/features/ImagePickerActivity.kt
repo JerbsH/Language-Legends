@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,7 +31,6 @@ class ImagePickerActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             // Handle the returned Uri
             if (uri != null) {
-                Log.d("DBG", "Image picked from gallery")
                 val returnIntent = Intent()
                 uri.let {
                     val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
@@ -42,7 +40,6 @@ class ImagePickerActivity : ComponentActivity() {
                 setResult(Activity.RESULT_OK, returnIntent)
                 finish()
             } else {
-                Log.d("DBG", "No image selected from gallery")
                 finish()
             }
         }
@@ -57,7 +54,6 @@ class ImagePickerActivity : ComponentActivity() {
                 setResult(Activity.RESULT_OK, returnIntent)
                 finish()
             } else {
-                Log.d("DBG", "No photo taken")
                 finish()
             }
         }
@@ -66,15 +62,12 @@ class ImagePickerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val username = intent.getStringExtra("username")
-        Log.d("DBG", "Username: $username") // Log the username
-
 
         lifecycleScope.launch {
             // Check if the username exists in the database
             val userProfile = withContext(Dispatchers.IO) {
                 userProfileDao.getAllUserProfiles().firstOrNull { it.username == username }
             }
-            Log.d("DBG", "UserProfile: $userProfile") // Log the user profile
 
 
             if (userProfile != null) {

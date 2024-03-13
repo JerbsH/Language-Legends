@@ -63,9 +63,7 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun updateLanguage(newLanguage: String) {
-        Log.d("DBG", "updateLanguage called")
         viewModelScope.launch {
-            Log.d("DBG", "UserProfileViewModel: Updating language to: $newLanguage")
 
             try {
                 val userProfile = withContext(Dispatchers.IO) {
@@ -98,11 +96,10 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                 userProfileDao.updateUserProfile(userProfile)
                 // Save the selected language to SharedPreferences
                 sharedPreferences.edit().putString("selectedLanguage", newLanguage).apply()
-                Log.d("dbg", "updatelanguage Updated selectedLanguageLiveData to: $newLanguage")
 
                 // Update the ViewModel's selectedLanguage and selectedLanguageIcon
                 this@UserProfileViewModel.selectedLanguage = newLanguage
-                selectedLanguageIcon = icon(newLanguage)
+                selectedLanguageIcon = icon(newLanguage) // Update the selectedLanguageIcon
                 selectedLanguageLiveData.value = newLanguage
             } catch (e: Exception) {
                 Log.e("DBG", "Error updating language: ${e.message}")
@@ -112,7 +109,6 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
 
     private fun loadSelectedLanguage() {
         selectedLanguage = sharedPreferences.getString("selectedLanguage", "English") ?: "English"
-        Log.d("dbg", "UserProfileViewModel: Loaded selected language: $selectedLanguage")
         selectedLanguageIcon = icon(selectedLanguage)
     }
 
@@ -146,7 +142,6 @@ class UserProfileViewModel(application: Application) : AndroidViewModel(applicat
                                             if (language != selectedOption) {
                                                 selectedOption = language
                                                 onLanguageSelected(language) // Pass the full language name
-
                                             }
                                         }) {
                                     Text(

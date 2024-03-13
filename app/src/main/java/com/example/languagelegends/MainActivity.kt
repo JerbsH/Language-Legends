@@ -1,7 +1,6 @@
 package com.example.languagelegends
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -71,7 +70,6 @@ class MainActivity : ComponentActivity() {
 
 
                 userProfileViewModel.selectedLanguageLiveData.observe(this@MainActivity) { newLanguage ->
-                    Log.d("DBG", "MainActivity: Observed new language: $newLanguage")
                     apiSelectedLanguage = newLanguage
 
                 }
@@ -112,13 +110,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TopBar(userProfileViewModel: UserProfileViewModel, AiChatViewModel: AiChatViewModel) {
+fun TopBar(userProfileViewModel: UserProfileViewModel, aiChatViewModel: AiChatViewModel) {
     var showLanguageSelection by remember { mutableStateOf(false) }
-    val buttonVisible by AiChatViewModel.chatVisible.observeAsState(false)
+    val buttonVisible by aiChatViewModel.chatVisible.observeAsState(false)
 
     fun toggle() {
-        AiChatViewModel.isFreeChat.value = false
-        AiChatViewModel.menuVisibility.value = true
+        aiChatViewModel.isFreeChat.value = false
+        aiChatViewModel.menuVisibility.value = true
     }
 
     Box(
@@ -259,7 +257,7 @@ fun NavHost(
         }
         composable(Screen.Chat.route) {
             onBottomBarVisibilityChanged(true)
-            ChatScreen().Chats(aiChatViewModel, userProfileViewModel)
+            ChatScreen().Chats(aiChatViewModel)
         }
         composable(
             route = "exercises/{exerciseNumber}",

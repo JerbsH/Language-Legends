@@ -9,17 +9,6 @@ import android.graphics.BitmapFactory
 import com.example.languagelegends.features.Language
 
 class Converters {
-/*
-    @TypeConverter
-    fun fromLanguageList(value: String?): List<Language>? {
-        val listType = object : TypeToken<List<Language>>() {}.type
-        return Gson().fromJson(value, listType)
-    }
-
-    @TypeConverter
-    fun toLanguageList(list: List<Language>?): String? {
-        return Gson().toJson(list)
-    }*/
 
     private val gson = Gson()
 
