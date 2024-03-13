@@ -201,7 +201,6 @@ fun WordScrambleExercise(
 
     val points = POINTS_PER_EXERCISE
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
