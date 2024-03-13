@@ -706,8 +706,8 @@ fun updateUserLanguages(userProfile: UserProfile, selectedLanguage: String) {
     val existingLanguage = userProfile.languages.find { it.name == selectedLanguage }
     val countryCode = LANGUAGES[selectedLanguage] ?: ""
     if (existingLanguage != null) {
-        existingLanguage.exercisesDone = 0
-        existingLanguage.pointsEarned = 0
+        existingLanguage.exercisesDone = existingLanguage.exercisesDone
+        existingLanguage.pointsEarned = existingLanguage.pointsEarned
     } else {
         userProfile.languages.add(Language(selectedLanguage, countryCode, 0, 0, 0))
     }
