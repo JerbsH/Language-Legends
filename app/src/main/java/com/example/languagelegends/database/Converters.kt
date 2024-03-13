@@ -57,8 +57,8 @@ class Converters {
      */
     @TypeConverter
     fun fromBitmap(bitmap: Bitmap?): ByteArray? {
-        val maxSize = 1024 * 1024
-        var quality = 100
+        val maxSize = 720 * 720
+        var quality = 80
         val stream = ByteArrayOutputStream()
         bitmap?.compress(Bitmap.CompressFormat.JPEG, quality, stream)
         while (stream.toByteArray().size > maxSize) {

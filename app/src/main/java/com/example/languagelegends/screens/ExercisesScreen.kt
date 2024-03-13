@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,9 +54,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.R
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.database.DatabaseProvider
+import com.example.languagelegends.database.UserProfile
 import com.example.languagelegends.database.UserProfileDao
 import com.example.languagelegends.features.LANGUAGES
 import com.example.languagelegends.features.SensorHelper
@@ -78,12 +81,14 @@ import kotlin.random.Random
 // Move points to a constant value
 private const val POINTS_PER_EXERCISE = 10
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisesScreen(
     navController: NavController,
     apiSelectedLanguage: String,
     aiChatViewModel: AiChatViewModel,
-    translateAPI: TranslateAPI
+    translateAPI: TranslateAPI,
+    onCompleteExercise: OnCompleteExercise
 ) {
     var currentExercise by remember { mutableIntStateOf(1) }
 
@@ -141,18 +146,36 @@ fun ExercisesScreen(
                     selectedLanguage = apiSelectedLanguage
                 )
             } else -> {
-            Text(
-                text = stringResource(id = R.string.all_exercises),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
+            Column {
+                TopAppBar(
+                    title = { Text(text = "") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate("path") }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                        }
+                    }
+                )
+                Text(
+                    text = stringResource(id = R.string.all_exercises),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.handshake),
+                    contentDescription = "High Five Icon",
+                    modifier = Modifier
+                        .size(100.dp) // adjust the size as needed
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
         }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,6 +189,9 @@ fun WordScrambleExercise(
     translateAPI: TranslateAPI,
     selectedLanguage: String // Pass the selected language
 ) {
+
+    // State to control the visibility of the dialog
+    var showDialog by remember { mutableStateOf(false) }
 
     val wordList = listOf("apple", "banana", "raspberry", "grape", "strawberry")
     var translatedWords: List<String> by remember { mutableStateOf(emptyList()) }
@@ -272,6 +298,9 @@ fun WordScrambleExercise(
                         "orange" -> R.drawable.orange
                         "grape" -> R.drawable.grape
                         "strawberry" -> R.drawable.strawberry
+                        "Pear" -> R.drawable.pear
+                        "Raspberry" -> R.drawable.raspberry
+
                         else -> R.drawable.fruit
                     }
                 // Display the picture of fruits
@@ -323,12 +352,13 @@ fun WordScrambleExercise(
                 Button(
                     onClick = {
                         if (isCorrect) {
-                            updatePointsAndProceed(
-                                userProfileDao,
-                                onNextExercise,
-                                points,
-                                userProfileViewModel
-                            )
+                            // Update points and show dialog
+                            userProfileViewModel.viewModelScope.launch {
+                                val userProfile = updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                                userProfile.let {
+                                    showDialog = true
+                                }
+                            }
                         }
                     },
                     enabled = isCorrect,
@@ -337,9 +367,27 @@ fun WordScrambleExercise(
                 ) {
                     Text(text = stringResource(id = R.string.ready))
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                // Dialog to show when the exercise is completed correctly
+                if (showDialog) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showDialog = false
+                            onNextExercise()
+                        },
+                        title = { Text(text = stringResource(id = R.string.correct)) },
+                        text = { Text(text = stringResource(id = R.string.points_earned, points)) },
+                        confirmButton = {
+                            Button(onClick = {
+                                showDialog = false
+                                onNextExercise()
+                            }) {
+                                Text(text = stringResource(id = R.string.next_exercise))
+                            }
+                        }
+                    )
+                }
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -376,6 +424,9 @@ fun SecondExercise(
     val userTranslations = remember {
         mutableStateOf(List(pairList.size) { "" })
     }
+
+    // State to control the visibility of the dialog
+    var showDialog by remember { mutableStateOf(false) }
 
     val points = POINTS_PER_EXERCISE
 
@@ -459,12 +510,12 @@ fun SecondExercise(
             Button(
                 onClick = {
                     if (isCorrect) {
-                        updatePointsAndProceed(
-                            userProfileDao,
-                            onNextExercise,
-                            points,
-                            userProfileViewModel
-                        )
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile = updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            userProfile?.let {
+                                showDialog = true
+                            }
+                        }
                     }
                 },
                 enabled = isCorrect,
@@ -472,9 +523,27 @@ fun SecondExercise(
             ) {
                 Text(text = stringResource(id = R.string.ready))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            // Dialog to show when the exercise is completed correctly
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDialog = false
+                        onNextExercise()
+                    },
+                    title = { Text(text = stringResource(id = R.string.correct)) },
+                    text = { Text(text = stringResource(id = R.string.points_earned, points)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            showDialog = false
+                            onNextExercise()
+                        }) {
+                            Text(text = stringResource(id = R.string.next_exercise))
+                        }
+                    }
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -537,6 +606,9 @@ fun TiltExercise(
 
     val points = POINTS_PER_EXERCISE
 
+    // State to control the visibility of the dialog
+    var showDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(currentItemIndex) {
         while (true) {
             delay(200) // Adjust delay as needed
@@ -555,12 +627,14 @@ fun TiltExercise(
                         currentItemIndex++
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
-                        updatePointsAndProceed(
-                            userProfileDao,
-                            onExerciseCompleted,
-                            points,
-                            userProfileViewModel
-                        )
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile =
+                                updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            userProfile?.let {
+                                showDialog = true
+                            }
+                        }
+
                         break
                     }
                 } else {
@@ -585,12 +659,13 @@ fun TiltExercise(
                         currentItemIndex++
                         isCorrectOnLeft.value = Random.nextBoolean()
                     } else {
-                        updatePointsAndProceed(
-                            userProfileDao,
-                            onExerciseCompleted,
-                            points,
-                            userProfileViewModel
-                        )
+                        userProfileViewModel.viewModelScope.launch {
+                            val userProfile =
+                                updatePointsAndProceed(userProfileDao, points, userProfileViewModel)
+                            userProfile?.let {
+                                showDialog = true
+                            }
+                        }
                         break
                     }
                 } else {
@@ -642,6 +717,8 @@ fun TiltExercise(
                 "Orange" -> R.drawable.orange
                 "Grape" -> R.drawable.grape
                 "Strawberry" -> R.drawable.strawberry
+                "Pear" -> R.drawable.pear
+                "Raspberry" -> R.drawable.raspberry
                 else -> R.drawable.fruit
             }
         Image(
@@ -720,40 +797,54 @@ fun TiltExercise(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+        // Dialog to show when the exercise is completed correctly
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDialog = false
+                    onExerciseCompleted()
+                },
+                title = { Text(text = stringResource(id = R.string.correct)) },
+                text = { Text(text = stringResource(id = R.string.points_earned, points)) },
+                confirmButton = {
+                    Button(onClick = {
+                        showDialog = false
+                        onExerciseCompleted()
+                    }) {
+                        Text(text = stringResource(id = R.string.next_exercise))
+                    }
+                }
+            )
+        }
     }
 }
 
 // Helper function to update points and move to the next exercise
-fun updatePointsAndProceed(
+suspend fun updatePointsAndProceed(
     userProfileDao: UserProfileDao,
-    onNextExercise: () -> Unit,
     points: Int,
     viewModel: UserProfileViewModel
-) {
+): UserProfile? {
+    // Perform database operations within a coroutine
+    val userProfile = withContext(Dispatchers.IO) {
+        userProfileDao.getAllUserProfiles().firstOrNull()
+    }
 
-    // Launch a coroutine using viewModelScope
-    viewModel.viewModelScope.launch {
-        // Perform database operations within a coroutine
-        val userProfile = withContext(Dispatchers.IO) {
-            userProfileDao.getAllUserProfiles().firstOrNull()
-        }
-
-        userProfile?.let { profile ->
-            val currentLanguage = profile.languages.find { it.name == profile.currentLanguage.name }
-            currentLanguage?.let { language ->
-                language.pointsEarned += points
-                language.exercisesDone++ // Increment exercisesDone
-                language.exerciseTimestamp = System.currentTimeMillis()
-                profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
-                profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
-                profile.pointsEarned += points // Increment pointsEarned
-                withContext(Dispatchers.IO) {
-                    userProfileDao.updateUserProfile(profile)
-                }
+    userProfile?.let { profile ->
+        val currentLanguage = profile.languages.find { it.name == profile.currentLanguage.name }
+        currentLanguage?.let { language ->
+            language.pointsEarned += points
+            language.exercisesDone++ // Increment exercisesDone
+            language.exerciseTimestamp = System.currentTimeMillis()
+            profile.languagePoints = profile.languages.sumOf { it.pointsEarned }
+            profile.exercisesDone = profile.exercisesDone?.plus(1) // Increment exercisesDone
+            profile.pointsEarned += points // Increment pointsEarned
+            withContext(Dispatchers.IO) {
+                userProfileDao.updateUserProfile(profile)
             }
         }
-        onNextExercise()
     }
+    return userProfile
 }
 suspend fun translateWords(
     wordList: List<String>,
