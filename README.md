@@ -27,7 +27,7 @@ See how you have been progressing your learning from your profile view. Your pro
 </p>
 
 ### Many languages to learn: 
-20+ Languages to select from and start learning. Works on three languages. Application localized to Finnish, Swedish and English.
+20+ Languages to select from and start learning. Works with three languages. Application localized to Finnish, Swedish and English.
 
 ## Getting Setup:
 Insert your service account information and deepl api key into their files according to the templates found in assets folder. (Filenames need to be keyfile.json and deeplAPIKey.json)
