@@ -2,11 +2,8 @@ package com.example.languagelegends.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,9 +19,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.languagelegends.OnCompleteExercise
 import com.example.languagelegends.aicomponents.AiChatViewModel
 import com.example.languagelegends.features.UserProfileViewModel
-import com.example.languagelegends.OnCompleteExercise
 
 /**This function displays the path screen. It shows a list of exercises that the user can navigate to.
  *The exercises are represented as circles on a path.

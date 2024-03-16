@@ -113,7 +113,6 @@ class MainActivity : ComponentActivity() {
                             userProfileViewModel,
                             aiChatViewModel,
                             viewState = viewState,
-                            apiSelectedLanguage = apiSelectedLanguage
                         )
                     }
                 }
@@ -265,7 +264,6 @@ class MainActivity : ComponentActivity() {
         selectedLanguage: String,
         userProfileViewModel: UserProfileViewModel,
         aiChatViewModel: AiChatViewModel,
-        apiSelectedLanguage: String,
         viewState: ViewState
     ) {
         val translateAPI = TranslateAPI(LocalContext.current)

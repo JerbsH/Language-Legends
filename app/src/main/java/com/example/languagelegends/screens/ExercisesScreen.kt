@@ -1,6 +1,5 @@
 package com.example.languagelegends.screens
 
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -104,7 +103,7 @@ fun ExercisesScreen(
     // Define userProfileDao and exerciseTimestamp here
     val context = LocalContext.current
     val userProfileDao = DatabaseProvider.getDatabase(context).userProfileDao()
-    val exerciseTimestamp = System.currentTimeMillis()
+    //val exerciseTimestamp = System.currentTimeMillis()
 
     //Define the layout for the exercises
     Column(
@@ -216,9 +215,6 @@ fun WordScrambleExercise(
 
 
     val toTranslate = listOf(wordList.random())
-    Log.d("DBG", "Word to translate 1: $toTranslate")
-    var word = toTranslate
-    Log.d("DBG", "Word to translate 2: $word")
     var currentWordEnglish: List<String> by remember { mutableStateOf(emptyList()) }
 
 
@@ -228,7 +224,7 @@ fun WordScrambleExercise(
             translateWords(toTranslate, selectedLanguage, translateAPI)
         }
         withContext(Dispatchers.IO) {
-            currentWordEnglish = translateWords(word, "EN", translateAPI)
+            currentWordEnglish = translateWords(toTranslate, "EN", translateAPI)
         }
         joinAll()
         translatedWords = translated
@@ -242,7 +238,6 @@ fun WordScrambleExercise(
     } else {
         // Randomly select a word from the list
         val currentWord = remember {
-            Log.d("DBG", "Translated words: $translatedWords")
             if (translatedWords.isNotEmpty()) {
                 translatedWords.random()
             } else {
@@ -250,7 +245,6 @@ fun WordScrambleExercise(
             }
         }
 
-        Log.d("DBG", "Current word: $currentWord")
         // State to hold the shuffled letters of the current word
         var shuffledLetters by remember {
             mutableStateOf(
@@ -659,11 +653,7 @@ fun TiltExercise(
             if (sensorHelper.isTiltedRight.value) { // Check for right tilt instead of left
                 if (isCorrectOnLeft.value) {
                     feedbackText = correctString // Provide feedback for correct tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted left1, selected answer: ${currentItem.second}"
-                    ) // Log the selected answer
-                    delay(3000) // Wait for a second before clearing the feedback
+                    delay(2500) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
                         currentItemIndex++
@@ -684,21 +674,13 @@ fun TiltExercise(
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted right, selected answer: ${currentItem.third}"
-                    ) // Log the selected answer
-                    delay(2000) // Wait for a second before clearing the feedback
+                    delay(2500) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
             } else if (sensorHelper.isTiltedLeft.value) { // Check for left tilt instead of right
                 if (!isCorrectOnLeft.value) {
                     feedbackText = correctString // Provide feedback for correct tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted right3, selected answer: ${currentItem.second}"
-                    ) // Log the selected answer
-                    delay(3000) // Wait for a second before clearing the feedback
+                    delay(2500) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                     if (currentItemIndex < vocabulary.size - 1) {
                         currentItemIndex++
@@ -717,11 +699,7 @@ fun TiltExercise(
                     }
                 } else {
                     feedbackText = keepTryingString // Provide feedback for incorrect tilt
-                    Log.d(
-                        "TiltExercise",
-                        "Tilted left, selected answer: ${currentItem.third}"
-                    ) // Log the selected answer
-                    delay(2000) // Wait for a second before clearing the feedback
+                    delay(2500) // Wait for a second before clearing the feedback
                     feedbackText = null // Clear the feedback
                 }
             }
@@ -808,7 +786,7 @@ fun TiltExercise(
         ) {
             val progressRight by animateFloatAsState(
                 targetValue = if (sensorHelper.isTiltedRight.value) 1f else 0f,
-                animationSpec = tween(durationMillis = 1000), label = ""
+                animationSpec = tween(durationMillis = 500), label = ""
             )
 
             LinearProgressIndicator(
@@ -822,7 +800,7 @@ fun TiltExercise(
 
             val progressLeft by animateFloatAsState(
                 targetValue = if (sensorHelper.isTiltedLeft.value) 1f else 0f,
-                animationSpec = tween(durationMillis = 1000), label = ""
+                animationSpec = tween(durationMillis = 500), label = ""
             )
 
             LinearProgressIndicator(
@@ -914,10 +892,6 @@ suspend fun translateWords(
 
     val languages = LANGUAGES
     val selectedLang = languages[selectedLanguage] ?: "EN"
-    Log.d("DBG", "Selected language: $selectedLang")
-    Log.d("DBG", "Selected language: $selectedLanguage")
-
-    Log.d("DBG", "Translation language: $selectedLang")
 
     // Launch a coroutine to perform the translation asynchronously
     val translateJobs = wordList.map { word ->
@@ -945,7 +919,5 @@ suspend fun translateWords(
 
     // Add the results to the translatedWords list
     transWords.addAll(results)
-
-    Log.d("DBG", "Translated words: $transWords")
     return transWords
 }
