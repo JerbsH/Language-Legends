@@ -1,6 +1,10 @@
 # Welcome to Language Legends!
 
 Are you ready to embark on an epic journey of language mastery? Look no further – Language Legends is here to guide you on your path to linguistic greatness.
+<p>
+  <a href="https://www.youtube.com/watch?v=yl59yqPR7LQ">See how it works</a>
+</p>
+
 
 ## Why Language Legends?
 
